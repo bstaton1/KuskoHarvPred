@@ -1,20 +1,57 @@
+#' @title Fit All Subsets for Multiple Response Variables
+#' @param global_formulae A named [`list`][base::list] object with elements for `effort`, `totalcpt`, `chinook_comp`, `chum_comp`, and `sockeye_comp` to be passed to the
+#'   `formula` argument of [fit_global_model_one()] separately.
+#' @param fit_data A [`data.frame`][base::data.frame] object storing the variables for regression fitting.
+#' @param ... Optional arguments passed to [fit_all_subsets_one()]
+#' @export
+
+fit_all_subsets = function(global_formulae, fit_data, ...) {
+
+  # specify the response variables to fit
+  responses = names(global_formulae)
+
+  # add the transformation
+  transform = ifelse(responses %in% c("effort", "total_cpt"), "log",
+                     ifelse(responses %in% c("chinook_comp", "chum_comp", "sockeye_comp"), "logit", NA))
+
+  if (any(is.na(transform))) {
+    stop ("the names of global formulae must be some of 'effort', 'total_cpt', 'chinook_comp', 'chum_comp', or 'sockeye_comp'")
+  }
+
+  transformed_responses = paste(transform, responses, sep = "_")
+
+  # count the responses
+  nr = length(responses)
+
+  # fit the global models for all response variables
+  global_models = lapply(1:nr, function(i) fit_global_model_one(response = transformed_responses[i], formula = global_formulae[[i]], fit_data = fit_data))
+
+  # obtain all subsets, with options; list elements are response variables
+  all_subsets = lapply(1:nr, function(i) fit_all_subsets_one(global_models[[i]], fit_data = fit_data, ...))
+
+  # assign the list names
+  names(all_subsets) = responses
+
+  #return it
+  return(all_subsets)
+}
+
 #' @title Fit a Global Model for a Given Response Variable
 #' @param response One of `"log_effort"` (drift trips per day),
 #'   `"log_total_cpt"` (total salmon catch per drift trip),
 #'   or `"logit_chinook_comp"` (Chinook salmon proportion composition in drift harvest trips).
 #' @param formula Character string containing the right-hand-side of the global model.
 #' @param fit_data A [`data.frame`][base::data.frame] object storing the variables for regression fitting.
-#'   Defaults to an object called `dat`.
 #' @return A fitted model object with class [`lm`][stats::lm].
-#' @export
+#' @note FIXME change to allow_collinearity?
 
-fit_global_model = function(response, formula, fit_data = dat) {
+fit_global_model_one = function(response, formula, fit_data) {
 
   # build the formula based on supplied arguments
   form = formula(paste0(response, " ~ ", formula))
 
   # fit the model
-  fit = lm(form, data = dat, na.action = "na.fail")
+  fit = lm(form, data = fit_data, na.action = "na.fail")
 
   # return the fit
   return(fit)
@@ -22,14 +59,15 @@ fit_global_model = function(response, formula, fit_data = dat) {
 
 #' @title Fit All Subsets of a Global Model
 #' @param global_model A fitted model object with class [`lm`][stats::lm].
-#' @param parallel Logical. Should model fitting be performed with parallel processing?
+#' @param fit_data A [`data.frame`][base::data.frame] object storing the variables for regression fitting.
+#' @param parallel Logical: should model fitting be performed with parallel processing?
 #'   Defaults to `FALSE`.
-#' @param reduce_colinearity Logical. Should variables that are known to be colinear be
+#' @param reduce_colinearity Logical: Should variables that are known to be colinear be
 #'   prevented from being included in the same model?
-#'   Defaults to `FALSE`.
+#'   Defaults to `FALSE` (i.e., allows colinear variables).
 #' @param cwt_retain Numeric value between 0 and 1: what cumulative model weight
 #'   should be used to trim the set of models?
-#'   Defaults to 1 (i.e., no trimming).
+#'   Defaults to 0.75 (i.e., keep models that when sorted in decreasing weight make it in the top 75% by model weight).
 #' @note If `parallel = TRUE`, models will be fitted using [MuMIn::pdredge()]
 #'   with the number of parallel cores used set to `max(parallel::detectCores() - 1, 1)`.
 #'   Otherwise, the models will be fitted using [MuMIn::dredge()].
@@ -38,9 +76,8 @@ fit_global_model = function(response, formula, fit_data = dat) {
 #'   are in the all allowed subsets of the global model, no trimming will be conducted.
 #'   Additionally, if the trimmed model set has fewer than 2 models, no trimming will be conducted.
 #' @return List of fitted model objects (each with class [`lm`][stats::lm]).
-#' @export
 
-fit_all_subsets = function(global_model, parallel = FALSE, reduce_colinearity = FALSE, cwt_retain = 1) {
+fit_all_subsets_one = function(global_model, fit_data, parallel = FALSE, reduce_colinearity = FALSE, cwt_retain = 0.75) {
 
   # create the subset matrix
   vars = colnames(model.matrix(global_model))[-1]
@@ -116,6 +153,9 @@ fit_all_subsets = function(global_model, parallel = FALSE, reduce_colinearity = 
 
   # refit all models
   fit_list = MuMIn::get.models(dredge_out_reduced, subset = TRUE)
+
+  # assign it attributes
+  attributes(fit_list)$subset_params = list(reduce_colinearity = reduce_colinearity, cwt_retain = cwt_retain)
 
   # return the list of fitted models
   return(fit_list)

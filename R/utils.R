@@ -68,7 +68,7 @@ inverse_transform = function(fit) {
 
   # use the right inverse link function depending on the response variable
   if (response %in% c("effort", "total_cpt")) fn = exp
-  if (response == "chinook_comp") fn = plogis
+  if (response %in% c("chinook_comp", "chum_comp", "sockeye_comp")) fn = plogis
 
   # return the function
   return(fn)
