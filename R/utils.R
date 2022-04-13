@@ -135,13 +135,14 @@ count_params = function(fit) {
 #' @param fit_list List of fitted model objects of class [`lm`][stats::lm]
 #' @param digits Numeric value controlling the number of decimal places to round to.
 #'   Passed to [base::round()] for `"delta"` and [KuskoHarvEst::smart_round()] for model weights.
+#'   Defaults to 3.
 #' @return Data frame with columns:
 #'   * `terms`: the right-hand-side of each fitted model formula; from [get_formula()].
 #'   * `K`: the number of parameters in each fitted model; from [count_params()].
 #'   * `delta`: the difference in AICc scores between each model and the lowest AICc model.
 #'   * `wt`: the model weight; from [get_wt()].
 
-AIC_table = function(fit_list, digits = NULL) {
+AIC_table = function(fit_list, digits = 3) {
 
   # get AICc from each model
   AICc = sapply(fit_list, MuMIn::AICc)
