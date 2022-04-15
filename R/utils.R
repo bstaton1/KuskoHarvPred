@@ -83,46 +83,6 @@ get_wt = function(AIC) {
   exp(-0.5 * delta)/sum(exp(-0.5 * delta))
 }
 
-#' @title Obtain the "Period" of the Season the Record Falls In
-#' @param x Either a numeric value representing days past May 31 that year
-#'   or a date object, which will be coerced to days past May 31 prior to the calculation.
-#' @return The period number corresponding to the input date(s) supplied to `x`:
-#'   * `1`: June 12 - June 19; first week of drift fishing allowed.
-#'   * `2`: June 20 - June 30; remainder of June.
-#'   * `3`: July 1 - July 30; any date in July.
-#'   * `NA`: if the date does not fall in any of these periods.
-
-get_period = function(x) {
-
-  # convert to "days past may 31 if necessary and possible
-  if (class(x) %in% c("numeric", "integer")) {
-    day = x
-  } else {
-    if (class(x) == "Date") {
-      day = KuskoHarvData:::to_days_past_may31(x)
-    } else {
-      stop ("x must be a numeric or Date object")
-    }
-  }
-
-  # build the days in each period
-  d1 = 12:19  # first week of drift fishing
-  d2 = 20:30  # remainder of June
-  d3 = 31:60  # any date in July
-
-  # build the period indicators
-  p1 = rep(1, length(d1)); names(p1) = d1
-  p2 = rep(2, length(d2)); names(p2) = d2
-  p3 = rep(3, length(d3)); names(p3) = d3
-  period_key = c(p1, p2, p3)
-
-  # determine which period this day is in
-  period = period_key[as.character(day)]
-
-  # return the period found
-  return(unname(period))
-}
-
 #' @title Count the Number of Parameters in a Model
 #' @param fit A fitted model object with class [`lm`][stats::lm].
 #' @return The number of coefficients in the fitted model plus 1 for the residual standard error.
