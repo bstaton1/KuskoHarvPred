@@ -160,3 +160,34 @@ fit_all_subsets_one = function(global_model, fit_data, parallel = FALSE, reduce_
   # return the list of fitted models
   return(fit_list)
 }
+
+#' @title Obtain Model-Averaged Predicted Value
+#'
+#' @param fit_list List of fitted model objects of class [`lm`][stats::lm].
+#' @param newdata Data frame storing the variable values at which to obtain model-averaged predictions.
+#' @return Numeric vector of length equal to `nrow(newdata)`.
+#' @export
+
+predict_model_avg = function(fit_list, newdata) {
+
+  # obtain predicted values at covariate values found in new data from each model
+  preds = lapply(fit_list, function(fit) unname(KuskoHarvPred:::inverse_transform(fit)(predict(fit, newdata = newdata))))
+
+  # obtain model weights
+  wts = KuskoHarvPred:::get_wt(unlist(lapply(fit_list, MuMIn::AICc)))
+
+  # simpler if only one predicted value per model
+  if (nrow(newdata) == 1) {
+    # calculate model-averaged predicted value
+    out = sum(unlist(preds) * wts)
+  } else {
+    # combine model-specific predicted vectors as columns in a matrix
+    preds = do.call(cbind, preds)
+
+    # calculate model-averaged predicted values
+    out = apply(preds, 1, function(i) sum(i * wts))
+  }
+
+  # return the model-averaged prediction
+  return(out)
+}
