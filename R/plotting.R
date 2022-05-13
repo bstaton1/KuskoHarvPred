@@ -1,0 +1,162 @@
+#' Subset Pre-Processed Model Predictions
+#'
+#' @param response Character; one of `"effort"`, `"total_cpt"`, `"chinook_comp"`, `"chum_comp"`, or `"sockeye_comp"`
+#' @param settings List specifying which covariate settings to subset the predicted values for. See details.
+#' @details The `settings` argument must be a list, and if it is empty (the default), the acceptable elements will be populated with preset values.
+#'   The following elements are acceptable:
+#'     * `settings$day`: numeric; defaults to `12:46`
+#'     * `settings$hours_open`: numeric; must contain any combination of 6, 12, 18, 24, defaults to 12
+#'     * `settings$p_before_noon`: numeric; must contain any combination of 0.25, 0.5, 0.75, 1; defaults to 0.5
+#'     * `settings$not_first_day`: logical; defaults to `FALSE`
+#'     * `settings$weekend`: logical; defaults to `FALSE`
+#'     * `settings$weekend`: logical; defaults to `FALSE`
+#'     * `settings$CAT_total_btf_cpue`: character, must contain any combination of `"min"`, `"mean"`, `"max"`; defaults to `"mean"`
+#'     * `settings$CAT_chinook_btf_comp`: character, must contain any combination of `"min"`, `"mean"`, `"max"`; defaults to `"mean"`
+#'     * `settings$CAT_chum_btf_comp`: character, must contain any combination of `"min"`, `"mean"`, `"max"`; defaults to `"mean"`
+#'     * `settings$CAT_sockeye_btf_comp`: character, must contain any combination of `"min"`, `"mean"`, `"max"`; defaults to `"mean"`
+#'     * `settings$CAT_mean_Nwind`: character, must contain any combination of `"strong_northerly"`, `"none"`, `"strong_southerly"`; defaults to `"none"`
+#'     * `settings$CAT_mean_Ewind`: character, must contain any combination of `"strong_easterly"`, `"none"`, `"strong_westerly"`; defaults to `"none"`
+#'  @note Because not every predictor variable is used for all responses, it is possible to change the `settings` argument and receive the same output.
+#'
+
+subset_pred_data = function(response, settings = list()) {
+
+  # set default settings if not supplied
+  if (is.null(settings$day)) settings$day = 12:46
+  if (is.null(settings$hours_open)) settings$hours_open = 12
+  if (is.null(settings$p_before_noon)) settings$p_before_noon = 0.5
+  if (is.null(settings$not_first_day)) settings$not_first_day = FALSE
+  if (is.null(settings$weekend)) settings$weekend = FALSE
+  if (is.null(settings$CAT_total_btf_cpue)) settings$CAT_total_btf_cpue = "mean"
+  if (is.null(settings$CAT_chinook_btf_comp)) settings$CAT_chinook_btf_comp = "mean"
+  if (is.null(settings$CAT_chum_btf_comp)) settings$CAT_chum_btf_comp = "mean"
+  if (is.null(settings$CAT_sockeye_btf_comp)) settings$CAT_sockeye_btf_comp = "mean"
+  if (is.null(settings$CAT_mean_Nwind)) settings$CAT_mean_Nwind = "none"
+  if (is.null(settings$CAT_mean_Ewind)) settings$CAT_mean_Ewind = "none"
+
+  # trim settings down to only those found in prediction data set
+  settings = settings[which(names(settings) %in% names(pred_data[[response]]))]
+
+  # extract only the columns included in the settings list
+  pred_data_sub = pred_data[[response]][,names(settings)]
+  if (!is.data.frame(pred_data_sub)) {
+    pred_data_sub = data.frame(pred_data_sub)
+    colnames(pred_data_sub) = names(settings)
+  }
+
+  # for each variable, find the rows that match the settings value for that variable
+  sub_true = do.call(cbind, lapply(names(settings), function(i) pred_data_sub[,i] %in% settings[[i]]))
+
+  # extract only rows that have TRUE for all variables specified in settings
+  out = pred_data[[response]][apply(sub_true, 1, all),]
+  out = out[order(out$day),]
+  rownames(out) = NULL
+
+  # return the output
+  return(out)
+}
+
+#' Plot the Relationship of a Variable with Day of the Season
+#'
+#' @param response Character; one of `"effort"`, `"total_cpt"`, `"chinook_comp"`, `"chum_comp"`, or `"sockeye_comp"`
+#' @param settings List specifying which covariate settings to subset the predicted values for. Passed to [subset_pred_data()].
+#' @param separate_day_types Logical; if the variable passed to `response` used the predictor variable `not_first_day`, should two relationships be drawn?
+#' @param pred_day Numeric; the day corresponding to a hypothetical prediction (`pred_response`). Defaults to `NULL` in which case this is not drawn.
+#' @param pred_response Numeric; the predicted response corresponding to a hypothetical day (`pred_day`). Defaults to `NULL` in which case this is not drawn.
+#'
+#' @export
+
+relationship_plot = function(response, settings = list(), separate_day_types = TRUE, pred_day = NULL, pred_response = NULL) {
+
+  # aesthetic settings here
+  pt_cex = 1.5
+  pt_col = scales::alpha("royalblue", 0.5)
+  pt_bg = scales::alpha("skyblue", 0.5)
+  line_col = "salmon"
+
+  # create the data set
+  dat = KuskoHarvData::prepare_regression_data()
+
+  # create the y-axis label
+  ylab = switch(response,
+                "effort" = "Drift Trips/Day",
+                "total_cpt" = "Salmon Catch/Trip",
+                "chinook_comp" = "Species Composition: Chinook Salmon",
+                "chum_comp" = "Species Composition: Chum Salmon",
+                "sockeye_comp" = "Species Composition: Sockeye Salmon",
+  )
+
+  # create the plot with two lines: one for not_first_day and one for !not_first_day
+  if ("not_first_day" %in% colnames(pred_data[[response]]) & separate_day_types) {
+
+    # extract only the data for this response variable and specific covariate settings
+    settings$not_first_day = c(TRUE, FALSE)
+    sub_pred_data = subset_pred_data(response, settings = settings)
+
+    # set the y-axis limits
+    ylim = c(0, max(sub_pred_data$pred_response, max(dat[,response]))) * 1.05
+
+    # scatter plot with correct dimensions, labels, etc.
+    plot(dat[,response] ~ day, data = dat, pch = ifelse(not_first_day, 24, 21), ylim = ylim, xaxt = "n", yaxt = "n",
+         ylab = ylab, xlab = "Day of Season", axes = FALSE,
+         bg = pt_bg, col = pt_col, cex = pt_cex, font.lab = 2)
+
+    # draw the fitted curves
+    lines(pred_response ~ day, data = subset(sub_pred_data, !not_first_day), col = line_col, lwd = 2)
+    lines(pred_response ~ day, data = subset(sub_pred_data, not_first_day), lty = 2, col = line_col, lwd = 2)
+
+    # add a legend
+    legend_location = ifelse(response == "total_cpt", "topleft", "topright")
+    legend(legend_location, title = "Fished Yesterday?", legend = c("No", "Yes"),
+           lty = c(1, 2), col = line_col, lwd = 2, bty = "n", text.col = "white",
+           x.intersp = 2.5, seg.len = 3.5)
+    legend(legend_location, title = "Fished Yesterday?", legend = c("No", "Yes"),
+           pch = c(21, 24), col = pt_col, pt.bg = pt_bg, pt.cex = pt_cex, bty = "n",
+           x.intersp = 2.5)
+
+  } else {
+
+    # extract only the data for this response variable and specific covariate settings
+    sub_pred_data = subset_pred_data(response, settings = settings)
+
+    # set the y-axis limits
+    if (stringr::str_detect(response, "comp")) {
+      ylim = c(0,1)
+    } else {
+      ylim = c(0, max(sub_pred_data$pred_response, max(dat[,response])))
+    }
+
+    # scatter plot with correct dimensions, labels, etc.
+    plot(dat[,response] ~ day, data = dat, pch = 21, col = pt_col, bg = pt_bg, cex = pt_cex, ylim = ylim, xaxt = "n", yaxt = "n",
+         ylab = ylab, xlab = "Day of Season", axes = FALSE, font.lab = 2)
+
+    # draw the fitted curve
+    lines(pred_response ~ day, data = sub_pred_data, col = line_col, lwd = 2)
+  }
+
+  usr = par("usr")
+
+  # if specific predicted day and response values are provided, draw them
+  if (!is.null(pred_day) & !is.null(pred_response)) {
+    segments(pred_day, usr[3], pred_day, pred_response, lwd = 2, lty = 3, col = "grey")
+    segments(usr[1], pred_response, pred_day, pred_response, lwd = 2, lty = 3, col = "grey")
+    points(x = pred_day, y = pred_response, pch = 16, cex = pt_cex)
+  }
+
+  # add x-axis
+  at_x = seq(12, 46, by = 5)
+  date_x = KuskoHarvData:::from_days_past_may31(at_x)
+  month_x = lubridate::month(date_x, label = TRUE, abbr = TRUE)
+  day_x = lubridate::day(date_x)
+  lab_x = paste(month_x, day_x)
+  axis(side = 1, at = at_x, labels = lab_x, lwd = 2)
+  segments(usr[1], usr[3], usr[2], usr[3], lwd = 2, xpd = TRUE)
+
+  # add y-axis
+  if (stringr::str_detect(response, "comp")) {
+    axis(side = 2, at = seq(0, 1, 0.2), labels = paste0(seq(0, 1, 0.2) * 100, "%"), lwd = 2)
+  } else {
+    axis(side = 2, lwd = 2)
+  }
+  segments(usr[1], usr[3], usr[1], usr[4], lwd = 2, xpd = TRUE)
+}
