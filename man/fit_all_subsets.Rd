@@ -7,7 +7,7 @@
 fit_all_subsets(global_formulae, fit_data, ...)
 }
 \arguments{
-\item{global_formulae}{A named \code{\link[base:list]{list}} object with elements for \code{effort}, \code{totalcpt}, \code{chinook_comp}, \code{chum_comp}, and \code{sockeye_comp} to be passed to the
+\item{global_formulae}{A named \code{\link[base:list]{list}} object with elements for \code{effort}, \code{total_cpt}, \code{chinook_comp}, \code{chum_comp}, and \code{sockeye_comp} to be passed to the
 \code{formula} argument of \code{\link[=fit_global_model_one]{fit_global_model_one()}} separately.}
 
 \item{fit_data}{A \code{\link[base:data.frame]{data.frame}} object storing the variables for regression fitting.}
