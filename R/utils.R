@@ -124,3 +124,14 @@ AIC_table = function(fit_list, digits = 3) {
   # return the output table
   return(tab)
 }
+
+#' Find Predictor Variable Names in a Set of Fitted Models
+#'
+#' @param fit_list List of fitted model objects of class [`lm`][stats::lm]
+#'
+
+find_variables = function(fit_list) {
+  vars = unique(unlist(lapply(fit_list, function(m) unlist(strsplit(KuskoHarvPred:::get_formula(m), fixed = TRUE, split = " + ")))))
+  if (any(vars == "Intercept only")) vars = vars[-which(vars == "Intercept only")]
+  vars
+}
