@@ -1,5 +1,5 @@
 #' @title Fit All Subsets for Multiple Response Variables
-#' @param global_formulae A named [`list`][base::list] object with elements for `effort`, `totalcpt`, `chinook_comp`, `chum_comp`, and `sockeye_comp` to be passed to the
+#' @param global_formulae A named [`list`][base::list] object with elements for `effort`, `total_cpt`, `chinook_comp`, `chum_comp`, and `sockeye_comp` to be passed to the
 #'   `formula` argument of [fit_global_model_one()] separately.
 #' @param fit_data A [`data.frame`][base::data.frame] object storing the variables for regression fitting.
 #' @param ... Optional arguments passed to [fit_all_subsets_one()]
