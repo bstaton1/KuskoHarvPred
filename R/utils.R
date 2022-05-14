@@ -135,3 +135,13 @@ find_variables = function(fit_list) {
   if (any(vars == "Intercept only")) vars = vars[-which(vars == "Intercept only")]
   vars
 }
+
+#' Start a Shiny Server for the Prediction Tool and Render It
+#'
+#' @export
+
+run_predictive_tool = function() {
+  pkg_dir = system.file(package = "KuskoHarvPred")
+  tool_dir = file.path(pkg_dir, "rstudio", "KuskoHarvPred-tool")
+  rmarkdown::run(file = file.path(tool_dir, "KuskoHarvPred-tool.Rmd"), auto_reload = FALSE, render_args = list(quiet = TRUE))
+}
