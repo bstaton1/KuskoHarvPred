@@ -324,7 +324,7 @@ reactive({
     )
   ) %>%
     kbl("html", align = "lr", col.names = c("Outcome Variable", "Predicted Value"),
-        caption = em("These outcome variables are predicted from relationships based on historical data using the input values.")) %>%
+        caption = "These outcome variables are predicted from relationships based on historical data using the input values.") %>%
     kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) %>%
     column_spec(1, bold = TRUE, width = "350px") %>%
     column_spec(2, width = "150px")
@@ -339,12 +339,12 @@ reactive({
 
 ```
 
-```{r}
+```{r pred-response-kable}
 h3("Predicted Outcomes")
 renderUI(HTML(rvals$preds_kable))
 ```
 
-```{r}
+```{r pred-harvest-kable}
 h3("Predicted Harvest")
 renderUI(HTML(rvals$pred_harv_kable))
 ```
