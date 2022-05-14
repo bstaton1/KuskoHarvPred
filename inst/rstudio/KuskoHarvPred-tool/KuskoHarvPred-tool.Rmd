@@ -101,7 +101,7 @@ rvals = reactiveValues()
   *  The abundance and species composition in the river
   *  The weather
   
-  Please see the `r icon("line-chart")` **Predictive Relationships** tab to view how each outcome has historically varied throughout the season and how the predicted value changes depending on the fishery conditions.
+  Please see the `r icon("chart-line")` **Predictive Relationships** tab to view how each outcome has historically varied throughout the season and how the predicted value changes depending on the fishery conditions.
   The `r icon("info-circle")` **Statistical Info.** tab (Methods Overview section) includes more details on how the tool works.
   
   </div>
@@ -110,9 +110,9 @@ rvals = reactiveValues()
   
   <div style="margin-left: 5px;">
 
-  1.  Enter the expected conditions of the proposed fishery opportunity (e.g., day, start/end times, Bethel Test Fishery index values, wind speed/direction) on the `r icon("sliders")` **Inputs** tab
+  1.  Enter the expected conditions of the proposed fishery opportunity (e.g., day, start/end times, Bethel Test Fishery index values, wind speed/direction) on the `r icon("sliders-h")` **Inputs** tab
   2.  Navigate to the `r icon("table")` **Outputs** tab -- the predictions of each outcome and species-specific harvest for the fishing period described in the inputs is shown in two tables.
-  3.  To explore how the tool works and to see good its predictions are, see the `r icon("line-chart")` **Predictive Relationships** and `r icon("info-circle")` **Statistical Info.** tabs.
+  3.  To explore how the tool works and to see good its predictions are, see the `r icon("chart-line")` **Predictive Relationships** and `r icon("info-circle")` **Statistical Info.** tabs.
   
   </div>
   
@@ -140,13 +140,13 @@ rvals = reactiveValues()
 
 # {.tabset .tabset-pills}
 
-## `r icon("sliders")` Inputs
+## `r icon("sliders-h")` Inputs
 
 ---
 
 :::{.blue}
 <details>
-  <summary>`r icon("info-circle")` **Information about `r icon("sliders")` Inputs**</summary>
+  <summary>`r icon("info-circle")` **Information about `r icon("sliders-h")` Inputs**</summary>
   <br>
   <p style="font-size: 12pt;"><b>On this page, you will enter the conditions of the proposed fishing opportunity.</b></p>
   
@@ -264,7 +264,7 @@ observeEvent(input$use_avg_btf, {
   <p style="font-size: 12pt;"><b>This page displays the predicted outcomes and harvest based on the input conditions.</b></p>
   
   The top table shows the predicted values for each outcome variable: drift trips, catch per trip, and species composition.
-  The values are obtained using relationships that are shown on the `r icon("line-chart")` **Predictive Relationships** page.
+  The values are obtained using relationships that are shown on the `r icon("chart-line")` **Predictive Relationships** page.
   
   The bottom table shows the harvest by species implied by the predicted outcomes, and are obtained by multiplying drift trips, catch per trip, and species composition.
   
@@ -349,13 +349,13 @@ h3("Predicted Harvest")
 renderUI(HTML(rvals$pred_harv_kable))
 ```
 
-## `r icon("line-chart")` Predictive Relationships {#section-relationships-tab}
+## `r icon("chart-line")` Predictive Relationships {#section-relationships-tab}
 
 ---
 
 :::{.blue}
 <details>
-  <summary>`r icon("info-circle")` **Information about `r icon("line-chart")` Predictive Relationships**</summary>
+  <summary>`r icon("info-circle")` **Information about `r icon("chart-line")` Predictive Relationships**</summary>
   <br>
   <p style="font-size: 12pt;"><b>This page displays the relationships between historical outcomes and conditions.</b></p>
   
@@ -705,7 +705,7 @@ renderUI(HTML(aic_kable(KuskoHarvPred:::fit_lists[[input$aic_response]])))
 
 ```{r importance-kable-fn}
 importance_kable = function(fit_list) {
-  tab = MuMIn::importance(fit_list)
+  tab = MuMIn::sw(fit_list)
 tab = as.data.frame(tab)
 tab = cbind(Variable = rownames(tab), Importance = KuskoHarvEst:::percentize(tab$tab))
 tab %>%
