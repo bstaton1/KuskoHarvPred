@@ -1,0 +1,1023 @@
+---
+title: "**Kuskokwim Salmon Harvest Prediction Tool**"
+author: "_v0.0.0.9000; FOR DRAFT/FEEDBACK USE ONLY_"
+date: "_Please send feedback to the tool developer, Ben Staton (<bstaton.qes@gmail.com>)_"
+output: 
+  html_document
+runtime: shiny
+---
+
+```{r knitr-setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.align = "center")
+```
+
+```{css}
+div.blue {
+  background-color: #e6f0ff; 
+  border-radius: 5px; 
+  padding: 5px;
+}
+
+div.red {
+  background-color: #FFE6E6;
+  border-radius: 5px; 
+  padding: 5px;
+}
+
+figcaption {
+  background-color: white;
+  color: grey;
+  padding: 5px;
+  margin-left: 60px;
+  margin-right: 60px;
+  text-align: left;
+}
+
+caption {
+  background-color: white;
+  color: grey;
+  padding: 5px;
+  margin-left: 60px;
+  margin-right: 60px;
+  text-align: left;
+}
+```
+
+```{r pkg-setup, warning = FALSE, message = FALSE}
+# load packages
+library(KuskoHarvData)  # Houses historical data and functions to prepare them for analysis
+library(KuskoHarvPred)  # Houses regression infrastructure and output
+library(shiny)          # For building interactive elements
+library(shinyjs)        # For making interactive elements more user-friendly
+library(kableExtra)     # For making HTML Tables
+library(lubridate)      # For dealing with dates
+library(stringr)        # For dealing with character strings
+# include shinyJS
+useShinyjs(rmd = TRUE)
+
+# set some CSS
+```
+
+```{r data-prep}
+# produce the regression data set
+dat = prepare_regression_data()
+```
+
+```{r reactive-container}
+rvals = reactiveValues()
+```
+
+---
+
+:::{.red}
+<details>
+  <summary>`r icon("exclamation-triangle")` **Information for New Users**</summary>
+  
+  `r h5(em("What Does the Tool Do?"))`
+  
+  <div style="margin-left: 30px;">
+  
+  This tool is designed to predict outcomes of a single day of fishing in the subsistence salmon fishery in the Lower Kuskokwim River.
+  
+  The outcomes predicted by the tool are:
+  
+  *  The number of drift boat trips
+  *  The number of salmon (Chinook, chum, and sockeye) caught by the average drift boat trip
+  *  The percent of the total salmon catch per trip that is made up of each species (Chinook, chum, and sockeye)
+  
+  The daily harvest of each species can be predicted from these quantities, which can then inform managers about the likely outcomes of a proposed fishery opportunity based on past data.
+  
+  </div>
+  
+  `r h5(em("How Does the Tool Work?"))`
+  
+  <div style="margin-left: 30px;">
+  
+  The tool relies on relationships between the outcomes and fishery conditions.
+  Fishery conditions might include features like:
+  
+  *  The time of the season
+  *  The time of day or length of fishing period
+  *  The abundance and species composition in the river
+  *  The weather
+  
+  Please see the `r icon("line-chart")` **Predictive Relationships** tab to view how each outcome has historically varied throughout the season and how the predicted value changes depending on the fishery conditions.
+  The `r icon("info-circle")` **Statistical Info.** tab (Methods Overview section) includes more details on how the tool works.
+  
+  </div>
+  
+  `r h5(em("How Is the Tool Used?"))`
+  
+  <div style="margin-left: 5px;">
+
+  1.  Enter the expected conditions of the proposed fishery opportunity (e.g., day, start/end times, Bethel Test Fishery index values, wind speed/direction) on the `r icon("sliders")` **Inputs** tab
+  2.  Navigate to the `r icon("table")` **Outputs** tab -- the predictions of each outcome and species-specific harvest for the fishing period described in the inputs is shown in two tables.
+  3.  To explore how the tool works and to see good its predictions are, see the `r icon("line-chart")` **Predictive Relationships** and `r icon("info-circle")` **Statistical Info.** tabs.
+  
+  </div>
+  
+  `r h5(em("Where do the data come from?"))`
+  
+  <div style="margin-left: 30px;">
+
+  The historical fishery outcomes are informed by data collected collaboratively involving several projects/agencies: Orutsararmiut Native Council, the [Community-Based Harvest Monitoring Program](https://static1.squarespace.com/static/5afdc3d5e74940913f78773d/t/622fc731ca40712f2235eda1/1647298414521/CBHM+2021+Report_final.pdf) (Kuskokwim River Inter-Tribal Fisheries Commission/Bering Sea Fisherman's Association), and the U.S. Fish and Wildlife Service. 
+  More information about data collection and harvest/effort estimation can be found in recent reports that document these topics for individual seasons (e.g., [Russell et al. 2021](https://static1.squarespace.com/static/5afdc3d5e74940913f78773d/t/61a6b1098494ce51e26b4460/1638314257230/2021+Kuskokwim+Subsistence+Harvest+Report.pdf); [Staton 2018](https://github.com/bstaton1/KuskoHarvEst/blob/main/inst/rstudio/templates/project/resources/04-documentation/Staton%20-%202018%20-%20In-season%20harvest%20and%20effort%20estimates.pdf)).
+  
+  Because of the scope of the monitoring data, predictions made by this tool apply only to:
+  
+  *  Drift nets (no other gears are included)
+  *  Mainstem Kuskokwim River (no tributaries are included)
+  *  The area between the villages of Tuntutuliak and Akiak
+  
+  The data informing this tool were collected in June and July in the years `r min(year(dat$date))` -- `r max(year(dat$date))` and are made up of `r nrow(dat)` individual days of monitored drift fishing.
+  
+  </div>
+  
+</details>
+:::
+
+---
+
+# {.tabset .tabset-pills}
+
+## `r icon("sliders")` Inputs
+
+---
+
+:::{.blue}
+<details>
+  <summary>`r icon("info-circle")` **Information about `r icon("sliders")` Inputs**</summary>
+  <br>
+  <p style="font-size: 12pt;"><b>On this page, you will enter the conditions of the proposed fishing opportunity.</b></p>
+  
+  The values entered here will be "plugged in" to historical relationships to predict outcomes for these conditions.
+  
+  Start by entering the date and the start/end times.
+  Be sure to check the box labeled "Fished Previous Day?" if fishing was/will be allowed the day before the date you pick.
+  
+  Next, enter the expected Bethel Test Fishery daily CPUE for the proposed fishing day.
+  If you have no idea, click the button to get the historical average values for the day you selected, or you can easily navigate to the Bethel Test Fishery data webpage by clicking the link.
+  
+  Finally, enter the expected weather (wind) conditions; click the link to obtain a wind forecast for Bethel.
+  
+</details>
+:::
+
+---
+
+```{r misc}
+year = year(today())
+default_date = max(as_date(paste0(year, "-06-12")), today() + 3)
+min_date = as_date(paste0(year, "-06-12"))
+max_date = as_date(paste0(year, "-07-31"))
+
+start_time_bank = c("12:00AM (Start of Day)", paste0(1:11, ":00AM"), paste0(c(12, 1:11), ":00PM"))
+end_time_bank = c("12:00AM (Start of Day)", paste0(1:11, ":00AM"), paste0(c(12, 1:11), ":00PM"), "12:00AM (End of Day)")
+
+process_start_date = function(date, time) {
+  new_time = str_remove(time, " \\(.+$")
+  new_time = str_replace(time, "\\:00", ":00:00 ")
+  new_datetime = parse_date_time(paste(date, new_time), '%Y-%m-%d %I:%M:%S %p', tz = "US/Alaska")
+  as_datetime(new_datetime, tz = "US/Alaska")
+}
+
+process_end_date = function(date, time) {
+  if (time == "12:00AM (End of Day)") date = date + 1
+  new_time = str_remove(time, " \\(.+$")
+  new_time = str_replace(time, "\\:00", ":00:00 ")
+  new_datetime = parse_date_time(paste(date, new_time), '%Y-%m-%d %I:%M:%S %p', tz = "US/Alaska")
+  as_datetime(new_datetime, tz = "US/Alaska")
+}
+
+wind_angle_key = c("N" = 0, "NE" = 45, "E" = 90, "SE" = 135, "S" = 180, "SW" = 225, "W" = 270, "NW" = 315)
+```
+
+```{r input-widgets}
+fillRow(
+  height = "80%",
+  
+  # input widgets for timing info
+  column(
+    width = 12,
+    h3("Opportunity"),
+    wellPanel(
+      dateInput(inputId = "date", label = "Day of Opportunity",
+                       value = default_date, min = min_date, max = max_date, format = "mm-dd-yyyy"),
+      selectInput(inputId = "start_time", label = "Start Time", choices = start_time_bank, selected = "10:00AM"),
+      selectInput(inputId = "end_time", label = "End Time", choices = end_time_bank, selected = "10:00PM"),
+      checkboxInput("fished_yesterday", label = "Fished Previous Day?", value = FALSE)
+    )
+  ),
+  
+  # input widgets for BTF info
+  column(
+    width = 12,
+    h3("Bethel Test Fishery"),
+    wellPanel(
+      numericInput(inputId = "chinook_btf_cpue", label = "Chinook CPUE", value = 10, min = 0),
+      numericInput(inputId = "chum_btf_cpue", label = "Chum CPUE", value = 10, min = 0),
+      numericInput(inputId = "sockeye_btf_cpue", label = "Sockeye CPUE", value = 10, min = 0),
+      a(icon("table"), "View BTF Data Webpage", href = "https://www.adfg.alaska.gov/index.cfm?adfg=commercialbyareakuskokwim.btf"),
+      actionButton(inputId = "use_avg_btf", label = "Get 2016 — 2021 Average", width = "100%")
+    )
+  ),
+  # input widgets for weather info
+  column(
+    width = 12,
+    h3("Weather"),
+    wellPanel(
+      numericInput(inputId = "wind_speed", label = "Wind Speed (MPH)", value = 0),
+      selectInput(inputId = "wind_direction", label = "Wind Direction",
+                         choices = c("N", "NE", "E", "SE", "S", "SW", "W", "NW"), selected = "SW"),
+      a(icon("search"), "Search Google Wind Forecast", href = "https://www.google.co.in/search?q=bethel+AK+wind+forecast"),
+    )
+  )
+)
+
+observeEvent(input$start_time, {
+  updateSelectInput(
+    inputId = "end_time",
+    choices = end_time_bank[(which(end_time_bank == input$start_time) + 1):length(end_time_bank)],
+    selected = input$end_time)
+})
+
+avg_btf_summary = function(dom, moy, stat) {
+  dates = as_date(paste(2016:2021, str_pad(as.character(moy), 2, "left", "0"), str_pad(as.character(dom), 2, "left", "0")))
+  round(mean(sapply(dates, KuskoHarvData:::summarize_btf, stat = stat, plus_minus = 1)), 1)
+}
+
+observeEvent(input$use_avg_btf, {
+  updateNumericInput(inputId = "chinook_btf_cpue", value = avg_btf_summary(day(input$date), month(input$date), "chinook_cpue"))
+  updateNumericInput(inputId = "chum_btf_cpue", value = avg_btf_summary(day(input$date), month(input$date), "chum_cpue"))
+  updateNumericInput(inputId = "sockeye_btf_cpue", value = avg_btf_summary(day(input$date), month(input$date), "sockeye_cpue"))
+})
+```
+
+## `r icon("table")` Outputs
+
+---
+
+:::{.blue}
+<details>
+  <summary>`r icon("info-circle")` **Information about `r icon("table")` Outputs**</summary>
+  <br>
+  <p style="font-size: 12pt;"><b>This page displays the predicted outcomes and harvest based on the input conditions.</b></p>
+  
+  The top table shows the predicted values for each outcome variable: drift trips, catch per trip, and species composition.
+  The values are obtained using relationships that are shown on the `r icon("line-chart")` **Predictive Relationships** page.
+  
+  The bottom table shows the harvest by species implied by the predicted outcomes, and are obtained by multiplying drift trips, catch per trip, and species composition.
+  
+</details>
+:::
+
+---
+
+```{r prep-predictive-data}
+
+reactive({
+  rvals$start_time = process_start_date(input$date, input$start_time)
+  rvals$end_time = process_end_date(input$date, input$end_time)
+  rvals$hours_open = as.numeric(as.duration(interval(rvals$start_time, rvals$end_time)), units = "hours")
+  rvals$hours_before_noon = as.numeric(as.duration(interval(rvals$start_time, as_datetime(paste0(input$date, " 12:00:00"), tz = "US/Alaska"))), units = "hours")
+  rvals$wind_angle = wind_angle_key[input$wind_direction]
+})
+
+reactive({
+  rvals$df = data.frame(
+    day = KuskoHarvData:::to_days_past_may31(dates = input$date),
+    weekend = wday(input$date, label = TRUE) %in% c("Sat", "Sun"),
+    not_first_day = input$fished_yesterday,
+    hours_open = rvals$hours_open,
+    p_before_noon = ifelse(rvals$hours_before_noon < 0, 0, rvals$hours_before_noon/rvals$hours_open),
+    total_btf_cpue = input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue,
+    chinook_btf_comp = input$chinook_btf_cpue/(input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue),
+    chum_btf_comp = input$chum_btf_cpue/(input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue),
+    sockeye_btf_comp = input$sockeye_btf_cpue/(input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue),
+    mean_Nwind = KuskoHarvData:::get_Nwind(speed = input$wind_speed, rvals$wind_angle),
+    mean_Ewind = KuskoHarvData:::get_Ewind(speed = input$wind_speed, rvals$wind_angle)
+  )
+})
+
+reactive({
+  rvals$preds = as.data.frame(lapply(KuskoHarvPred:::fit_lists, function(fit_list) predict_model_avg(fit_list, rvals$df)))
+  
+  rvals$comp_preds = c(chinook = rvals$preds$chinook_comp,  chum = rvals$preds$chum_comp, sockeye = rvals$preds$sockeye_comp)
+  rvals$comp_preds_adj = rvals$comp_preds/sum(rvals$comp_preds)
+  
+  rvals$pred_harv = data.frame(
+    Species = c("Chinook", "Chum", "Sockeye", "Total"),
+    "Predicted Harvest" = c(
+      rvals$preds$effort * rvals$preds$total_cpt * rvals$comp_preds_adj["chinook"],
+      rvals$preds$effort * rvals$preds$total_cpt * rvals$comp_preds_adj["chum"],
+      rvals$preds$effort * rvals$preds$total_cpt * rvals$comp_preds_adj["sockeye"],
+      rvals$preds$effort * rvals$preds$total_cpt
+    )
+  )
+  
+  rvals$preds_kable = data.frame(
+    Variable = c("Drift Trips", "Salmon Catch/Trip", "Chinook Composition", "Chum Composition", "Sockeye Composition"),
+    "Predicted Value" = c(
+      as.character(round(rvals$preds$effort)),
+      as.character(round(rvals$preds$total_cpt, 1)),
+      paste0(KuskoHarvEst:::smart_round(rvals$comp_preds_adj, 2) * 100, "%")
+    )
+  ) %>%
+    kbl("html", align = "lr", col.names = c("Outcome Variable", "Predicted Value"),
+        caption = em("These outcome variables are predicted from relationships based on historical data using the input values.")) %>%
+    kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) %>%
+    column_spec(1, bold = TRUE, width = "350px") %>%
+    column_spec(2, width = "150px")
+    
+  rvals$pred_harv_kable = rvals$pred_harv %>%
+    kbl("html", digits = 0, format.args = list(big.mark = ","), col.names = c("Species", "Predicted Value"), row.names = FALSE,
+        caption = em("These harvest predictions are obtained by multiplying the predicted values of", strong("drift trips"), "by", strong("salmon catch/trip"), "by", strong("species composition."))) %>%
+    kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) %>%
+    column_spec(1, bold = TRUE, width = "350px") %>%
+    column_spec(2, width = "150px")
+})
+
+```
+
+```{r}
+h3("Predicted Outcomes")
+renderUI(HTML(rvals$preds_kable))
+```
+
+```{r}
+h3("Predicted Harvest")
+renderUI(HTML(rvals$pred_harv_kable))
+```
+
+## `r icon("line-chart")` Predictive Relationships {#section-relationships-tab}
+
+---
+
+:::{.blue}
+<details>
+  <summary>`r icon("info-circle")` **Information about `r icon("line-chart")` Predictive Relationships**</summary>
+  <br>
+  <p style="font-size: 12pt;"><b>This page displays the relationships between historical outcomes and conditions.</b></p>
+  
+  In the figure displayed on this page, 
+  
+  *  The vertical axis is the value of the outcome variable
+  *  The horizontal axis is the day of the season
+  *  Blue points represent historical data
+  *  Red lines represent model predicted values
+  
+  The figure shows how the value of different outcome variables change throughout the season.
+  Additionally, you can see how changes in the other condition variables impact the predicted value from the model by selecting different options for the other condition variables.
+  
+  Not all condition variables are used to predict all outcome variables.
+  For example, "hours of fishing" is a condition variable that is used to predict drift trips/day and salmon catch/day, but not the species composition outcome variables.
+  This is why "hours of fishing" disappears when viewing the species composition relationships.
+  
+</details>
+:::
+
+```{r plot-ui}
+
+CAT_btf_choices = c("Maximum" = "max", "Average" = "mean", "Minimum" = "min")
+response_choices = c("Drift Trips/Day" = "effort", "Salmon Catch/Trip" = "total_cpt", "Chinook Composition" = "chinook_comp", "Chum Composition" = "chum_comp", "Sockeye Composition" = "sockeye_comp")
+hr()
+selectInput(inputId = "plot_response", label = p("Outcome Variable", style = "font-size: 15pt;"), choices = response_choices, width = "25%")
+hr()
+p(strong("Condition Variables"), style = "font-size: 15pt;")
+
+fillRow(
+  column(
+    width = 12,
+    hidden(
+      selectInput(inputId = "plot_CAT_total_btf_cpue", label = "Total BTF CPUE", choices = CAT_btf_choices, selected = "mean")
+    ),
+    
+    hidden(
+      selectInput(inputId = "plot_CAT_chinook_btf_comp", label = "Chinook BTF Composition", choices = CAT_btf_choices, selected = "mean")
+    ),
+    
+    hidden(
+      selectInput(inputId = "plot_CAT_chum_btf_comp", label = "Chum BTF Composition", choices = CAT_btf_choices, selected = "mean")
+    ),
+    
+    hidden(
+      selectInput(inputId = "plot_CAT_sockeye_btf_comp", label = "Sockeye BTF Composition", choices = CAT_btf_choices, selected = "mean")
+    )
+  ),
+  
+  column(
+    width = 12,
+    hidden(
+      selectInput(inputId = "plot_hours_open", label = "Hours of Fishing", choices = c("6", "12", "18", "24"), selected = "12")
+    ),
+    
+    hidden(
+      selectInput(inputId = "plot_p_before_noon", label = "Percent of Fishing Before Noon", choices = c("0%" = "0", "25%" = "0.25", "50%" = "0.50", "75%" = "0.75", "100%" = 1), selected = "0.25")
+    )
+  ),
+  
+  column(
+    width = 12,
+    hidden(
+      selectInput(inputId = "plot_CAT_mean_Nwind", label = "North/South Wind", choices = c("Strong Southerly Wind" = "strong_southerly", "No North/South Wind" = "none", "Strong Northerly Wind" = "strong_northerly"), selected = "none")
+    ),
+    
+    hidden(
+      selectInput(inputId = "plot_CAT_mean_Ewind", label = "East/West Wind", choices = c("Strong Westerly Wind" = "strong_westerly", "No East/West Wind" = "none", "Strong Easterly Wind" = "strong_easterly"), selected = "none")
+    )
+  )
+)
+hr()
+```
+
+```{r plot-server}
+# Extract all predictor variable names for this response variable
+reactive({
+  rvals$vars = KuskoHarvPred:::find_variables(KuskoHarvPred:::fit_lists[[input$plot_response]])
+})
+
+# Toggle the various plot settings widgets based on whether that covariate is in any models for that response variable
+observe({
+  toggle(id = "plot_hours_open", condition = "hours_open" %in% rvals$vars)
+  toggle(id = "plot_p_before_noon", condition = "p_before_noon" %in% rvals$vars)
+  toggle(id = "plot_CAT_total_btf_cpue", condition = "total_btf_cpue" %in% rvals$vars)
+  toggle(id = "plot_CAT_chinook_btf_comp", condition = "chinook_btf_comp" %in% rvals$vars)
+  toggle(id = "plot_CAT_chum_btf_comp", condition = "chum_btf_comp" %in% rvals$vars)
+  toggle(id = "plot_CAT_sockeye_btf_comp", condition = "sockeye_btf_comp" %in% rvals$vars)
+  toggle(id = "plot_CAT_mean_Nwind", condition = "mean_Nwind" %in% rvals$vars)
+  toggle(id = "plot_CAT_mean_Ewind", condition = "mean_Ewind" %in% rvals$vars)
+})
+
+# Construct the settings for subsetting pre-processed predictions for plotting
+reactive({
+  rvals$plot_settings = list(
+    hours_open = as.numeric(input$plot_hours_open),
+    p_before_noon = as.numeric(input$plot_p_before_noon),
+    CAT_total_btf_cpue = input$plot_CAT_total_btf_cpue,
+    CAT_chinook_btf_comp = input$plot_CAT_chinook_btf_comp,
+    CAT_chum_btf_comp = input$plot_CAT_chum_btf_comp,
+    CAT_sockeye_btf_comp = input$plot_CAT_sockeye_btf_comp,
+    CAT_mean_Nwind = input$plot_CAT_mean_Nwind,
+    CAT_mean_Ewind = input$plot_CAT_mean_Ewind
+  )
+})
+```
+
+```{r plot-output}
+# plot the relationship between the response variable and day of the season
+# settings argument is a list that says which prediction covariates to keep and display
+# e.g., default is to plot with mean BTF values, but could supply "min" or "max" to see how this changes predicted curve
+br()
+br()
+br()
+br()
+br()
+br()
+
+div(
+  style = "margin: auto; width: 75%",
+  renderPlot(expr = {
+    par(mar = c(3.5,3.5,1,1), mgp = c(1.5,0.2,0), tcl = -0.25, cex = 1.5)
+    relationship_plot(response = input$plot_response,
+           settings = rvals$plot_settings,
+           separate_day_types = TRUE,
+           # pred_day = KuskoHarvData:::to_days_past_may31(input$date),
+           # pred_response = rvals$preds[,input$plot_response]
+           pred_day = NULL,
+           pred_response = NULL
+           )
+    # abline(v = c(20, 31))
+  })
+)
+```
+
+## `r icon("info-circle")` Statistical Info. {.tabset}
+
+### Methods Overview {#section-methods-overview}
+
+#### Summary
+
+:::{.p style="margin-left: 30px;"}
+
+**Goal**: Obtain accurate predictions of harvest by species for a proposed fishing opportunity.
+
+**Overall Approach**: Use historical outcomes and conditions to develop relationships, then use them to obtain predictions of outcomes based on the expected conditions for the current year.
+
+**Statistical Approach**: Quantify relationships using several linear regression models for each outcome variable.
+Perform AIC model-averaging with the models that make up the top 75% of model weight to obtain predictions that account for model uncertainty.
+Predictive performance of models was assessed using leave-one-out cross-validation.
+:::
+
+#### Outcome Variables that Determine Harvest
+
+:::{.p style="margin-left: 30px;"}
+
+Daily harvest of a given species is the product of the values of three outcome variables:
+
+$$
+\mathrm{Harvest_{species} = number\space of\space trips \times total\space salmon\space catch\space per\space trip \times \%Composition_{species}}
+$$
+
+Rather than predict harvest directly, the tool predicts each of the three outcome variables, which are then multiplied to obtain predictions of harvest.
+This is because the three outcome variables may vary in more predictable ways than total harvest does.
+:::
+
+#### Relationships and Prediction
+
+:::{.p style="margin-left: 30px;"}
+
+The outcome variables vary in somewhat predictable ways throughout the season.
+For example, the number of total drift trips generally decreases throughout the season, as does the percent composition of Chinook salmon in the catch.
+So we could consider "day of the season" a condition variable that may be useful for predicting the values of these outcomes.
+
+The statistical analysis behind this tool uses **linear regression** modeling to build relationships between outcome variables and condition variables.
+Take the figure below as an example: the outcome variable decreases on average with increasing values of the condition variable. 
+The red line is the model -- it estimates the average value of the outcome at a given condition value.
+Once we have the relationship
+
+<figure align="center">
+  <img src="resources/scatter-1.png" height="35%" width = "35%"/>
+  <figcaption>
+    Hypothetical relationship between an outcome variable and a condition variable.
+    The grey dotted lines show how the relationship is used to make a prediction.
+  </figcaption>
+</figure>
+
+In addition, we may have reason to believe that outcome variables are influenced by more than one condition variables, such as the in-river salmon abundance or the weather.
+We can build models that account for more than one condition variable at a time; consider the example below where in addition to condition variable #1, there is also a condition variable #2 which categorizes the data into two groups: A and B.
+In this case, the model will produce a different prediction for the same value of condition variable #1 depending on the value of condition variable #2.
+
+<figure align="center">
+  <img src="resources/scatter-2.png" height="35%" width = "35%"/>
+  <figcaption>
+    Hypothetical relationship between an outcome variable and two condition variables: one numerical and one categorical.
+    The grey dotted lines show that there are two model predictions at a given value of condition #1: one that applies when condition variable #2 is group A and one for when condition variable #2 is group B. 
+  </figcaption>
+</figure>
+
+:::
+
+#### Condition Variables
+
+:::{.p style="margin-left: 30px;"}
+
+Care must be used when selecting which condition variables to assess for predicting outcomes.
+Condition variables must be measurable and available in the past and future.
+Importantly, they should have a plausible mechanism for causing the outcome variable to vary.
+
+The table below shows which condition variables were included as part of the analysis.
+Notice that not all condition variables were assessed as predictors for all outcomes, and that not all assessed variables made it into the final analysis because they had little-to-no predictive utility.
+
+<details>
+<summary>Click to view table</summary>
+
+```{r}
+tab = c(
+# Variable               Description                                                      EFFORT CPT    %CHIN  %CHUM  %SOCK  
+  "Day",                 "Number of days past May 31st",                                  "YES", "YES", "YES", "YES", "YES",
+  "Day^2",               "Quadratic form; allows non-linear time trends",                 "NO" , "YES", "NO" , "NO" , "NO" ,
+  "Hours Open",          "Number of hours fishing was allowed that day",                  "YES", "YES", "NO" , "NO" , "NO" ,
+  "Fished Yesterday",    "Yes/No; whether fishing was allowed the previous day",          "YES", "YES", "NO" , "NO" , "NO" ,
+  "Weekend",             "Yes/No; whether the day was Saturday or Sunday",                "YES", "NO" , "NO" , "NO" , "NO" ,
+  "% Before Noon",       "Proportion of fishing hours that occured before noon that day", "YES", "YES", "NO" , "NO" , "NO" ,
+  "BTF CPUE",            "Total daily Bethel Test Fishery CPUE (Chinook+chum+sockeye)",   "YES", "YES", "NO" , "NO" , "NO" ,
+  "BTF % Chinook",       "Daily proportion that Chinook CPUE made up of the total",       "YES", "NO" , "YES", "NO" , "NO" ,
+  "BTF % Chum",          "Daily proportion that chum CPUE made up of the total",          "NO" , "NO" , "NO" , "YES", "NO" ,
+  "BTF % Sockeye",       "Daily proportion that sockeye CPUE made up of the total",       "NO" , "NO" , "NO" , "NO" , "YES",
+  "Air Temperature",     "Daily average air temperature",                                 "TRY", "NO" , "NO" , "NO" , "NO" ,
+  "Relative Humidity",   "Daily average percent relative humidity",                       "TRY", "NO" , "NO" , "NO" , "NO" ,
+  "Precipitation",       "Daily total precipitation",                                     "TRY", "NO" , "NO" , "NO" , "NO" ,
+  "Wind Speed",          "Daily average wind speed",                                      "TRY", "TRY", "NO" , "NO" , "NO" ,
+  "Gust Wind Speed",     "Daily maximum gust speed",                                      "TRY", "TRY", "NO" , "NO" , "NO" ,
+  "Northerly Wind Speed","Daily average northerly wind speed vector",                     "YES", "YES", "NO" , "NO" , "NO" ,
+  "Easterly Wind Speed", "Daily average easterly wind speed vector",                      "YES", "YES", "NO" , "NO" , "NO" ,
+  "Water Clarity",       "Daily index of water clarity",                                  "NO" , "TRY", "NO" , "NO" , "NO" ,
+  "Water Temperature",   "Daily water temperature",                                       "NO" , "TRY", "NO" , "NO" , "NO" 
+)
+
+tab = matrix(tab, ncol = 7, byrow = TRUE)
+
+tab[tab == "YES"] = "&#9745;"
+tab[tab == "NO"] = "&#9744;"
+tab[tab == "TRY"] = "&#9746;"
+
+tab[,3:7] = cell_spec(tab[,3:7], "html", font_size = "x-large", escape = FALSE)
+
+type = c(rep("Timing", 6), rep("Bethel Test Fishery", 4), rep("Weather<sup>1<\\sup>", 7), rep("Water<sup>2<\\sup>", 2))
+
+tab = cbind(type, tab)
+
+kbl(tab, col.names = c(" ", "Condition Variable", "Description", "Trips/Day", "Catch/Trip", "Chinook", "Chum", "Sockeye"), escape = FALSE, align = "lllccccc",
+    caption = 'All condition variables assessed as part of the predictive analyses for each outcome variable. The symbol meanings are: <span style="font-size: medium;">&#9744;</span> (not assessed), <span style="font-size: medium;">&#9746;</span> (assessed but not part of final analysis), and <span style="font-size: medium;">&#9745;</span> (in final analysis).') %>%
+  kable_styling(full_width = TRUE, bootstrap_options = c("condensed")) %>%
+  add_header_above(c(" " = 5, "% Composition" = 3), bold = TRUE) %>%
+  add_header_above(c(" " = 3, "Outcome Variable" = 5), bold = TRUE) %>%
+  column_spec(1:2, bold = TRUE) %>%
+  column_spec(1, width = "80px") %>%
+  column_spec(2, width = "120px") %>%
+  column_spec(3, width = "180px") %>%
+  collapse_rows(1) %>%
+  footnote(number = c("Weather variables measured at Bethel Airport.", "Water variables measured during daily Bethel Test Fishery sampling."), number_title = "Notes") %>%
+  
+  column_spec(3:7, width = "65px")
+```
+
+</details>
+:::
+
+#### Model Uncertainty
+
+:::{.p style="margin-left: 30px;"}
+
+The table above shows all of the condition variables that were assessed as potential predictors of the outcome variables.
+However, there is uncertainty about which condition variables should be used in the model.
+We do not want to include variables that have little predictive utility, but we also do not want to leave out something important.
+Thus, the analysis uses many models that range from the simplest (no condition variables, the average outcome is the best available prediction) to the most complex (all assessed variables included in one model).
+
+Rather than selecting one single best model for prediction (which would ignore the uncertainty about which model is best), we perform **model-averaging**.
+This is where we average the predictions from each model so that those that are expected to produce better predictions carry more weight in the average.
+We use an index of predictive performance called AIC to calculate the weighting factors -- AIC assigns a score to a model based on its ability to explain variability in the historical data with the fewest condition variables possible.
+:::
+
+#### Cross-Validation
+
+:::{.p style="margin-left: 30px;"}
+It is important to quantify the reliability of predictions.
+We should not expect perfect predictions every time, but instead we should expect that predictions are accurate and precise on average.
+Accuracy is about bias: sometimes the predictions are higher than the true value and some times lower, but accurate predictions are on average unbiased.
+Precision is about variability: how far away from the true value are predictions.
+
+We can quantify the reliability (accuracy and precision) using **leave-one-out cross-validation** (LOO).
+This is a technique where we leave out one data point at a time from the relationship, and use the relationship based on the remaining data points to predict the value of the left-out data point.
+We then measure how far away the prediction was from the actual data point (i.e., the error; $\mathrm{error} = \mathrm{predicted} - \mathrm{actual}$).
+We then repeat this for all data points and calculate the error made in predicting each left-out data point and summarize them.
+:::
+
+### AIC {.tabset .tabset-pills}
+
+---
+
+:::{.blue}
+<details>
+  <summary>`r icon("question-circle")` **AIC Tables**</summary>
+  <br>
+  AIC is a score assigned to each regression model that we use to determine how much weight to assign to its predictions when taking the average.
+  The tables on this page show all regression models that are included in the average prediction for each outcome variable.
+  The models differ depending on which condition variables they include.
+  Models with low "Delta AIC" scores (close to zero) are those closest in predictive performance to the best model, and thus carry the most weight.
+</details>
+:::
+
+---
+
+```{r aic-kable-fn}
+aic_kable = function(fit_list) {
+  KuskoHarvPred:::AIC_table(fit_list, digits = 2) %>%
+    kbl("html", col.names = c("Model", "K", "Delta AICc", "Weight"), row.names = FALSE,
+        caption = "Models included in the model-averaged prediction for this outcome variable. 'K' is the number of parameters, 'Delta AICc' is an index of predictive performance relative to the single best predictive model, and 'Weight' is the weight that predictions from each model carry in the average.") %>%
+    kable_styling(full_width = TRUE, bootstrap_options = c("striped", "condensed")) %>%
+    column_spec(1, monospace = TRUE)
+}
+```
+
+```{r aic-kable-ui}
+selectInput("aic_response", "Outcome Variable", choices = response_choices, selected = "effort")
+```
+
+```{r aic-kable-output}
+renderUI(HTML(aic_kable(KuskoHarvPred:::fit_lists[[input$aic_response]])))
+```
+
+### Variable Importance {.tabset .tabset-pills}
+
+---
+
+:::{.blue}
+<details>
+  <summary>`r icon("question-circle")` **Variable Importance**</summary>
+  <br>
+  The tables on this page describe how important each condition variable is for predicting each outcome variable.
+  Variable importance is the sum of the model weights for all models that include each condition variable.
+</details>
+:::
+
+---
+
+```{r importance-kable-fn}
+importance_kable = function(fit_list) {
+  tab = MuMIn::importance(fit_list)
+tab = as.data.frame(tab)
+tab = cbind(Variable = rownames(tab), Importance = KuskoHarvEst:::percentize(tab$tab))
+tab %>%
+kbl("html", align = "lr") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("condensed", "striped")) %>% column_spec(1, monospace = TRUE)
+}
+```
+
+```{r importance-kable-ui}
+selectInput("importance_response", "Outcome Variable", choices = response_choices, selected = "effort")
+```
+
+```{r importance-kable-output}
+renderUI(HTML(importance_kable(KuskoHarvPred:::fit_lists[[input$importance_response]])))
+```
+
+### Effect Sizes {.tabset .tabset-pills}
+
+---
+
+:::{.blue}
+<details>
+  <summary>`r icon("question-circle")` **Effect Sizes**</summary>
+  <br>
+  The effect size represents how much the outcome variable changes on average with one unit change in the condition variable.
+  The values shown in the figures below have been standardized so that they are scaled to their uncertainy, which makes them comparable even though the different variables are measured on different scales.
+  The effect size estimates shown here are averaged across models.
+  
+  Positive (blue) values mean that the outcome variable increases on average with increasing values of the condition variable.
+</details>
+:::
+
+---
+
+```{r eff-size-plot-fn}
+eff_size_plot = function(fit_list) {
+  mod_avg = MuMIn::model.avg(fit_list)
+  x = MuMIn::coefTable(mod_avg, full = TRUE)
+  x = x[-1,]
+  eff_sizes = sort(x[,"Estimate"]/x[,"Std. Error"])
+  mp = barplot(eff_sizes, horiz = TRUE, las = 1, xlim = max(abs(eff_sizes)) * c(-1.05,1.05),
+               space = 0,
+               col = ifelse(eff_sizes <= 0, "salmon", "skyblue"),
+               border = "white")
+  
+  usr = par("usr")
+  axis(side = 1, at = axisTicks(usr[1:2], log = FALSE), labels = FALSE, lwd = 2)
+  axis(side = 2, at = mp, labels = FALSE, lwd = 2)
+  segments(usr[1], usr[3], usr[2], usr[3], xpd = TRUE, lwd = 2)
+  segments(usr[1], usr[3], usr[1], usr[4], xpd = TRUE, lwd = 2)
+  abline(v = 0, col = "grey50", lty = 1, lwd = 4, lend = "square")
+  
+  mtext(side = 1, line = 1.5, "Model-Averaged Effect Size", cex = par("cex"))
+  mtext(side = 1, line = 2.5, "(Est/SE)", cex = par("cex"))
+}
+```
+
+```{r eff-size-plot-ui}
+selectInput("eff_size_response", "Outcome Variable", choices = response_choices, selected = "effort")
+```
+
+```{r eff-size-plot-output}
+div(
+  style = "margin: auto; width: 75%",
+  renderPlot(expr = {
+    par(mar = c(3.5,8,1,1),mgp = c(1.5,0.3,0), tcl = -0.25, cex = 1.5)
+
+    eff_size_plot(KuskoHarvPred:::fit_lists[[input$eff_size_response]])
+    })
+)
+```
+
+### Cross-Validation {.tabset .tabset-pills}
+
+---
+
+:::{.blue}
+<details>
+  <summary>`r icon("question-circle")` **Cross-Validation**</summary>
+  <br>
+  
+  Cross-validation is a technique we use to measure the reliability of the predictions.
+  We use **leave-one-out** cross-validation (LOO) which involves leaving out one data point at a time from the relationship, and using the relationship based on the remaining data points to predict the value of the left-out data point.
+  We then measure how far away the prediction was from the actual data point (i.e., the error; $\mathrm{error} = \mathrm{predicted} - \mathrm{actual}$).
+  We then repeat this for all data points and calculate the error made in predicting each left-out data point and summarize them.
+  
+  Before summarizing the errors, we convert them to a **percent error**: $\mathrm{error}/\mathrm{actual} \times 100\%$.
+  This is important to do since it makes the scale of the error be relative to the magnitude of the actual value.
+  For example, if the prediction is wrong by 1,000 fish (error), this is a much larger error if the true value is 2,000 fish (50% error) versus if it was  10,000 fish (10% error).
+  Said another way, we should be more concerned about an error of 1,000 fish if that is large relative to the actual value.
+  Because the scale of the outcomes vary throughout the season, standardizing with percents ensures that errors are comparable across data points.
+
+  We use two statistics to summarize the errors:
+
+* **Mean % LOO Error (MPE)**: Quantifies accuracy by taking the average of all percent errors, including their original sign (positive or negative). If the predictions are unbiased (accurate), then this value will be near 0%, i.e., under- and over-predictions cancel out. Values greater than zero indicate the predictions tend to be higher than the actual value negative values indicate predictions tend to be lower than the actual value.
+* **Mean Absolute % LOO Error (MAPE)**: Quantifies precision by taking the average of all percent errors, discarding their original sign (all errors converted to positive errors before taking the mean). This represents how far the average prediction is from the actual value so smaller values mean more precise predictions.
+
+In summarizing the errors, we categorize them into these three time periods of the season. This allows us to quantify how the reliability of predictions changes throughout the season.
+
+```{r period-table}
+counts = table(KuskoHarvData:::get_period(dat$day))
+counts = as.numeric(counts)
+counts = c(counts, sum(counts))
+
+tab = data.frame(
+  Period = c(1:3, "All"),
+  dates = c("June 12 -- June 19", "June 20 -- June 30", "July 1 -- End-of-Season", "June 12 -- End-of-Season"),
+  counts = counts,
+  significance = c("First week of drift fishing allowed", "Remainder of June", "Dates in July", "Whole Season")
+)
+
+kbl(tab, "html", col.names = c("Period", "Date Range", "Historical Data Points", "Significance"), align = "clcl") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) %>%
+  column_spec(1, bold = TRUE)
+```
+
+</details>
+:::
+
+---
+
+#### Summary Plots
+
+These figures show the leave-one-out (LOO) cross-validation error summaries for each outcome variable and time period of the season.
+
+```{r cv-plot-fn}
+# names of the LOO Periods
+period_labels = c("6/12-6/19", "6/20-6/30", "7/1-7/31", "All")
+
+# function to take XX% and go to 0.XX
+unpercentize = function(x) {
+  x %<>%
+    str_remove("%") %>%
+    str_remove("<") %>%
+    as.numeric
+  x/100
+}
+
+# function to make LOO error summary barplots
+loo_plot = function(var) {
+  
+  # extract the pre-processed loo error summaries
+  errors = KuskoHarvPred:::loo_output$error_summary
+  
+  # rename the response variable
+  errors = cbind(new_response = c("effort", "total_cpt", "chinook_comp", "chum_comp", "sockeye_comp", "chinook_harv", "chum_harv", "sockeye_harv"), errors)
+
+  # extract only info needed for plotting
+  x = unpercentize(errors[errors$new_response == var,-c(1:5)])
+  x_mpe = x[1:4] * 100
+  x_mape = x[5:8] * 100
+
+  # make the yaxis limits
+  min_val = ifelse(min(x_mpe) < 0, min(x_mpe), 0)
+  y_diff = max(x_mpe) - min_val
+  if (min_val == 0) {
+    ylim = c(0, max(x_mpe) + y_diff * 0.1)
+  } else {
+    ylim = c(min_val - y_diff * 0.1, max(x_mpe) + y_diff * 0.1)
+  }
+  
+  # make the MPE barplot
+  mp = barplot(x_mpe, ylim = ylim, xaxt = "n", yaxt = "n", border = "white", col = ifelse(x_mpe < 0, "salmon", "skyblue"), main = "Mean % LOO Error\n(Accuracy)", space = 0)
+  usr = par("usr"); ydiff = diff(usr[3:4])
+  text(x = mp, y = ifelse(x_mpe < 0, x_mpe - ydiff * 0.035, x_mpe + ydiff * 0.035), labels = paste0(x_mpe, "%"), col = "grey50", font = 3)
+  axis(side = 1, at = mp, labels = period_labels, las = 1, lwd = 2)
+  axis(side = 2, at = axisTicks(usr[3:4], log = FALSE), labels = paste0(axisTicks(usr[3:4], log = FALSE), "%"), lwd = 2)
+  abline(h = 0, lwd = 2, col = "grey", lend = "square")
+  segments(usr[1], usr[3], usr[2], usr[3], xpd = TRUE, lwd = 2)
+  segments(usr[1], usr[3], usr[1], usr[4], xpd = TRUE, lwd = 2)
+  
+  # make the MAPE barplot
+  mp = barplot(x_mape, ylim = c(0, max(x_mape)) * 1.2, xaxt = "n", yaxt = "n", border = "white", col = "skyblue", main = "Mean Absolute % LOO Error\n(Precision)", space = 0)
+  usr = par("usr"); ydiff = diff(usr[3:4])
+  text(x = mp, y = ifelse(x_mape < 0, x_mape - ydiff * 0.035, x_mape + ydiff * 0.035), labels = paste0(x_mape, "%"), col = "grey50", font = 3)
+  axis(side = 1, at = mp, labels = period_labels, las = 1, lwd = 2)
+  axis(side = 4, at = axisTicks(usr[3:4], log = FALSE), labels = paste0(axisTicks(usr[3:4], log = FALSE), "%"), lwd = 2)
+  abline(h = 0, lwd = 2, col = "grey", lend = "square")
+  segments(usr[1], usr[3], usr[2], usr[3], xpd = TRUE, lwd = 2)
+  segments(usr[2], usr[3], usr[2], usr[4], xpd = TRUE, lwd = 2)
+}
+```
+
+```{r cv-plot-ui}
+selectInput("cv_plot_response", "Variable",
+            choices = list("Outcomes" = response_choices, "Harvest by Species" = c("Chinook" = "chinook_harv", "Chum" = "chum_harv", "Sockeye" = "sockeye_harv")), selected = "effort")
+```
+
+```{r cv-plot-output}
+div(
+  style = "margin: auto; width: 100%",
+  renderPlot(expr = {
+    par(mar = c(0.0,1,4,0.0), mfrow = c(1,2), mgp = c(2,0.35,0), tcl = -0.25, oma = c(2,2,0,2), cex = 1.5, cex.axis = 0.95)
+    loo_plot(input$cv_plot_response)
+  })
+)
+```
+
+#### Summary Table
+
+This table shows the leave-one-out (LOO) cross-validation error summaries for each outcome variable and time period of the season.
+The values are the same as those plotted on the "Summary Plots" page.
+
+```{r cv-table-output}
+loo_output = KuskoHarvPred:::loo_output
+
+loo_output$error_summary$n_models[is.na(loo_output$error_summary$n_models)] = " — "
+loo_output$error_summary$response = c("Drift Trips/Day", "Salmon Catch/Trip", "Chinook Composition", "Chum Composition", "Sockeye Composition", "Chinook Harvest", "Chum Harvest", "Sockeye Harvest")
+
+kable(loo_output$error_summary[,-c(1:2)], "html", align = "lccccccccc", col.names = c("Variable", "N Models", period_labels, period_labels),) %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) %>%
+  add_header_above(c(" " = 2, "Mean % LOO Error (Accuracy)" = 4, "Mean Absolute % LOO Error (Precision)" = 4)) %>%
+  column_spec(1, bold = TRUE)
+```
+
+#### Observed vs. Predicted Plots
+
+These figures show the relationship between model predictions and the actual value.
+Recall that the predicted values are obtained using leave-one-out methods, so the prediction is made without the model "knowing" that the outcome occurred.
+The color of the points represents the time period of the season and the dashed line represents 1:1 equality (if a point is on the line, the prediction was exactly equal to the actual value).
+
+```{r obs-v-pred-plot-fn}
+loo_preds = loo_output$loo_preds
+
+pred_v_obs_plot = function(var) {
+  
+  yhat = loo_preds[,var]
+  yobs = dat[,var]
+  period = KuskoHarvData:::get_period(dat$day)
+  
+  # obtain the axis limits
+  if (str_detect(var, "comp")) {
+    xlim = ylim = c(0,1)
+  } else {
+    xlim = ylim = range(0, yhat, yobs) * 1.1
+  }
+
+  # blank plot with correct dimensions and labels
+  plot(x = yobs, y = yhat, xlab = "Observed Value", ylab = "Predicted Value",
+       xlim = xlim, ylim = ylim, type = "n", axes = FALSE)
+
+  # draw 1:1 equality line
+  abline(0,1, lty = 2)
+
+  # decide colors
+  base_col = ifelse(period == 1, "skyblue", ifelse(period == 2, "orange", ifelse(period == 3, "salmon", "grey20")))
+  alpha = c(bg = 0.5, col = 0.75)
+
+  # draw the points
+  points(x = yobs, y = yhat, pch = 21, cex = 1.75, bg = scales::alpha(base_col, alpha["bg"]), col = scales::alpha(base_col, alpha["col"]))
+
+  # draw the error summaries
+  # vals = get_errors(yhat = yhat, yobs = yobs)$summary
+  # names = paste0(names(vals), ": ")
+  # vals = round(vals, 2)
+  # vals[c("MPE", "MAPE")] = paste0(vals[c("MPE", "MAPE")] * 100, "%")
+  # legend("topleft", inset = c(-0.05,-0.025), legend = paste0(names, vals), text.font = 3, bty = "n", cex = 0.9)
+
+  legend("bottomright", title = "Period", legend = c("6/12-6/19", "6/20-6/30", ">= 7/1"), pch = 21,
+         col = scales::alpha(c("skyblue", "orange", "salmon"), alpha["col"]),
+         pt.bg = scales::alpha(c("skyblue", "orange", "salmon"), alpha["bg"]),
+         pt.cex = 2, cex = 0.9,
+         bty = "n"
+         )
+
+  # draw axes
+  if (str_detect(var, "comp")) {
+    axis(side = 1, at = seq(0, 1, 0.2), labels = paste0(seq(0, 1, 0.2) * 100, "%"), lwd = 2)
+    axis(side = 2, at = seq(0, 1, 0.2), labels = paste0(seq(0, 1, 0.2) * 100, "%"), lwd = 2)
+  } else {
+    axis(side = 1, lwd = 2); axis(side = 2, lwd = 2)
+  }
+}
+```
+
+```{r obs-v-pred-plot-ui}
+selectInput("obs_v_pred_plot_response", "Variable", 
+            choices = list("Outcomes" = response_choices, "Harvest by Species" = c("Chinook" = "chinook_harv", "Chum" = "chum_harv", "Sockeye" = "sockeye_harv")), selected = "effort")
+```
+
+```{r obs-v-pred-plot-output}
+div(
+  style = "margin: auto; width: 60%",
+  renderPlot(expr = {
+    par(mar = c(3,3,1,1), mgp = c(2,0.35,0), tcl = -0.25, cex = 1.5, xaxs = "i", yaxs = "i")
+    pred_v_obs_plot(input$obs_v_pred_plot_response)
+  })
+)
+```
+
+## `r icon("chevron-right")` More Info. {.tabset}
+
+### `r icon("users")` Collaborators
+
+_On this tab, I will acknowledge everyone who has contributed to the development of this tool._
+  
+### `r icon("code")` Code
+
+_On this tab, I will link to the various code sources for this tool._
+
+This will include links to the `r icon("github")` GitHub repositories for each of the 'KuskoHarv*' family of packages:
+
+* KuskoHarvEst
+* KuskoHarvData
+* KuskoHarvPred
+
+as well as a link that goes direct to the Rmd source code for the tool.
+
+### `r icon("question-circle")` Help
+
+Questions may be directed to the tool developer: Ben Staton (<bstaton.qes@gmail.com>)
+
+### `r icon("dollar-sign")` Funding
+
+The development of this tool was made possible by a grant to Quantitative Ecological Services, LLC from the Arctic-Yukon-Kuskokwim Sustainable Salmon Initiative, administered by the Bering Sea Fisherman's Association under project #AC-2106.
