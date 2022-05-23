@@ -369,6 +369,8 @@ renderUI(HTML(rvals$pred_harv_kable))
   The figure shows how the value of different outcome variables change throughout the season.
   Additionally, you can see how changes in the other condition variables impact the predicted value from the model by selecting different options for the other condition variables.
   
+  If you check "Show Uncertainty", a region around the model predicted value will be displayed -- this represents +/- 1 mean absolute % error, obtained using leave-one-out cross-validation and is the area we would expect outcomes to occur due to random variability that the model cannot predict (see `r icon("info-circle")` Statistical Info. > Cross-Validation for more information).
+  
   Not all condition variables are used to predict all outcome variables.
   For example, "hours of fishing" is a condition variable that is used to predict drift trips/day and salmon catch/day, but not the species composition outcome variables.
   This is why "hours of fishing" disappears when viewing the species composition relationships.
@@ -382,9 +384,10 @@ CAT_btf_choices = c("Maximum" = "max", "Average" = "mean", "Minimum" = "min")
 response_choices = c("Drift Trips/Day" = "effort", "Salmon Catch/Trip" = "total_cpt", "Chinook Composition" = "chinook_comp", "Chum Composition" = "chum_comp", "Sockeye Composition" = "sockeye_comp")
 hr()
 selectInput(inputId = "plot_response", label = p("Outcome Variable", style = "font-size: 15pt;"), choices = response_choices, width = "25%")
+checkboxInput("draw_mape_range", "Show Uncertainty", value = FALSE)
 hr()
-p(strong("Condition Variables"), style = "font-size: 15pt;")
 
+p(strong("Condition Variables"), style = "font-size: 15pt;")
 fillRow(
   column(
     width = 12,
@@ -484,7 +487,8 @@ div(
            # pred_day = KuskoHarvData:::to_days_past_may31(input$date),
            # pred_response = rvals$preds[,input$plot_response]
            pred_day = NULL,
-           pred_response = NULL
+           pred_response = NULL, 
+           draw_mape_range = input$draw_mape_range
            )
     # abline(v = c(20, 31))
   })
