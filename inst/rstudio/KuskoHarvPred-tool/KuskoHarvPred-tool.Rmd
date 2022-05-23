@@ -261,20 +261,30 @@ observeEvent(input$use_avg_btf, {
 <details>
   <summary>`r icon("info-circle")` **Information about `r icon("table")` Outputs**</summary>
   <br>
-  <p style="font-size: 12pt;"><b>This page displays the predicted outcomes and harvest based on the input conditions.</b></p>
+  <p style="font-size: 12pt;"><b>This page displays the model-predicted outcomes and harvest based on the input conditions.</b></p>
   
-  The top table shows the predicted values for each outcome variable: drift trips, catch per trip, and species composition.
+  <p style="font-size: 12pt;"><em>You may also adjust the predictions to align with your expectations.</em></p>
+  
+  **Model-Predicted Values**
+  
+  The table shows the predicted values for each outcome variable: drift trips, catch per trip, and species composition.
   The values are obtained using relationships that are shown on the `r icon("chart-line")` **Predictive Relationships** page.
   
-  The bottom table shows the harvest by species implied by the predicted outcomes, and are obtained by multiplying drift trips, catch per trip, and species composition.
+  The table also shows the harvest by species implied by the predicted outcomes, and are obtained by multiplying drift trips, catch per trip, and species composition.
+  
+  **User-Adjusted Predictions**
+  
+  If you select "Adjust Predictions", you can set the outcome variables to specific values (or ranges of values) to align with what you expect to occur.
+  The output you select and the implied predicted harvest will be displayed in the table as well.
+  Note that the species composition predictions must add up to 100% -- if you change the value for one species, the other two species will change automatically to ensure this.
   
 </details>
 :::
 
 ---
 
-```{r prep-predictive-data}
-
+```{r regression-predictions}
+# convert widget inputs to usable formats for regression 
 reactive({
   rvals$start_time = process_start_date(input$date, input$start_time)
   rvals$end_time = process_end_date(input$date, input$end_time)
@@ -283,6 +293,7 @@ reactive({
   rvals$wind_angle = wind_angle_key[input$wind_direction]
 })
 
+# create the complete predictive data set based on widget inputs
 reactive({
   rvals$df = data.frame(
     day = KuskoHarvData:::to_days_past_may31(dates = input$date),
@@ -299,54 +310,202 @@ reactive({
   )
 })
 
+# produce regression model predictions
 reactive({
+  # obtain predicted response variables
   rvals$preds = as.data.frame(lapply(KuskoHarvPred:::fit_lists, function(fit_list) predict_model_avg(fit_list, rvals$df)))
   
+  # restandardize composition variables
   rvals$comp_preds = c(chinook = rvals$preds$chinook_comp,  chum = rvals$preds$chum_comp, sockeye = rvals$preds$sockeye_comp)
-  rvals$comp_preds_adj = rvals$comp_preds/sum(rvals$comp_preds)
+  rvals$comp_preds_adj = KuskoHarvEst:::smart_round(rvals$comp_preds/sum(rvals$comp_preds), 2)
+})
+```
+
+```{r user-adjustment-ui}
+
+# allow user to tweak predictions
+checkboxInput("show_user_adjust_preds", label = "Adjust Predictions?", value = FALSE)
+
+fillRow(
   
-  rvals$pred_harv = data.frame(
-    Species = c("Chinook", "Chum", "Sockeye", "Total"),
-    "Predicted Harvest" = c(
-      rvals$preds$effort * rvals$preds$total_cpt * rvals$comp_preds_adj["chinook"],
-      rvals$preds$effort * rvals$preds$total_cpt * rvals$comp_preds_adj["chum"],
-      rvals$preds$effort * rvals$preds$total_cpt * rvals$comp_preds_adj["sockeye"],
-      rvals$preds$effort * rvals$preds$total_cpt
+  # table showing output of predictions
+  column(
+    width = 12,
+    h3("Predictions"),
+    helpText("Model-predicted outcomes come from the relationships in the ", icon("chart-line"), "Predictive Relationships tab. Harvest predictions come from multiplying ", strong("drift trips"), "by", strong("salmon catch/trip"), "by", strong("species composition"), "."),
+    wellPanel(
+      renderUI(HTML(rvals$preds_kable))
+    )
+  ),
+  
+  # optional sliders to adjust model-predicted values
+  hidden(
+    div(
+      id = "user_adjust_preds",
+      column(
+        width = 12,
+        h3("Adjust Predictions"),
+        helpText("If you think the outcomes will be different, you can adjust them here to compare with model predictions. The default values are centered on the model prediction, and for drift trips and salmon catch/trip the two endpoints span the range of possible values based on historical variability (+/- 1MAPE)."),
+        wellPanel(
+          sliderInput("user_effort", "Drift Trips", min = 0, max = 1000, value = c(500, 700), step = 10),
+          sliderInput("user_total_cpt", "Salmon Catch/Trip", min = 0, max = 100, value = c(10, 20), step = 1),
+          sliderInput("user_chinook_comp", "Chinook Composition", min = 0, max = 100, value = 50, post = "%"),
+          sliderInput("user_chum_comp", "Chum Composition", min = 0, max = 100, value = 25, post = "%"),
+          sliderInput("user_sockeye_comp", "Sockeye Composition", min = 0, max = 100, val = 25, post = "%"),
+          actionButton("reset_user", "Reset to Default", icon("sync"))
+        )
+      )
     )
   )
+)
+
+# function to set the values of the user-adjusted sliders
+update_user_sliders = function(input, rvals) {
   
-  rvals$preds_kable = data.frame(
-    Variable = c("Drift Trips", "Salmon Catch/Trip", "Chinook Composition", "Chum Composition", "Sockeye Composition"),
-    "Predicted Value" = c(
-      as.character(round(rvals$preds$effort)),
-      as.character(round(rvals$preds$total_cpt, 1)),
-      paste0(KuskoHarvEst:::smart_round(rvals$comp_preds_adj, 2) * 100, "%")
-    )
-  ) %>%
-    kbl("html", align = "lr", col.names = c("Outcome Variable", "Predicted Value"),
-        caption = "These outcome variables are predicted from relationships based on historical data using the input values.") %>%
-    kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) %>%
-    column_spec(1, bold = TRUE, width = "350px") %>%
-    column_spec(2, width = "150px")
-    
-  rvals$pred_harv_kable = rvals$pred_harv %>%
-    kbl("html", digits = 0, format.args = list(big.mark = ","), col.names = c("Species", "Predicted Value"), row.names = FALSE,
-        caption = "These harvest predictions are obtained by multiplying the predicted values of <b>drift trips</b> by <b>salmon catch/trip</b> by <b>species composition</b> from above.", escape = FALSE) %>%
-    kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) %>%
-    column_spec(1, bold = TRUE, width = "350px") %>%
-    column_spec(2, width = "150px")
+  effort_error = KuskoHarvPred:::get_mape("effort", KuskoHarvData:::get_period(input$date)) * rvals$preds$effort
+  total_cpt_error = KuskoHarvPred:::get_mape("total_cpt", KuskoHarvData:::get_period(input$date)) * rvals$preds$total_cpt
+  
+  updateSliderInput(inputId = "user_effort", 
+                    value = c(max(0, round(rvals$preds$effort - effort_error, -1)), min(1000, round(rvals$preds$effort + effort_error, -1))))
+  updateSliderInput(inputId = "user_total_cpt", 
+                    value = c(max(0, ceiling(rvals$preds$total_cpt - total_cpt_error)), min(1000, round(rvals$preds$total_cpt + total_cpt_error))))
+  updateSliderInput(inputId = "user_chinook_comp", value = unname(rvals$comp_preds_adj["chinook"] * 100))
+  updateSliderInput(inputId = "user_chum_comp", value = unname(rvals$comp_preds_adj["chum"] * 100))
+  updateSliderInput(inputId = "user_sockeye_comp", value = unname(rvals$comp_preds_adj["sockeye"] * 100))
+}
+
+# if predicted values change, reset the sliders
+observeEvent(rvals$preds, {
+  update_user_sliders(input, rvals)
 })
 
+# if the "reset" button is clicked, reset the sliders
+observeEvent(input$reset_user, {
+  update_user_sliders(input, rvals)
+})
+
+# function to calculate the value of two composition sliders when the third is changed
+# to ensure they sum to 100%
+get_other_percents = function(inputId_changed, inputs) {
+  
+  # names of all sliders
+  all_inputIds = c("user_chinook_comp", "user_chum_comp", "user_sockeye_comp")
+  
+  # which were not changed
+  remaining_inputIds = all_inputIds[-which(all_inputIds == inputId_changed)]
+  
+  # amount needed to distribute among the unchanged sliders
+  remaining = 100 - inputs[[inputId_changed]]
+  
+  # proportion of the remaining that should be apportioned to each unchanged slider
+  # keep ratio of two unchanged sliders the same
+  p_remaining_A = inputs[[remaining_inputIds[1]]]/(inputs[[remaining_inputIds[1]]] + inputs[[remaining_inputIds[2]]])
+  p_remaining_B = inputs[[remaining_inputIds[2]]]/(inputs[[remaining_inputIds[1]]] + inputs[[remaining_inputIds[2]]])
+  
+  # create the output vector
+  out = remaining * c(p_remaining_A, p_remaining_B)
+  names(out) = remaining_inputIds
+  out
+}
+
+# when the chinook comp is changed, adjust the other two to sum top 100%
+observeEvent(input$user_chinook_comp, {
+  other_percents = get_other_percents("user_chinook_comp", input)
+  updateSliderInput(inputId = "user_chum_comp", value = unname(other_percents["user_chum_comp"]))
+  updateSliderInput(inputId = "user_sockeye_comp", value = unname(other_percents["user_sockeye_comp"]))
+})
+
+# when the chum comp is changed, adjust the other two to sum top 100%
+observeEvent(input$user_chum_comp, {
+  other_percents = get_other_percents("user_chum_comp", input)
+  updateSliderInput(inputId = "user_chinook_comp", value = unname(other_percents["user_chinook_comp"]))
+  updateSliderInput(inputId = "user_sockeye_comp", value = unname(other_percents["user_sockeye_comp"]))
+})
+
+# when the sockeye comp is changed, adjust the other two to sum top 100%
+observeEvent(input$user_sockeye_comp, {
+  other_percents = get_other_percents("user_sockeye_comp", input)
+  updateSliderInput(inputId = "user_chinook_comp", value = unname(other_percents["user_chinook_comp"]))
+  updateSliderInput(inputId = "user_chum_comp", value = unname(other_percents["user_chum_comp"]))
+})
+
+# remove the user adjustment UI if checkbox is not checked
+observe({
+  toggle(id = "user_adjust_preds", condition = input$show_user_adjust_preds)
+})
 ```
 
-```{r pred-response-kable}
-h3("Predicted Outcomes")
-renderUI(HTML(rvals$preds_kable))
-```
+```{r preds-kable}
 
-```{r pred-harvest-kable}
-h3("Predicted Harvest")
-renderUI(HTML(rvals$pred_harv_kable))
+# function to create output table
+preds_kable = function(input, rvals) {
+  
+  # process regression model predictions: always displayed
+  model_effort = round(rvals$preds$effort)
+  model_total_cpt = ceiling(rvals$preds$total_cpt)
+  model_chinook_comp = rvals$comp_preds_adj["chinook"]
+  model_chum_comp = rvals$comp_preds_adj["chum"]
+  model_sockeye_comp = rvals$comp_preds_adj["sockeye"]
+  model_total_harv = model_effort * model_total_cpt
+  model_chinook_harv = round(model_total_harv * model_chinook_comp, -1)
+  model_chum_harv = round(model_total_harv * model_chum_comp, -1)
+  model_sockeye_harv = round(model_total_harv * model_sockeye_comp, -1)
+  model_total_harv = model_chinook_harv + model_chum_harv + model_sockeye_harv
+  
+  # combine individual quantities into nice formatted data frame for easy kable
+  model_preds = data.frame(
+    quantity = c("Drift Trips", "Salmon Catch/Trip", "Chinook Composition", "Chum Composition", "Sockeye Composition", "Chinook Harvest", "Chum Harvest", "Sockeye Harvest", "Total Harvest"),
+    model = c(prettyNum(model_effort, big.mark = ",", scientific = FALSE), model_total_cpt, KuskoHarvEst:::percentize(c(model_chinook_comp, model_chum_comp, model_sockeye_comp)), prettyNum(c(model_chinook_harv, model_chum_harv, model_sockeye_harv, model_total_harv), big.mark = ",", scientific = FALSE))
+  )
+  
+  # if allowing user-adjusted predictions
+  if (input$show_user_adjust_preds) {
+    
+    # obtain user-adjusted predictions
+    user_effort = round(input$user_effort)
+    user_total_cpt = ceiling(input$user_total_cpt)
+    user_chinook_comp = input$user_chinook_comp/100
+    user_chum_comp = input$user_chum_comp/100
+    user_sockeye_comp = input$user_sockeye_comp/100
+    user_total_harv = user_effort * user_total_cpt
+    user_chinook_harv = round(user_total_harv * user_chinook_comp, -1)
+    user_chum_harv = round(user_total_harv * user_chum_comp, -1)
+    user_sockeye_harv = round(user_total_harv * user_sockeye_comp, -1)
+    user_total_harv = user_chinook_harv + user_chum_harv + user_sockeye_harv
+    
+    # make into a nice data frame
+    user_preds = data.frame(
+      quantity = c("Drift Trips", "Salmon Catch/Trip", "Chinook Composition", "Chum Composition", "Sockeye Composition", "Chinook Harvest", "Chum Harvest", "Sockeye Harvest", "Total Harvest"),
+      user_lwr = c(prettyNum(user_effort[1], big.mark = ",", scientific = FALSE), user_total_cpt[1], KuskoHarvEst:::percentize(c(user_chinook_comp, user_chum_comp, user_sockeye_comp)), prettyNum(c(user_chinook_harv[1], user_chum_harv[1], user_sockeye_harv[1], user_total_harv[1]), big.mark = ",", scientific = FALSE)),
+      user_upr = c(prettyNum(user_effort[2], big.mark = ",", scientific = FALSE), user_total_cpt[2], KuskoHarvEst:::percentize(c(user_chinook_comp, user_chum_comp, user_sockeye_comp)), prettyNum(c(user_chinook_harv[2], user_chum_harv[2], user_sockeye_harv[2], user_total_harv[2]), big.mark = ",", scientific = FALSE))
+    )
+    
+    # combine with the regression predictions
+    preds = merge(model_preds, user_preds, by = "quantity", sort = FALSE)
+    col_names = c(" ", "Model", "User Min.", "User Max.")
+    align = "lccc"
+    header = c(" " = 1, "Predicted Values" = 3)
+  } else {
+    preds = model_preds
+    col_names = c(" ", "Model")
+    align = "lc"
+    header = c(" " = 1, "Predicted Values" = 1)
+  }
+  
+  kbl(preds, "html", col.names = col_names, align = align) %>%
+    kable_styling(full_width = TRUE, bootstrap_options = c("condensed")) %>%
+    column_spec(1, bold = FALSE, italic = TRUE) %>%
+    pack_rows("Predicted Outcomes", 1, 5) %>%
+    pack_rows("Predicted Harvest", 6, 9, hline_before = TRUE) %>%
+    add_header_above(header)
+    
+}
+
+# create the table
+reactive({
+  rvals$preds_kable = preds_kable(input, rvals)
+})
+
 ```
 
 ## `r icon("chart-line")` Predictive Relationships {#section-relationships-tab}
