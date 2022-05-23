@@ -839,15 +839,6 @@ These figures show the leave-one-out (LOO) cross-validation error summaries for 
 # names of the LOO Periods
 period_labels = c("6/12-6/19", "6/20-6/30", "7/1-7/31", "All")
 
-# function to take XX% and go to 0.XX
-unpercentize = function(x) {
-  x %<>%
-    str_remove("%") %>%
-    str_remove("<") %>%
-    as.numeric
-  x/100
-}
-
 # function to make LOO error summary barplots
 loo_plot = function(var) {
   
@@ -858,7 +849,7 @@ loo_plot = function(var) {
   errors = cbind(new_response = c("effort", "total_cpt", "chinook_comp", "chum_comp", "sockeye_comp", "chinook_harv", "chum_harv", "sockeye_harv"), errors)
 
   # extract only info needed for plotting
-  x = unpercentize(errors[errors$new_response == var,-c(1:5)])
+  x = KuskoHarvPred:::unpercentize(errors[errors$new_response == var,-c(1:5)])
   x_mpe = x[1:4] * 100
   x_mape = x[5:8] * 100
 
