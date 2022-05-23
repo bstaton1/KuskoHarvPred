@@ -63,16 +63,17 @@ subset_pred_data = function(response, settings = list()) {
 #' @param separate_day_types Logical; if the variable passed to `response` used the predictor variable `not_first_day`, should two relationships be drawn?
 #' @param pred_day Numeric; the day corresponding to a hypothetical prediction (`pred_response`). Defaults to `NULL` in which case this is not drawn.
 #' @param pred_response Numeric; the predicted response corresponding to a hypothetical day (`pred_day`). Defaults to `NULL` in which case this is not drawn.
-#'
+#' @param draw_make_range Logical; should a shaded region around model prediction that shows +/- 1MAPE be shown?
 #' @export
 
-relationship_plot = function(response, settings = list(), separate_day_types = TRUE, pred_day = NULL, pred_response = NULL) {
+relationship_plot = function(response, settings = list(), separate_day_types = TRUE, pred_day = NULL, pred_response = NULL, draw_mape_range = FALSE) {
 
   # aesthetic settings here
   pt_cex = 1.5
   pt_col = scales::alpha("royalblue", 0.5)
   pt_bg = scales::alpha("skyblue", 0.5)
   line_col = "salmon"
+  poly_col = scales::alpha(line_col, 0.25)
 
   # create the data set
   dat = KuskoHarvData::prepare_regression_data()
@@ -97,13 +98,41 @@ relationship_plot = function(response, settings = list(), separate_day_types = T
     ylim = c(0, max(sub_pred_data$pred_response, max(dat[,response]))) * 1.05
 
     # scatter plot with correct dimensions, labels, etc.
-    plot(dat[,response] ~ day, data = dat, pch = ifelse(not_first_day, 24, 21), ylim = ylim, xaxt = "n", yaxt = "n",
-         ylab = ylab, xlab = "Day of Season", axes = FALSE,
-         bg = pt_bg, col = pt_col, cex = pt_cex, font.lab = 2)
+    plot(dat[,response] ~ day, data = dat, type = "n", ylim = ylim, xaxt = "n", yaxt = "n",
+         ylab = ylab, xlab = "Day of Season", axes = FALSE, font.lab = 2)
+
+    # draw uncertainty if instructed
+    if (draw_mape_range) {
+      # for first day
+      x = subset(sub_pred_data, !not_first_day)
+      period = KuskoHarvData:::get_period(x$day)
+      mape = sapply(period, function(p) get_mape(response, p))
+      lwr = x$pred_response - x$pred_response * mape
+      upr = x$pred_response + x$pred_response * mape
+      lwr = ifelse(lwr < 0, 0, lwr)
+      polygon(x = c(x$day, rev(x$day)), y = c(lwr, rev(upr)), col = poly_col, border = FALSE)
+      lines(lwr ~ x$day, col = line_col)
+      lines(upr ~ x$day, col = line_col)
+
+      # for not first day
+      x = subset(sub_pred_data, not_first_day)
+      period = KuskoHarvData:::get_period(x$day)
+      mape = sapply(period, function(p) get_mape(response, p))
+      lwr = x$pred_response - x$pred_response * mape
+      upr = x$pred_response + x$pred_response * mape
+      lwr = ifelse(lwr < 0, 0, lwr)
+      polygon(x = c(x$day, rev(x$day)), y = c(lwr, rev(upr)), col = poly_col, border = FALSE)
+      lines(lwr ~ x$day, col = line_col)
+      lines(upr ~ x$day, col = line_col)
+    }
 
     # draw the fitted curves
     lines(pred_response ~ day, data = subset(sub_pred_data, !not_first_day), col = line_col, lwd = 2)
     lines(pred_response ~ day, data = subset(sub_pred_data, not_first_day), lty = 2, col = line_col, lwd = 2)
+
+    # draw points
+    points(dat[,response] ~ day, data = dat, pch = ifelse(not_first_day, 24, 21),
+           bg = pt_bg, col = pt_col, cex = pt_cex)
 
     # add a legend
     legend_location = ifelse(response == "total_cpt", "topleft", "topright")
@@ -127,11 +156,27 @@ relationship_plot = function(response, settings = list(), separate_day_types = T
     }
 
     # scatter plot with correct dimensions, labels, etc.
-    plot(dat[,response] ~ day, data = dat, pch = 21, col = pt_col, bg = pt_bg, cex = pt_cex, ylim = ylim, xaxt = "n", yaxt = "n",
+    plot(dat[,response] ~ day, data = dat, type = "n", ylim = ylim, xaxt = "n", yaxt = "n",
          ylab = ylab, xlab = "Day of Season", axes = FALSE, font.lab = 2)
 
+    # draw uncertainty if instructed
+    if (draw_mape_range) {
+      x = sub_pred_data
+      period = KuskoHarvData:::get_period(x$day)
+      mape = sapply(period, function(p) get_mape(response, p))
+      lwr = x$pred_response - x$pred_response * mape
+      upr = x$pred_response + x$pred_response * mape
+      lwr = ifelse(lwr < 0, 0, lwr)
+      polygon(x = c(x$day, rev(x$day)), y = c(lwr, rev(upr)), col = poly_col, border = FALSE)
+      lines(lwr ~ x$day, col = line_col)
+      lines(upr ~ x$day, col = line_col)
+    }
+
+    # draw points
+    points(dat[,response] ~ day, data = dat, pch = 21, col = pt_col, bg = pt_bg, cex = pt_cex)
+
     # draw the fitted curve
-    lines(pred_response ~ day, data = sub_pred_data, col = line_col, lwd = 2)
+    lines(pred_response ~ day, data = sub_pred_data, col = line_col, lwd = 3)
   }
 
   usr = par("usr")
