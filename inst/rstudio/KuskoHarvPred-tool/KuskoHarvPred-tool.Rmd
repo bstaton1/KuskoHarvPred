@@ -664,6 +664,194 @@ div(
 )
 ```
 
+## `r icon("search")` Data Explorer {.tabset}
+
+---
+
+:::{.blue}
+<details>
+  <summary>`r icon("info-circle")` **Information about `r icon("search")` Data Explorer**</summary>
+  <br>
+  <p style="font-size: 12pt;"><b>This page displays the data used by the predictive relationships.</b></p>
+  
+  **Outcome Data**
+  
+  This tab shows the outcomes and harvest from each day of monitored drift boat fishing.
+  Each row is one day, and you can filter rows by specific values by clicking the `r icon("filter")` "Show/Hide Filters" link.
+  
+  **Condition Data**
+  
+  _The content on this page is currently under construction. Please wait for a future version for this feature._
+  
+</details>
+:::
+
+---
+
+### Outcome Data
+
+```{r outcome-data-UI}
+# link to show/hide data filters UI
+actionLink("show_hide_data_kable_filters", label = "Show/Hide Filters", icon = icon("filter"))
+
+# UI elements for filtering the outcome data
+hidden(
+  div(
+    id = "data_kable_filters",
+    fillRow(
+      flex = c(1,3),
+      
+      # Filter by time period
+      column(
+        width = 12,
+        h3(icon("filter"), "Time Periods"),
+        wellPanel(
+          selectizeInput("data_kable_years", "Years", choices = 2016:2021, selected = 2016:2021, multiple = TRUE,
+                         options = list(placeholder = "Select one or more years")),
+          selectizeInput("data_kable_periods", "Periods",
+                         choices = list("Period 1 (6/12-6/19)" = 1, "Period 2 (6/20-6/30)" = 2, "Period 3 (7/1-7/31)" = 3),
+                         selected = c(1,2,3), multiple = TRUE, options = list(placeholder = "Select one or more periods")),
+          actionButton("filter_periods_select_all", "Select All")
+        )
+      ),
+      
+      # Filter by outcome
+      column(
+        width = 12,
+        h3(icon("filter"), "Outcomes"),
+        wellPanel(
+          splitLayout(
+            sliderInput("data_kable_effort", "Drift Trips", min = min(dat$effort), max = max(dat$effort),
+                        value = range(dat$effort), width = "95%"),
+            sliderInput("data_kable_total_cpt", "Catch/Trip", min = min(round(dat$total_cpt)), max = max(round(dat$total_cpt)),
+                        value = range(round(dat$total_cpt)), width = "95%"),
+            sliderInput("data_kable_chinook_comp", "Chinook Composition", min = min(round(dat$chinook_comp, 2)) * 100, max = max(round(dat$chinook_comp, 2)) * 100,
+                        value = range(round(dat$chinook_comp, 2) * 100), post = "%", width = "95%")
+          ),
+          actionButton("filter_outcomes_select_all", "Select All")
+        )
+      )
+    ),
+    
+    # empty space between filters and the table
+    # FIXME: work out a better solution for this kind of thing
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br()
+  )
+)
+
+# show or hide filters when the action link is clicked
+observeEvent(input$show_hide_data_kable_filters, {
+  toggle(id = "data_kable_filters")
+})
+
+# reset the time period filters to default when action button is clicked
+observeEvent(input$filter_periods_select_all, {
+  updateSelectizeInput(inputId = "data_kable_years", selected = 2016:2021, multiple = TRUE)
+  updateSelectizeInput(inputId = "data_kable_periods", selected = c(1,2,3), multiple = TRUE)
+})
+
+# reset the outcome filters to default when action button is clicked
+observeEvent(input$filter_outcomes_select_all, {
+  updateSliderInput(inputId = "data_kable_effort", value = range(dat$effort))
+  updateSliderInput(inputId = "data_kable_total_cpt", value = range(round(dat$total_cpt)))
+  updateSliderInput(inputId = "data_kable_chinook_comp", value = range(round(dat$chinook_comp, 2) * 100))
+})
+
+```
+
+```{r outcome-data-fn}
+data_kable = function(period_keep, year_keep, effort_range, total_cpt_range, chinook_comp_range) {
+  table_dat = prepare_regression_data()
+  data("meta", package = "KuskoHarvData")
+  meta$date = date(meta$start)
+  table_dat = merge(meta, table_dat, by = "date", sort = FALSE, all.y = TRUE, all.x = FALSE)
+  
+  
+  table_dat$total_cpt = round(table_dat$total_cpt)
+  table_dat = cbind(year = as.character(year(table_dat$date)), table_dat)
+  table_dat$chinook_comp = round(table_dat$chinook_comp, 2)
+  table_dat$chum_comp = round(table_dat$chum_comp, 2)
+  table_dat$sockeye_comp = round(table_dat$sockeye_comp, 2)
+  
+  effort_in = table_dat$effort >= effort_range[1] & table_dat$effort <= effort_range[2]
+  total_cpt_in = table_dat$total_cpt >= total_cpt_range[1] & table_dat$total_cpt <= total_cpt_range[2]
+  chinook_comp_in = table_dat$chinook_comp >= chinook_comp_range[1] & table_dat$chinook_comp <= chinook_comp_range[2]
+
+  table_dat = table_dat[table_dat$period %in% period_keep & table_dat$year %in% year_keep & effort_in & total_cpt_in & chinook_comp_in,]
+  
+  table_dat$start_time = KuskoHarvEst:::short_datetime(table_dat$start)
+  table_dat$end_time = KuskoHarvEst:::short_datetime(table_dat$end)
+  table_dat = table_dat[,c("year", "period", "date", "start_time", "end_time", "effort", "total_cpt", "chinook_comp", "chum_comp", "sockeye_comp", "chinook_harv", "chum_harv", "sockeye_harv")]
+  table_dat$chinook_comp = KuskoHarvEst:::percentize(table_dat$chinook_comp)
+  table_dat$chum_comp = KuskoHarvEst:::percentize(table_dat$chum_comp)
+  table_dat$sockeye_comp = KuskoHarvEst:::percentize(table_dat$sockeye_comp)
+
+  table_dat$chinook_harv = round(table_dat$chinook_harv, -1)
+  table_dat$chum_harv = round(table_dat$chum_harv, -1)
+  table_dat$sockeye_harv = round(table_dat$sockeye_harv, -1)
+  table_dat = cbind(table_dat, "total_harv" = table_dat$chinook_harv + table_dat$chum_harv + table_dat$sockeye_harv)
+  
+  head(table_dat)
+
+  
+  if (nrow(table_dat) > 0) {
+    out = table_dat %>%
+      kbl("html", row.names = FALSE,
+          col.names = c("Year", "Period", "Date", "Start Time", "End Time", "Drift Trips", "Catch/Trip", rep(c("Chinook", "Chum", "Sockeye"), 2), "Total"),
+          align = "cclllccccccccc", format.args = list(big.mark = ",")) %>%
+      kable_styling(full_width = TRUE, bootstrap_options = c("condensed")) %>%
+      collapse_rows(1:2) %>%
+      add_header_above(c(" " = 7, "Species Composition" = 3, "Harvest" = "4"))
+    
+  } else {
+    out = '<p align="center" style="color:tomato; font-size:150%;">No records match the selected filters.</p>'
+  }
+  
+  return(out)
+}
+```
+
+```{r outcome-data-output}
+# create the table contents
+reactive({
+  rvals$data_kable = data_kable(period_keep = input$data_kable_periods, year_keep = input$data_kable_years,
+                                effort_range = input$data_kable_effort,
+                                total_cpt_range = input$data_kable_total_cpt,
+                                chinook_comp_range = input$data_kable_chinook_comp/100
+  )
+})
+
+# render table
+renderUI(HTML(rvals$data_kable))
+
+# update the action link text with how many records out of the total are displayed
+# any time the contents of the table change
+observeEvent(rvals$data_kable, {
+  nrows_data_kable = max(stringr::str_count(as.character(rvals$data_kable), "<tr>") - 2, 0)
+  updateActionLink(inputId = "show_hide_data_kable_filters", label = paste0("Show/Hide Filters (", nrows_data_kable, "/", nrow(dat), " records shown)"))
+})
+```
+
+### Condition Data
+
+_The content on this page is currently under construction. Please wait for a future version for this feature._
+
 ## `r icon("info-circle")` Statistical Info. {.tabset}
 
 ### Methods Overview {#section-methods-overview}
@@ -1185,3 +1373,4 @@ Questions may be directed to the tool developer: Ben Staton (<bstaton.qes@gmail.
 ### `r icon("dollar-sign")` Funding
 
 The development of this tool was made possible by a grant to Quantitative Ecological Services, LLC from the Arctic-Yukon-Kuskokwim Sustainable Salmon Initiative, administered by the Bering Sea Fisherman's Association under project #AC-2106.
+
