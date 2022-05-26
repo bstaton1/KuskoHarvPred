@@ -9,7 +9,8 @@ relationship_plot(
   settings = list(),
   separate_day_types = TRUE,
   pred_day = NULL,
-  pred_response = NULL
+  pred_response = NULL,
+  draw_mape_range = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ relationship_plot(
 \item{pred_day}{Numeric; the day corresponding to a hypothetical prediction (\code{pred_response}). Defaults to \code{NULL} in which case this is not drawn.}
 
 \item{pred_response}{Numeric; the predicted response corresponding to a hypothetical day (\code{pred_day}). Defaults to \code{NULL} in which case this is not drawn.}
+
+\item{draw_make_range}{Logical; should a shaded region around model prediction that shows +/- 1MAPE be shown?}
 }
 \description{
 Plot the Relationship of a Variable with Day of the Season
