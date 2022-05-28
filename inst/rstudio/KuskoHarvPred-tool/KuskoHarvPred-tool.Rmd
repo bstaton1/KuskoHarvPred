@@ -48,14 +48,14 @@ caption {
 library(KuskoHarvData)  # Houses historical data and functions to prepare them for analysis
 library(KuskoHarvPred)  # Houses regression infrastructure and output
 library(shiny)          # For building interactive elements
-library(shinyjs)        # For making interactive elements more user-friendly
 library(kableExtra)     # For making HTML Tables
 library(lubridate)      # For dealing with dates
 library(stringr)        # For dealing with character strings
-# include shinyJS
-useShinyjs(rmd = TRUE)
+```
 
-# set some CSS
+```{r shinyjs-setup}
+library(shinyjs)        # For making interactive elements more user-friendly
+useShinyjs(rmd = TRUE)
 ```
 
 ```{r data-prep}
@@ -779,7 +779,7 @@ observeEvent(input$filter_outcomes_select_all, {
 data_kable = function(period_keep, year_keep, effort_range, total_cpt_range, chinook_comp_range) {
   table_dat = prepare_regression_data()
   data("meta", package = "KuskoHarvData")
-  meta$date = date(meta$start)
+  meta$date = lubridate::date(meta$start)
   table_dat = merge(meta, table_dat, by = "date", sort = FALSE, all.y = TRUE, all.x = FALSE)
   
   
