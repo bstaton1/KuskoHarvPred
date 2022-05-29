@@ -247,34 +247,6 @@ whole_loo_analysis = function(global_formulae, fit_data, var_desc = NULL, error_
   # make wide format
   x = reshape2::dcast(x, response + n_models ~ type + period, value.var = "value")
 
-  # format the percent error columns
-  p_cols = stringr::str_detect(colnames(x), "MPE|MAPE")
-  if (any(p_cols)) {
-    x[,p_cols] = apply(x[,p_cols], 2, KuskoHarvEst:::percentize)
-  }
-
-  # format the non-percent error columns
-  np_cols = stringr::str_detect(colnames(x), "RHO|RMSE|ME|MAE")
-  if (any(np_cols)) {
-    x[,np_cols] = apply(x[,np_cols], 2, round, digits = 3)
-  }
-
-  # format the response variable
-  x$response = as.character(x$response)
-  rownames(x) = x$response
-  response_key = c(
-    "effort" = "Total Effort",
-    "total_cpt" = "Total Catch/Effort",
-    "chinook_comp" = "Chinook %Composition",
-    "chum_comp" = "Chum %Composition",
-    "sockeye_comp" = "Sockeye %Composition",
-    "chinook_harv" = "Chinook Harvest",
-    "chum_harv" = "Chum Harvest",
-    "sockeye_harv" = "Sockeye Harvest"
-  )
-  x$response = response_key[x$response]
-  x = x[names(response_key),]
-
   # combine with other meta-information about the analysis
   error_summary = cbind(
     reduce_colinearity = ifelse(attr(model_lists[[1]], "subset_params")$reduce_colinearity, "Yes", "No"),
@@ -284,6 +256,11 @@ whole_loo_analysis = function(global_formulae, fit_data, var_desc = NULL, error_
   if (!is.null(var_desc)) {
     error_summary = cbind(var_desc = var_desc, error_summary)
   }
+
+  # reorder rows
+  error_summary$response = as.character(error_summary$response)
+  rownames(error_summary) = error_summary$response
+  error_summary = error_summary[c("effort", "total_cpt", "chinook_comp", "chum_comp", "sockeye_comp", "chinook_harv", "chum_harv", "sockeye_harv"),]
   rownames(error_summary) = NULL
 
   # stop the timer
