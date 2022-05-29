@@ -143,7 +143,7 @@ find_variables = function(fit_list) {
 run_predictive_tool = function() {
   pkg_dir = system.file(package = "KuskoHarvPred")
   tool_dir = file.path(pkg_dir, "rstudio", "KuskoHarvPred-tool")
-  rmarkdown::run(file = file.path(tool_dir, "KuskoHarvPred-tool.Rmd"), auto_reload = FALSE, render_args = list(quiet = TRUE))
+  rmarkdown::run(file = file.path(tool_dir, "index.Rmd"), auto_reload = FALSE, render_args = list(quiet = TRUE))
 }
 
 #' Extract a Period- and Variable-specific MAPE value

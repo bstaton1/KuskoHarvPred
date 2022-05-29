@@ -1371,7 +1371,7 @@ All code and data can be found on `r icon("github")` GitHub at the links below:
 * [KuskoHarvData](https://www.github.com/bstaton1/KuskoHarvData) -- stores historical raw data and compiled harvest and effort estimates
 * [KuskoHarvPred](https://www.github.com/bstaton1/KuskoHarvPred) -- for predicting fishery outcomes that have not yet occurred. 
 
-The code for this tool can be found [here](https://github.com/bstaton1/KuskoHarvPred/blob/main/inst/rstudio/KuskoHarvPred-tool/KuskoHarvPred-tool.Rmd).
+The code for this tool can be found [here](https://github.com/bstaton1/KuskoHarvPred/blob/main/inst/rstudio/KuskoHarvPred-tool/index.Rmd).
 
 This tool is subject to the [MIT License](https://github.com/bstaton1/KuskoHarvPred/blob/main/LICENSE), which essentially means it is free to use, replicate, and alter so long as the original license and copyright is retained as part of the software.
 
