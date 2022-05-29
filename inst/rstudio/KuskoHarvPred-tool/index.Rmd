@@ -115,6 +115,13 @@ rvals = reactiveValues()
   
   </div>
   
+  <div style="margin-left: 30px;">
+  
+  **NOTE:** On the `r icon("table")` **Outputs** tab, you may manually adjust the predictions if they are very different from the conditions in the current year or your intuition.
+  **_Use caution with this feature_** -- it is possible to use this feature to have the tool suggest any possible outcome, so it is essential that good rationale is used when deciding why predictions should be different from those suggested by the model and historical data.
+  
+  </div>
+  
   `r h5(em("Where do the data come from?"))`
   
   <div style="margin-left: 30px;">
