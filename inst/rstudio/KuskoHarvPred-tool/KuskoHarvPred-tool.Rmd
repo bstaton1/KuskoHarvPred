@@ -1,7 +1,6 @@
 ---
 title: "**Kuskokwim Salmon Harvest Prediction Tool**"
-author: "_v0.0.0.9001; FOR DRAFT/FEEDBACK USE ONLY_"
-date: "_Please send feedback to the tool developer, Ben Staton (<bstaton.qes@gmail.com>)_"
+author: "_v0.1.0; FOR USE IN 2022_"
 output: 
   html_document
 runtime: shiny
