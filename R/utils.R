@@ -146,14 +146,6 @@ run_predictive_tool = function() {
   rmarkdown::run(file = file.path(tool_dir, "KuskoHarvPred-tool.Rmd"), auto_reload = FALSE, render_args = list(quiet = TRUE))
 }
 
-#' Convert a Character Percent to Numeric Proportion
-#'
-#' @param x Character, formatted like `"XX%"`
-
-unpercentize = function(x) {
-  as.numeric(stringr::str_remove(stringr::str_remove(x, "%"), "<"))/100
-}
-
 #' Extract a Period- and Variable-specific MAPE value
 #'
 #' @param response Character; one of `"effort"`, `"total_cpt"`, `"chinook_comp"`, `"chum_comp"`, `"sockeye_comp"`, `"chinook_harv"`, `"chum_harv"`, or `"sockeye_harv"`
@@ -166,9 +158,6 @@ get_mape = function(response, period) {
   # extract LOO errors
   errors = KuskoHarvPred:::loo_output$error_summary
 
-  # rename the response variable
-  errors$response = c("effort", "total_cpt", "chinook_comp", "chum_comp", "sockeye_comp", "chinook_harv", "chum_harv", "sockeye_harv")
-
   # extract only the specific MAPE of interest and convert to a proportion
-  unpercentize(errors[errors$response == response,paste0("MAPE_", period)])
+  errors[errors$response == response,paste0("MAPE_", period)]
 }
