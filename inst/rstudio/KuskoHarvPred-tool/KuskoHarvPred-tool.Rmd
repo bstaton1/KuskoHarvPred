@@ -762,8 +762,8 @@ observeEvent(input$show_hide_data_kable_filters, {
 
 # reset the time period filters to default when action button is clicked
 observeEvent(input$filter_periods_select_all, {
-  updateSelectizeInput(inputId = "data_kable_years", selected = 2016:2021, multiple = TRUE)
-  updateSelectizeInput(inputId = "data_kable_periods", selected = c(1,2,3), multiple = TRUE)
+  updateSelectizeInput(inputId = "data_kable_years", selected = 2016:2021)
+  updateSelectizeInput(inputId = "data_kable_periods", selected = c(1,2,3))
 })
 
 # reset the outcome filters to default when action button is clicked
