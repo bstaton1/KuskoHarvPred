@@ -1,9 +1,11 @@
 ---
-title: "**Kuskokwim Salmon Harvest Prediction Tool**"
+title: '**Kuskokwim Salmon Harvest Prediction Tool**'
 author: "_v0.1.0; FOR USE IN 2022_"
-output: 
-  html_document
+output: html_document
 runtime: shiny
+resource_files:
+- resources/scatter-1.png
+- resources/scatter-2.png
 ---
 
 ```{r knitr-setup, include = FALSE}
@@ -44,6 +46,7 @@ caption {
 
 ```{r pkg-setup, warning = FALSE, message = FALSE}
 # load packages
+library(KuskoHarvEst)   # Houses workflow for producing harvest estimates, and some helper functions used here
 library(KuskoHarvData)  # Houses historical data and functions to prepare them for analysis
 library(KuskoHarvPred)  # Houses regression infrastructure and output
 library(shiny)          # For building interactive elements
