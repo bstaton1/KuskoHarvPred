@@ -1,7 +1,6 @@
 ---
 title: "**Kuskokwim Salmon Harvest Prediction Tool**"
-author: "_v0.0.0.9001; FOR DRAFT/FEEDBACK USE ONLY_"
-date: "_Please send feedback to the tool developer, Ben Staton (<bstaton.qes@gmail.com>)_"
+author: "_v0.1.0; FOR USE IN 2022_"
 output: 
   html_document
 runtime: shiny
@@ -53,7 +52,7 @@ library(lubridate)      # For dealing with dates
 library(stringr)        # For dealing with character strings
 ```
 
-```{r shinyjs-setup}
+```{r shinyjs-setup, warning = FALSE, message = FALSE}
 library(shinyjs)        # For making interactive elements more user-friendly
 useShinyjs(rmd = TRUE)
 ```
@@ -113,6 +112,13 @@ rvals = reactiveValues()
   1.  Enter the expected conditions of the proposed fishery opportunity (e.g., day, start/end times, Bethel Test Fishery index values, wind speed/direction) on the `r icon("sliders-h")` **Inputs** tab
   2.  Navigate to the `r icon("table")` **Outputs** tab -- the predictions of each outcome and species-specific harvest for the fishing period described in the inputs is shown in two tables.
   3.  To explore how the tool works and to see good its predictions are, see the `r icon("chart-line")` **Predictive Relationships** and `r icon("info-circle")` **Statistical Info.** tabs.
+  
+  </div>
+  
+  <div style="margin-left: 30px;">
+  
+  **NOTE:** On the `r icon("table")` **Outputs** tab, you may manually adjust the predictions if they are very different from the conditions in the current year or your intuition.
+  **_Use caution with this feature_** -- it is possible to use this feature to have the tool suggest any possible outcome, so it is essential that good rationale is used when deciding why predictions should be different from those suggested by the model and historical data.
   
   </div>
   
@@ -762,8 +768,8 @@ observeEvent(input$show_hide_data_kable_filters, {
 
 # reset the time period filters to default when action button is clicked
 observeEvent(input$filter_periods_select_all, {
-  updateSelectizeInput(inputId = "data_kable_years", selected = 2016:2021, multiple = TRUE)
-  updateSelectizeInput(inputId = "data_kable_periods", selected = c(1,2,3), multiple = TRUE)
+  updateSelectizeInput(inputId = "data_kable_years", selected = 2016:2021)
+  updateSelectizeInput(inputId = "data_kable_periods", selected = c(1,2,3))
 })
 
 # reset the outcome filters to default when action button is clicked
@@ -932,7 +938,7 @@ Notice that not all condition variables were assessed as predictors for all outc
 <details>
 <summary>Click to view table</summary>
 
-```{r}
+```{r predictor-vars-table}
 tab = c(
 # Variable               Description                                                      EFFORT CPT    %CHIN  %CHUM  %SOCK  
   "Day",                 "Number of days past May 31st",                                  "YES", "YES", "YES", "YES", "YES",
@@ -1197,16 +1203,14 @@ These figures show the leave-one-out (LOO) cross-validation error summaries for 
 period_labels = c("6/12-6/19", "6/20-6/30", "7/1-7/31", "All")
 
 # function to make LOO error summary barplots
-loo_plot = function(var) {
+loo_plot = function(response) {
   
   # extract the pre-processed loo error summaries
   errors = KuskoHarvPred:::loo_output$error_summary
-  
-  # rename the response variable
-  errors = cbind(new_response = c("effort", "total_cpt", "chinook_comp", "chum_comp", "sockeye_comp", "chinook_harv", "chum_harv", "sockeye_harv"), errors)
 
   # extract only info needed for plotting
-  x = KuskoHarvPred:::unpercentize(errors[errors$new_response == var,-c(1:5)])
+  x = errors[errors$response == response,-which(colnames(errors) %in% c("reduce_colinearity", "cwt_retain", "response", "n_models"))]
+  x = unlist(x)
   x_mpe = x[1:4] * 100
   x_mape = x[5:8] * 100
 
@@ -1222,7 +1226,7 @@ loo_plot = function(var) {
   # make the MPE barplot
   mp = barplot(x_mpe, ylim = ylim, xaxt = "n", yaxt = "n", border = "white", col = ifelse(x_mpe < 0, "salmon", "skyblue"), main = "Mean % LOO Error\n(Accuracy)", space = 0)
   usr = par("usr"); ydiff = diff(usr[3:4])
-  text(x = mp, y = ifelse(x_mpe < 0, x_mpe - ydiff * 0.035, x_mpe + ydiff * 0.035), labels = paste0(x_mpe, "%"), col = "grey50", font = 3)
+  text(x = mp, y = ifelse(x_mpe < 0, x_mpe - ydiff * 0.035, x_mpe + ydiff * 0.035), labels = KuskoHarvEst:::percentize(x_mpe/100), col = "grey50", font = 3)
   axis(side = 1, at = mp, labels = period_labels, las = 1, lwd = 2)
   axis(side = 2, at = axisTicks(usr[3:4], log = FALSE), labels = paste0(axisTicks(usr[3:4], log = FALSE), "%"), lwd = 2)
   abline(h = 0, lwd = 2, col = "grey", lend = "square")
@@ -1232,7 +1236,7 @@ loo_plot = function(var) {
   # make the MAPE barplot
   mp = barplot(x_mape, ylim = c(0, max(x_mape)) * 1.2, xaxt = "n", yaxt = "n", border = "white", col = "skyblue", main = "Mean Absolute % LOO Error\n(Precision)", space = 0)
   usr = par("usr"); ydiff = diff(usr[3:4])
-  text(x = mp, y = ifelse(x_mape < 0, x_mape - ydiff * 0.035, x_mape + ydiff * 0.035), labels = paste0(x_mape, "%"), col = "grey50", font = 3)
+  text(x = mp, y = ifelse(x_mape < 0, x_mape - ydiff * 0.035, x_mape + ydiff * 0.035), labels = KuskoHarvEst:::percentize(x_mape/100), col = "grey50", font = 3)
   axis(side = 1, at = mp, labels = period_labels, las = 1, lwd = 2)
   axis(side = 4, at = axisTicks(usr[3:4], log = FALSE), labels = paste0(axisTicks(usr[3:4], log = FALSE), "%"), lwd = 2)
   abline(h = 0, lwd = 2, col = "grey", lend = "square")
@@ -1262,12 +1266,15 @@ This table shows the leave-one-out (LOO) cross-validation error summaries for ea
 The values are the same as those plotted on the "Summary Plots" page.
 
 ```{r cv-table-output}
-loo_output = KuskoHarvPred:::loo_output
+error_summary = KuskoHarvPred:::loo_output$error_summary
 
-loo_output$error_summary$n_models[is.na(loo_output$error_summary$n_models)] = " — "
-loo_output$error_summary$response = c("Drift Trips/Day", "Salmon Catch/Trip", "Chinook Composition", "Chum Composition", "Sockeye Composition", "Chinook Harvest", "Chum Harvest", "Sockeye Harvest")
+error_summary = error_summary[,-which(colnames(error_summary) %in% c("reduce_colinearity", "cwt_retain"))]
+error_summary$n_models[is.na(error_summary$n_models)] = " — "
+error_summary$response = c("Drift Trips/Day", "Salmon Catch/Trip", "Chinook Composition", "Chum Composition", "Sockeye Composition", "Chinook Harvest", "Chum Harvest", "Sockeye Harvest")
 
-kable(loo_output$error_summary[,-c(1:2)], "html", align = "lccccccccc", col.names = c("Variable", "N Models", period_labels, period_labels),) %>%
+error_summary = cbind(error_summary[,1:2], apply(error_summary[,-c(1,2)], 2, KuskoHarvEst:::percentize))
+
+kbl(error_summary, "html", align = "lccccccccc", col.names = c("Variable", "N Models", period_labels, period_labels),) %>%
   kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) %>%
   add_header_above(c(" " = 2, "Mean % LOO Error (Accuracy)" = 4, "Mean Absolute % LOO Error (Precision)" = 4)) %>%
   column_spec(1, bold = TRUE)
@@ -1280,7 +1287,7 @@ Recall that the predicted values are obtained using leave-one-out methods, so th
 The color of the points represents the time period of the season and the dashed line represents 1:1 equality (if a point is on the line, the prediction was exactly equal to the actual value).
 
 ```{r obs-v-pred-plot-fn}
-loo_preds = loo_output$loo_preds
+loo_preds = KuskoHarvPred:::loo_output$loo_preds
 
 pred_v_obs_plot = function(var) {
   
@@ -1352,25 +1359,35 @@ div(
 
 ### `r icon("users")` Collaborators
 
-_On this tab, I will acknowledge everyone who has contributed to the development of this tool._
+This tool was developed by [Ben Staton](https://www.github.com/bstaton1) who has been working on statistical aspects of Kuskokwim River salmon assessment and management since 2014.
+
+The development of this tool has benefited from input and feedback from multiple collaborators including (alphabetical order by last name):
+
+* Bill Bechtol
+* Lew Coggins
+* Gary Decossas
+* Sean Larson
+* Nick Smith
   
 ### `r icon("code")` Code
 
-_On this tab, I will link to the various code sources for this tool._
+This project was conducted entirely in [program R](https://www.r-project.org/) using a set of custom R packages.
+All code and data can be found on `r icon("github")` GitHub at the links below:
 
-This will include links to the `r icon("github")` GitHub repositories for each of the 'KuskoHarv*' family of packages:
+* [KuskoHarvEst](https://www.github.com/bstaton1/KuskoHarvEst) -- for producing and reporting estimates of harvest and effort in-season
+* [KuskoHarvData](https://www.github.com/bstaton1/KuskoHarvData) -- stores historical raw data and compiled harvest and effort estimates
+* [KuskoHarvPred](https://www.github.com/bstaton1/KuskoHarvPred) -- for predicting fishery outcomes that have not yet occurred. 
 
-* KuskoHarvEst
-* KuskoHarvData
-* KuskoHarvPred
+The code for this tool can be found [here](https://github.com/bstaton1/KuskoHarvPred/blob/main/inst/rstudio/KuskoHarvPred-tool/index.Rmd).
 
-as well as a link that goes direct to the Rmd source code for the tool.
+This tool is subject to the [MIT License](https://github.com/bstaton1/KuskoHarvPred/blob/main/LICENSE), which essentially means it is free to use, replicate, and alter so long as the original license and copyright is retained as part of the software.
 
-### `r icon("question-circle")` Help
+`r icon("copyright")` 2022 Ben Staton
 
-Questions may be directed to the tool developer: Ben Staton (<bstaton.qes@gmail.com>)
+### `r icon("envelope")` Contact
+
+Questions and feedback may be directed to the tool developer: Ben Staton (<bstaton.qes@gmail.com>)
 
 ### `r icon("dollar-sign")` Funding
 
 The development of this tool was made possible by a grant to Quantitative Ecological Services, LLC from the Arctic-Yukon-Kuskokwim Sustainable Salmon Initiative, administered by the Bering Sea Fisherman's Association under project #AC-2106.
-

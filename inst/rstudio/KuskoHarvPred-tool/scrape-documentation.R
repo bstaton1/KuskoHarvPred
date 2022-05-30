@@ -15,7 +15,7 @@ new_wd = file.path(wd, "inst/rstudio/KuskoHarvPred-tool")
 setwd(new_wd)
 
 # read in the tool code
-tool_code = readLines("KuskoHarvPred-tool.Rmd")
+tool_code = readLines("index.Rmd")
 
 # function to scrape specific chunk text from the rmd file
 extract_chunk = function(x, label, prog = "r ") {
@@ -61,17 +61,24 @@ methods = tool_code[first:last]
 yaml = c(
   "---",
   'title: "**Kuskokwim Salmon Harvest Prediction Tool**"',
-  'subtitle: "Help Documentation"',
+  'subtitle: "_Help Documentation_"',
   'output:',
   '  html_document',
   '---\n'
 )
+
+# prep the "more information" content
+more_info = tool_code[which(str_detect(tool_code, "More Info\\. \\{\\.tabset\\}")): length(tool_code)]
+more_info[1] = "## More Information {.tabset .tabset-pills}"
 
 # build the full document
 out = c(yaml, chunks, methods, "### Help Information\n", help)
 
 # change all headers to be up by one level
 out = str_replace_all(out, "###", "##")
+
+# combine more information section
+out = c(out, more_info)
 
 # write the file
 writeLines(out, "KuskoHarvPred-tool-documentation.Rmd")
@@ -90,4 +97,3 @@ unlink("KuskoHarvPred-tool-documentation.Rmd")
 
 # set the working directory back to the project location
 setwd(wd)
-
