@@ -1,6 +1,6 @@
 ---
 title: '**Kuskokwim Salmon Harvest Prediction Tool**'
-author: "_v0.1.0; FOR USE IN 2022_"
+author: "_v0.1.0.9990; DRAFT FOR USE IN 2023_"
 output: html_document
 runtime: shiny
 resource_files:
