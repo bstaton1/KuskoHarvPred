@@ -23,10 +23,10 @@ loo_output = loo_output[-which(names(loo_output) == "models")]
 
 # build objects needed for constructing predictive data set
 # years
-year_range = 2016:2021
+year_range = sort(unique(lubridate::year(dat$date)))
 
 # build bank of day variable
-day = 12:46
+day = min(dat$day):max(dat$day)
 
 # build bank of miscellaneous variables
 misc_bank = list(
@@ -99,7 +99,7 @@ weather_key = data.frame(
   CAT_mean_Ewind = c("strong_westerly", "none", "strong_easterly")
 )
 
-build_pred_data = function(vars, days = 12:46) {
+build_pred_data = function(vars, days = min(dat$day):max(dat$day)) {
 
   # extract the names of all BTF variables
   btf_vars = vars[stringr::str_detect(vars, "btf")]
@@ -149,7 +149,7 @@ pred_data = lapply(fit_lists, function(fit_list) build_pred_data(KuskoHarvPred::
 
 # add model averaged predictions
 pred_data = lapply(names(fit_lists), function(r) {
-  cbind(pred_data[[r]], pred_response = predict_model_avg(fit_lists[[r]], pred_data[[r]]))
+  cbind(pred_data[[r]], pred_response = KuskoHarvPred::predict_model_avg(fit_lists[[r]], pred_data[[r]]))
 }); names(pred_data) = names(fit_lists)
 
 # export them to proper structure and location

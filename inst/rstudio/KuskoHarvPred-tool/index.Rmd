@@ -63,6 +63,9 @@ useShinyjs(rmd = TRUE)
 ```{r data-prep}
 # produce the regression data set
 dat = prepare_regression_data()
+
+# extract the unique years available
+yrs = sort(unique(year(dat$date)))
 ```
 
 ```{r reactive-container}
@@ -251,7 +254,7 @@ observeEvent(input$start_time, {
 })
 
 avg_btf_summary = function(dom, moy, stat) {
-  dates = as_date(paste(2016:2021, str_pad(as.character(moy), 2, "left", "0"), str_pad(as.character(dom), 2, "left", "0")))
+  dates = as_date(paste(yrs, str_pad(as.character(moy), 2, "left", "0"), str_pad(as.character(dom), 2, "left", "0")))
   round(mean(sapply(dates, KuskoHarvData:::summarize_btf, stat = stat, plus_minus = 1)), 1)
 }
 
@@ -715,7 +718,7 @@ hidden(
         width = 12,
         h3(icon("filter"), "Time Periods"),
         wellPanel(
-          selectizeInput("data_kable_years", "Years", choices = 2016:2021, selected = 2016:2021, multiple = TRUE,
+          selectizeInput("data_kable_years", "Years", choices = yrs, selected = yrs, multiple = TRUE,
                          options = list(placeholder = "Select one or more years")),
           selectizeInput("data_kable_periods", "Periods",
                          choices = list("Period 1 (6/12-6/19)" = 1, "Period 2 (6/20-6/30)" = 2, "Period 3 (7/1-7/31)" = 3),
@@ -771,7 +774,7 @@ observeEvent(input$show_hide_data_kable_filters, {
 
 # reset the time period filters to default when action button is clicked
 observeEvent(input$filter_periods_select_all, {
-  updateSelectizeInput(inputId = "data_kable_years", selected = 2016:2021)
+  updateSelectizeInput(inputId = "data_kable_years", selected = yrs)
   updateSelectizeInput(inputId = "data_kable_periods", selected = c(1,2,3))
 })
 
