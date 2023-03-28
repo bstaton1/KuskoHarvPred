@@ -58,49 +58,6 @@ loo_pred_model_avg = function(fit_list) {
   return(loo_pred_model_avg)
 }
 
-#' @title Obtain Prediction Errors and Summaries
-#'
-#' @param yhat Numeric vector of predicted values.
-#' @param yobs Numeric vector of observed values.
-#' @note If `yhat` and `yobs` are of unequal lengths, the function will fail with a useful error message.
-#' @return A [`list`][base::list] object with elements `$error` (`yhat - yobs`), `$p_error` (`(yhat - yobs)/yobs`), and `$summary`.
-#'   `$summary` is a named vector with elements:
-#'   * `RHO` -- Pearson correlation coefficient between `yhat` and `yobs`.
-#'   * `RMSE` -- Root mean squared error: `sqrt(mean(error^2))`.
-#'   * `ME` -- Mean error: `mean(error)`.
-#'   * `MAE` -- Mean absolute error: `mean(abs(error))`.
-#'   * `MPE` -- Mean proportional error: `mean(p_error)`.
-#'   * `MAPE` -- Mean absolution proportional error: `mean(abs(p_error))`.
-#' @export
-
-get_errors = function(yhat, yobs) {
-
-  # return an error if the two input vectors are unequal lengths
-  if (length(yhat) != length(yobs)) {
-    stop ("yhat and yobs must be of equal length")
-  }
-
-  # calculate raw errors
-  error = yhat - yobs
-
-  # calculate proportional errors
-  p_error = error/yobs
-
-  # calculate summaries and return
-  list(
-    error = error,
-    p_error = p_error,
-    summary = c(
-      RHO = cor(yhat, yobs),
-      RMSE = sqrt(mean(error^2)),
-      ME = mean(error),
-      MAE = mean(abs(error)),
-      MPE = mean(p_error),
-      MAPE = mean(abs(p_error))
-    )
-  )
-}
-
 #' @title Plot Predicted vs. Observed Points
 #'
 #' @param yhat Numeric vector of predicted values.
