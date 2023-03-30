@@ -94,7 +94,7 @@ count_params = function(fit) {
 #' @title Produce a Concise AICc Table
 #' @param fit_list List of fitted model objects of class [`lm`][stats::lm]
 #' @param digits Numeric value controlling the number of decimal places to round to.
-#'   Passed to [base::round()] for `"delta"` and [KuskoHarvEst::smart_round()] for model weights.
+#'   Passed to [base::round()] for `"delta"` and [KuskoHarvUtils::smart_round()] for model weights.
 #'   Defaults to 3.
 #' @return Data frame with columns:
 #'   * `terms`: the right-hand-side of each fitted model formula; from [get_formula()].
@@ -118,7 +118,7 @@ AIC_table = function(fit_list, digits = 3) {
   # if rounding, do so for relevant variables
   if (!is.null(digits)) {
     tab$delta = round(tab$delta, digits = digits)
-    tab$wt = KuskoHarvEst:::smart_round(tab$wt, digits = digits)
+    tab$wt = KuskoHarvUtils::smart_round(tab$wt, digits = digits)
   }
 
   # return the output table
