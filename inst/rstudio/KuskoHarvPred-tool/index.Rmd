@@ -1323,7 +1323,7 @@ pred_v_obs_plot = function(var) {
   points(x = yobs, y = yhat, pch = 21, cex = 1.75, bg = scales::alpha(base_col, alpha["bg"]), col = scales::alpha(base_col, alpha["col"]))
 
   # draw the error summaries
-  # vals = get_errors(yhat = yhat, yobs = yobs)$summary
+  # vals = KuskoHarvUtils::get_errors(yhat = yhat, yobs = yobs)$summary
   # names = paste0(names(vals), ": ")
   # vals = round(vals, 2)
   # vals[c("MPE", "MAPE")] = paste0(vals[c("MPE", "MAPE")] * 100, "%")
