@@ -38,7 +38,7 @@ misc_bank = list(
 
 # extract BTF total CPUE summaries for each day of each year
 total_btf_cpue = lapply(year_range, function(y) {
-  dates = KuskoHarvData:::from_days_past_may31(day, y)
+  dates = KuskoHarvUtils::from_days_past_may31(day, y)
   out = sapply(dates, KuskoHarvData:::summarize_btf, stat = "total_cpue", plus_minus = 1)
   out = data.frame(var = "total_btf_cpue", day = day, year = y, value = out)
   return(out)
@@ -46,7 +46,7 @@ total_btf_cpue = lapply(year_range, function(y) {
 
 # extract BTF Chinook composition summaries for each day of each year
 chinook_btf_comp = lapply(year_range, function(y) {
-  dates = KuskoHarvData:::from_days_past_may31(day, y)
+  dates = KuskoHarvUtils::from_days_past_may31(day, y)
   out = sapply(dates, KuskoHarvData:::summarize_btf, stat = "chinook_comp", plus_minus = 1)
   out = data.frame(var = "chinook_btf_comp", day = day, year = y, value = out)
   return(out)
@@ -54,7 +54,7 @@ chinook_btf_comp = lapply(year_range, function(y) {
 
 # extract BTF chum composition summaries for each day of each year
 chum_btf_comp = lapply(year_range, function(y) {
-  dates = KuskoHarvData:::from_days_past_may31(day, y)
+  dates = KuskoHarvUtils::from_days_past_may31(day, y)
   out = sapply(dates, KuskoHarvData:::summarize_btf, stat = "chum_comp", plus_minus = 1)
   out = data.frame(var = "chum_btf_comp", day = day, year = y, value = out)
   return(out)
@@ -62,7 +62,7 @@ chum_btf_comp = lapply(year_range, function(y) {
 
 # extract BTF sockeye composition summaries for each day of each year
 sockeye_btf_comp = lapply(year_range, function(y) {
-  dates = KuskoHarvData:::from_days_past_may31(day, y)
+  dates = KuskoHarvUtils::from_days_past_may31(day, y)
   out = sapply(dates, KuskoHarvData:::summarize_btf, stat = "sockeye_comp", plus_minus = 1)
   out = data.frame(var = "sockeye_btf_comp", day = day, year = y, value = out)
   return(out)

@@ -170,7 +170,7 @@ whole_loo_analysis = function(global_formulae, fit_data, var_desc = NULL, error_
   # STEP 4: summarize the errors
   summarize_errors = function(yhat, response, fit_data, error_types) {
       # build a data.frame with time period, prediction, and observed values
-      df = data.frame(period = KuskoHarvData:::get_period(fit_data$day), yhat = yhat, yobs = fit_data[,response])
+      df = data.frame(period = KuskoHarvUtils::get_period(fit_data$day), yhat = yhat, yobs = fit_data[,response])
 
       # calculate MPE and MAPE for each period separately
       errors = lapply(unique(df$period), function(p) {

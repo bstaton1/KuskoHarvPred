@@ -308,7 +308,7 @@ reactive({
 # create the complete predictive data set based on widget inputs
 reactive({
   rvals$df = data.frame(
-    day = KuskoHarvData:::to_days_past_may31(dates = input$date),
+    day = KuskoHarvUtils::to_days_past_may31(dates = input$date),
     weekend = wday(input$date, label = TRUE) %in% c("Sat", "Sun"),
     not_first_day = input$fished_yesterday,
     hours_open = rvals$hours_open,
@@ -317,8 +317,8 @@ reactive({
     chinook_btf_comp = input$chinook_btf_cpue/(input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue),
     chum_btf_comp = input$chum_btf_cpue/(input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue),
     sockeye_btf_comp = input$sockeye_btf_cpue/(input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue),
-    mean_Nwind = KuskoHarvData:::get_Nwind(speed = input$wind_speed, rvals$wind_angle),
-    mean_Ewind = KuskoHarvData:::get_Ewind(speed = input$wind_speed, rvals$wind_angle)
+    mean_Nwind = KuskoHarvUtils::get_Nwind(speed = input$wind_speed, angle = rvals$wind_angle),
+    mean_Ewind = KuskoHarvUtils::get_Ewind(speed = input$wind_speed, angle = rvals$wind_angle)
   )
 })
 
@@ -375,8 +375,8 @@ fillRow(
 # function to set the values of the user-adjusted sliders
 update_user_sliders = function(input, rvals) {
   
-  effort_error = KuskoHarvPred:::get_mape("effort", KuskoHarvData:::get_period(input$date)) * rvals$preds$effort
-  total_cpt_error = KuskoHarvPred:::get_mape("total_cpt", KuskoHarvData:::get_period(input$date)) * rvals$preds$total_cpt
+  effort_error = KuskoHarvPred:::get_mape("effort", KuskoHarvUtils::get_period(input$date)) * rvals$preds$effort
+  total_cpt_error = KuskoHarvPred:::get_mape("total_cpt", KuskoHarvUtils::get_period(input$date)) * rvals$preds$total_cpt
   
   updateSliderInput(inputId = "user_effort", 
                     value = c(max(0, round(rvals$preds$effort - effort_error, -1)), min(1000, round(rvals$preds$effort + effort_error, -1))))
@@ -665,7 +665,7 @@ div(
     relationship_plot(response = input$plot_response,
            settings = rvals$plot_settings,
            separate_day_types = TRUE,
-           # pred_day = KuskoHarvData:::to_days_past_may31(input$date),
+           # pred_day = KuskoHarvUtils::to_days_past_may31(input$date),
            # pred_response = rvals$preds[,input$plot_response]
            pred_day = NULL,
            pred_response = NULL, 
@@ -1179,7 +1179,7 @@ div(
 In summarizing the errors, we categorize them into these three time periods of the season. This allows us to quantify how the reliability of predictions changes throughout the season.
 
 ```{r period-table}
-counts = table(KuskoHarvData:::get_period(dat$day))
+counts = table(KuskoHarvUtils::get_period(dat$day))
 counts = as.numeric(counts)
 counts = c(counts, sum(counts))
 
@@ -1299,7 +1299,7 @@ pred_v_obs_plot = function(var) {
   
   yhat = loo_preds[,var]
   yobs = dat[,var]
-  period = KuskoHarvData:::get_period(dat$day)
+  period = KuskoHarvUtils::get_period(dat$day)
   
   # obtain the axis limits
   if (str_detect(var, "comp")) {
