@@ -10,7 +10,7 @@ AIC_table(fit_list, digits = 3)
 \item{fit_list}{List of fitted model objects of class \code{\link[stats:lm]{lm}}}
 
 \item{digits}{Numeric value controlling the number of decimal places to round to.
-Passed to \code{\link[base:Round]{base::round()}} for \code{"delta"} and \code{\link[KuskoHarvEst:smart_round]{KuskoHarvEst::smart_round()}} for model weights.
+Passed to \code{\link[base:Round]{base::round()}} for \code{"delta"} and \code{\link[KuskoHarvUtils:smart_round]{KuskoHarvUtils::smart_round()}} for model weights.
 Defaults to 3.}
 }
 \value{

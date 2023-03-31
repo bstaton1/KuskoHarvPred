@@ -105,7 +105,7 @@ relationship_plot = function(response, settings = list(), separate_day_types = T
     if (draw_mape_range) {
       # for first day
       x = subset(sub_pred_data, !not_first_day)
-      period = KuskoHarvData:::get_period(x$day)
+      period = KuskoHarvUtils::get_period(x$day)
       mape = sapply(period, function(p) get_mape(response, p))
       lwr = x$pred_response - x$pred_response * mape
       upr = x$pred_response + x$pred_response * mape
@@ -116,7 +116,7 @@ relationship_plot = function(response, settings = list(), separate_day_types = T
 
       # for not first day
       x = subset(sub_pred_data, not_first_day)
-      period = KuskoHarvData:::get_period(x$day)
+      period = KuskoHarvUtils::get_period(x$day)
       mape = sapply(period, function(p) get_mape(response, p))
       lwr = x$pred_response - x$pred_response * mape
       upr = x$pred_response + x$pred_response * mape
@@ -162,7 +162,7 @@ relationship_plot = function(response, settings = list(), separate_day_types = T
     # draw uncertainty if instructed
     if (draw_mape_range) {
       x = sub_pred_data
-      period = KuskoHarvData:::get_period(x$day)
+      period = KuskoHarvUtils::get_period(x$day)
       mape = sapply(period, function(p) get_mape(response, p))
       lwr = x$pred_response - x$pred_response * mape
       upr = x$pred_response + x$pred_response * mape
@@ -190,7 +190,7 @@ relationship_plot = function(response, settings = list(), separate_day_types = T
 
   # add x-axis
   at_x = seq(12, 46, by = 5)
-  date_x = KuskoHarvData:::from_days_past_may31(at_x)
+  date_x = KuskoHarvUtils::from_days_past_may31(at_x)
   month_x = lubridate::month(date_x, label = TRUE, abbr = TRUE)
   day_x = lubridate::day(date_x)
   lab_x = paste(month_x, day_x)

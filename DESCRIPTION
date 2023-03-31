@@ -23,6 +23,7 @@ Imports:
     details,
     usethis
 Remotes:
+    bstaton1/KuskoHarvUtils,
     bstaton1/KuskoHarvEst,
     bstaton1/KuskoHarvData
 Encoding: UTF-8

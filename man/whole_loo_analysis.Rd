@@ -19,7 +19,7 @@ whole_loo_analysis(
 \item{var_desc}{Optional character string describing the variables used in fitting.
 If supplied, will become the first column in the \code{error_summary} element of the output list.}
 
-\item{error_types}{A character vector specifying which types of error summaries (obtained by \code{\link[=get_errors]{get_errors()}}) to return.
+\item{error_types}{A character vector specifying which types of error summaries (obtained by \code{\link[KuskoHarvUtils:get_errors]{KuskoHarvUtils::get_errors()}}) to return.
 Options are any combination of \code{"RHO"}, \code{"RMSE"}, \code{"ME"}, \code{"MAE"}, \code{"MPE"}, or \code{"MAPE"}.}
 
 \item{...}{Optional arguments passed to \code{\link[=fit_all_subsets]{fit_all_subsets()}}}
@@ -45,6 +45,6 @@ This function conducts several steps in a self-contained wrapper:
 \item Fits the global models to each response variable using \code{\link[=fit_global_model_one]{fit_global_model_one()}}.
 \item Fits all subsets of these global models using \code{\link[=fit_all_subsets]{fit_all_subsets()}}.
 \item Obtains model-averaged leave-one-out predictions for each record using \code{\link[=loo_pred_model_avg]{loo_pred_model_avg()}}.
-\item Summarizes the errors made in step 3 by response variable type and period (see \code{\link[=get_errors]{get_errors()}} \code{\link[=get_period]{get_period()}}).
+\item Summarizes the errors made in step 3 by response variable type and period (see \code{\link[KuskoHarvUtils:get_errors]{KuskoHarvUtils::get_errors()}} and \code{\link[KuskoHarvUtils:get_period]{KuskoHarvUtils::get_period()}}).
 }
 }
