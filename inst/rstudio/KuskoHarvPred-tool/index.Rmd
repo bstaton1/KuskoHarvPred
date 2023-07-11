@@ -704,26 +704,28 @@ div(
 
 ```{r outcome-data-UI}
 # link to show/hide data filters UI
-actionLink("show_hide_data_kable_filters", label = "Show/Hide Filters", icon = icon("filter"))
+actionLink("show_hide_resp_kable_filters", label = "Show/Hide Filters", icon = icon("filter"))
 
 # UI elements for filtering the outcome data
 hidden(
   div(
-    id = "data_kable_filters",
+    id = "resp_kable_filters",
     fillRow(
-      flex = c(1,3),
+      flex = c(1,1),
       
       # Filter by time period
       column(
         width = 12,
         h3(icon("filter"), "Time Periods"),
         wellPanel(
-          selectizeInput("data_kable_years", "Years", choices = yrs, selected = yrs, multiple = TRUE,
-                         options = list(placeholder = "Select one or more years")),
-          selectizeInput("data_kable_periods", "Periods",
+          selectizeInput("resp_kable_years", "Years", choices = yrs, selected = yrs, multiple = TRUE,
+                         options = list(placeholder = "Select one or more years",
+                                        plugins = list("remove_button"))),
+          selectizeInput("resp_kable_periods", "Periods",
                          choices = list("Period 1 (6/12-6/19)" = 1, "Period 2 (6/20-6/30)" = 2, "Period 3 (7/1-7/31)" = 3),
-                         selected = c(1,2,3), multiple = TRUE, options = list(placeholder = "Select one or more periods")),
-          actionButton("filter_periods_select_all", "Select All")
+                         selected = c(1,2,3), multiple = TRUE,
+                         options = list(placeholder = "Select one or more periods", plugins = list("remove_button"))),
+          actionButton("filter_resp_periods_select_all", "Select All", width = "100%", icon = icon("check"))
         )
       ),
       
@@ -732,15 +734,15 @@ hidden(
         width = 12,
         h3(icon("filter"), "Outcomes"),
         wellPanel(
-          splitLayout(
-            sliderInput("data_kable_effort", "Drift Trips", min = min(dat$effort), max = max(dat$effort),
+          # splitLayout(
+            sliderInput("resp_kable_effort", "Drift Trips", min = min(dat$effort), max = max(dat$effort),
                         value = range(dat$effort), width = "95%"),
-            sliderInput("data_kable_total_cpt", "Catch/Trip", min = min(round(dat$total_cpt)), max = max(round(dat$total_cpt)),
+            sliderInput("resp_kable_total_cpt", "Catch/Trip", min = min(round(dat$total_cpt)), max = max(round(dat$total_cpt)),
                         value = range(round(dat$total_cpt)), width = "95%"),
-            sliderInput("data_kable_chinook_comp", "Chinook Composition", min = min(round(dat$chinook_comp, 2)) * 100, max = max(round(dat$chinook_comp, 2)) * 100,
-                        value = range(round(dat$chinook_comp, 2) * 100), post = "%", width = "95%")
-          ),
-          actionButton("filter_outcomes_select_all", "Select All")
+            sliderInput("resp_kable_chinook_comp", "Chinook Composition", min = min(round(dat$chinook_comp, 2)) * 100, max = max(round(dat$chinook_comp, 2)) * 100,
+                        value = range(round(dat$chinook_comp, 2) * 100), post = "%", width = "95%"),
+          # ),
+          actionButton("filter_outcomes_select_all", "Select All", width = "100%", icon = icon("check"))
         )
       )
     ),
@@ -763,32 +765,37 @@ hidden(
     br(),
     br(),
     br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
     br()
   )
 )
 
 # show or hide filters when the action link is clicked
-observeEvent(input$show_hide_data_kable_filters, {
-  toggle(id = "data_kable_filters")
+observeEvent(input$show_hide_resp_kable_filters, {
+  toggle(id = "resp_kable_filters")
 })
 
 # reset the time period filters to default when action button is clicked
-observeEvent(input$filter_periods_select_all, {
-  updateSelectizeInput(inputId = "data_kable_years", selected = yrs)
-  updateSelectizeInput(inputId = "data_kable_periods", selected = c(1,2,3))
+observeEvent(input$filter_resp_periods_select_all, {
+  updateSelectizeInput(inputId = "resp_kable_years", selected = yrs)
+  updateSelectizeInput(inputId = "resp_kable_periods", selected = c(1,2,3))
 })
 
 # reset the outcome filters to default when action button is clicked
 observeEvent(input$filter_outcomes_select_all, {
-  updateSliderInput(inputId = "data_kable_effort", value = range(dat$effort))
-  updateSliderInput(inputId = "data_kable_total_cpt", value = range(round(dat$total_cpt)))
-  updateSliderInput(inputId = "data_kable_chinook_comp", value = range(round(dat$chinook_comp, 2) * 100))
+  updateSliderInput(inputId = "resp_kable_effort", value = range(dat$effort))
+  updateSliderInput(inputId = "resp_kable_total_cpt", value = range(round(dat$total_cpt)))
+  updateSliderInput(inputId = "resp_kable_chinook_comp", value = range(round(dat$chinook_comp, 2) * 100))
 })
 
 ```
 
 ```{r outcome-data-fn}
-data_kable = function(period_keep, year_keep, effort_range, total_cpt_range, chinook_comp_range) {
+resp_kable = function(period_keep, year_keep, effort_range, total_cpt_range, chinook_comp_range) {
   table_dat = prepare_regression_data()
   data("meta", package = "KuskoHarvData")
   meta$date = lubridate::date(meta$start)
@@ -818,16 +825,15 @@ data_kable = function(period_keep, year_keep, effort_range, total_cpt_range, chi
   table_dat$chum_harv = round(table_dat$chum_harv, -1)
   table_dat$sockeye_harv = round(table_dat$sockeye_harv, -1)
   table_dat = cbind(table_dat, "total_harv" = table_dat$chinook_harv + table_dat$chum_harv + table_dat$sockeye_harv)
+  table_dat$date = paste(lubridate::month(table_dat$date, label = TRUE, abbr = TRUE), lubridate::day(table_dat$date))
   
-  head(table_dat)
-
   
   if (nrow(table_dat) > 0) {
     out = table_dat %>%
       kbl("html", row.names = FALSE,
           col.names = c("Year", "Period", "Date", "Start Time", "End Time", "Drift Trips", "Catch/Trip", rep(c("Chinook", "Chum", "Sockeye"), 2), "Total"),
           align = "cclllccccccccc", format.args = list(big.mark = ",")) %>%
-      kable_styling(full_width = TRUE, bootstrap_options = c("condensed")) %>%
+      kable_styling(full_width = TRUE, bootstrap_options = c("condensed"), fixed_thead = TRUE) %>%
       collapse_rows(1:2) %>%
       add_header_above(c(" " = 7, "Species Composition" = 3, "Harvest" = "4"))
     
@@ -842,21 +848,21 @@ data_kable = function(period_keep, year_keep, effort_range, total_cpt_range, chi
 ```{r outcome-data-output}
 # create the table contents
 reactive({
-  rvals$data_kable = data_kable(period_keep = input$data_kable_periods, year_keep = input$data_kable_years,
-                                effort_range = input$data_kable_effort,
-                                total_cpt_range = input$data_kable_total_cpt,
-                                chinook_comp_range = input$data_kable_chinook_comp/100
+  rvals$resp_kable = resp_kable(period_keep = input$resp_kable_periods, year_keep = input$resp_kable_years,
+                                effort_range = input$resp_kable_effort,
+                                total_cpt_range = input$resp_kable_total_cpt,
+                                chinook_comp_range = input$resp_kable_chinook_comp/100
   )
 })
 
 # render table
-renderUI(HTML(rvals$data_kable))
+renderUI(HTML(rvals$resp_kable))
 
 # update the action link text with how many records out of the total are displayed
 # any time the contents of the table change
-observeEvent(rvals$data_kable, {
-  nrows_data_kable = max(stringr::str_count(as.character(rvals$data_kable), "<tr>") - 2, 0)
-  updateActionLink(inputId = "show_hide_data_kable_filters", label = paste0("Show/Hide Filters (", nrows_data_kable, "/", nrow(dat), " records shown)"))
+observeEvent(rvals$resp_kable, {
+  nrows_resp_kable = max(stringr::str_count(as.character(rvals$resp_kable), "<tr>") - 2, 0)
+  updateActionLink(inputId = "show_hide_resp_kable_filters", label = paste0("Show/Hide Filters (", nrows_resp_kable, "/", nrow(dat), " records shown)"))
 })
 ```
 
