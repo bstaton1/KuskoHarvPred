@@ -693,7 +693,8 @@ div(
   
   **Condition Data**
   
-  _The content on this page is currently under construction. Please wait for a future version for this feature._
+  This tab shows the conditions used to predict outcomes from each day of monitored drift boat fishing.
+  Each row is one day, and you can filter rows by specific values by clicking the `r icon("filter")` "Show/Hide Filters" link.
   
 </details>
 :::
@@ -868,7 +869,146 @@ observeEvent(rvals$resp_kable, {
 
 ### Condition Data
 
-_The content on this page is currently under construction. Please wait for a future version for this feature._
+```{r condition-data-UI}
+# link to show/hide data filters UI
+actionLink("show_hide_pred_kable_filters", label = "Show/Hide Filters", icon = icon("filter"))
+
+# UI elements for filtering the outcome data
+hidden(
+  div(
+    id = "pred_kable_filters",
+    fillRow(
+      flex = c(1,3),
+      
+      # Filter by time period
+      column(
+        width = 12,
+        h3(icon("filter"), "Time Periods"),
+        wellPanel(
+          selectizeInput("pred_kable_years", "Years", choices = yrs, selected = yrs, multiple = TRUE,
+                         options = list(placeholder = "Select one or more years",
+                                        plugins = list("remove_button"))),
+          selectizeInput("pred_kable_periods", "Periods",
+                         choices = list("Period 1 (6/12-6/19)" = 1, "Period 2 (6/20-6/30)" = 2, "Period 3 (7/1-7/31)" = 3),
+                         selected = c(1,2,3), multiple = TRUE,
+                         options = list(placeholder = "Select one or more periods",
+                                        plugins = list("remove_button"))),
+          actionButton("filter_pred_periods_select_all", "Select All", icon = icon("check"), width = "100%")
+        )
+      )
+    ),
+    
+    # empty space between filters and the table
+    # FIXME: work out a better solution for this kind of thing
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br()
+  )
+)
+
+# show or hide filters when the action link is clicked
+observeEvent(input$show_hide_pred_kable_filters, {
+  toggle(id = "pred_kable_filters")
+})
+
+# reset the time period filters to default when action button is clicked
+observeEvent(input$filter_pred_periods_select_all, {
+  updateSelectizeInput(inputId = "pred_kable_years", selected = yrs)
+  updateSelectizeInput(inputId = "pred_kable_periods", selected = c(1,2,3))
+})
+```
+
+```{r condition-data-fn}
+pred_kable = function(period_keep, year_keep) {
+  table_dat = prepare_regression_data()
+  data("meta", package = "KuskoHarvData")
+  meta$date = lubridate::date(meta$start)
+  table_dat = merge(meta, table_dat, by = "date", sort = FALSE, all.y = TRUE, all.x = FALSE)
+  
+  # keep only the relevant records
+  table_dat = table_dat[table_dat$period %in% period_keep & table_dat$year %in% year_keep,]
+  
+  # find the variables used in any model
+  # pred_vars = unique(unlist(lapply(fit_lists, KuskoHarvPred:::find_variables)))
+  # pred_vars = pred_vars[!stringr::str_detect(pred_vars, "^I\\(")]
+  ordered_pred_vars = c("hours_open", "p_before_noon", 
+                        "weekend", "not_first_day", "total_btf_cpue",
+                        "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp",
+                        "mean_Nwind", "mean_Ewind")
+  
+  # check to make sure everything is included
+  # all(pred_vars %in% ordered_pred_vars)
+  
+  # keep only variables to display
+  table_dat = table_dat[,c("year", "period", "date", ordered_pred_vars)]
+  
+  # convert proportion variables to percentages
+  table_dat$p_before_noon = KuskoHarvUtils::percentize(table_dat$p_before_noon)
+  table_dat$chinook_btf_comp = KuskoHarvUtils::percentize(table_dat$chinook_btf_comp)
+  table_dat$chum_btf_comp = KuskoHarvUtils::percentize(table_dat$chum_btf_comp)
+  table_dat$sockeye_btf_comp = KuskoHarvUtils::percentize(table_dat$sockeye_btf_comp)
+  
+  # convert logical variables to yes/no
+  table_dat$weekend = ifelse(table_dat$weekend, "Yes", "No")
+  table_dat$not_first_day = ifelse(table_dat$not_first_day, "Yes", "No")
+  
+  # round numeric variables
+  table_dat$total_btf_cpue = round(table_dat$total_btf_cpue)
+  table_dat$mean_Nwind = round(table_dat$mean_Nwind, 1)
+  table_dat$mean_Ewind = round(table_dat$mean_Ewind, 1)
+  
+  # format the date
+  table_dat$date = paste(lubridate::month(table_dat$date, label = TRUE, abbr = TRUE), lubridate::day(table_dat$date))
+  
+  # create the output: a nice kable if some records available, a nice message if not
+  if (nrow(table_dat) > 0) {
+    out = table_dat %>%
+      kbl("html", row.names = FALSE,
+          col.names = c("Year", "Period", "Date",
+                        "Hours Open", "%Before Noon", "Weekend?", "Fished Yesterday?",
+                        "Total CPUE", "%Chinook", "%Chum", "%Sockeye", "N. Wind", "E. Wind"),
+          align = "cclcccccccccc") %>%
+      kable_styling(full_width = TRUE, bootstrap_options = c("condensed"), fixed_thead = TRUE) %>%
+      collapse_rows(1:2) %>%
+      column_spec(3, width = "65px") %>%
+      add_header_above(c(" " = 7, "Bethel Test Fishery" = 4, " " = 2))
+    
+  } else {
+    out = '<p align="center" style="color:tomato; font-size:150%;">No records match the selected filters.</p>'
+  }
+  
+  return(out)
+}
+```
+
+```{r condition-data-output}
+# create the table contents
+reactive({
+  rvals$pred_kable = pred_kable(period_keep = input$pred_kable_periods, year_keep = input$pred_kable_years)
+})
+
+# render table
+renderUI(HTML(rvals$pred_kable))
+
+# update the action link text with how many records out of the total are displayed
+# any time the contents of the table change
+observeEvent(rvals$pred_kable, {
+  nrows_pred_kable = max(stringr::str_count(as.character(rvals$pred_kable), "<tr>") - 2, 0)
+  updateActionLink(inputId = "show_hide_pred_kable_filters", label = paste0("Show/Hide Filters (", nrows_pred_kable, "/", nrow(dat), " records shown)"))
+})
+```
 
 ## `r icon("info-circle")` Statistical Info. {.tabset}
 
