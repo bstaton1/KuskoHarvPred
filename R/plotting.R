@@ -60,13 +60,14 @@ subset_pred_data = function(response, settings = list()) {
 #'
 #' @param response Character; one of `"effort"`, `"total_cpt"`, `"chinook_comp"`, `"chum_comp"`, or `"sockeye_comp"`
 #' @param settings List specifying which covariate settings to subset the predicted values for. Passed to [subset_pred_data()].
+#' @param dat Data frame; the input regression data set, defaults to [KuskoHarvData::prepare_regression_data()].
 #' @param separate_day_types Logical; if the variable passed to `response` used the predictor variable `not_first_day`, should two relationships be drawn?
 #' @param pred_day Numeric; the day corresponding to a hypothetical prediction (`pred_response`). Defaults to `NULL` in which case this is not drawn.
 #' @param pred_response Numeric; the predicted response corresponding to a hypothetical day (`pred_day`). Defaults to `NULL` in which case this is not drawn.
 #' @param draw_make_range Logical; should a shaded region around model prediction that shows +/- 1MAPE be shown?
 #' @export
 
-relationship_plot = function(response, settings = list(), separate_day_types = TRUE, pred_day = NULL, pred_response = NULL, draw_mape_range = FALSE) {
+relationship_plot = function(response, settings = list(), dat = KuskoHarvData::prepare_regression_data(), separate_day_types = TRUE, pred_day = NULL, pred_response = NULL, draw_mape_range = FALSE) {
 
   # aesthetic settings here
   pt_cex = 1.5
@@ -74,9 +75,6 @@ relationship_plot = function(response, settings = list(), separate_day_types = T
   pt_bg = scales::alpha("skyblue", 0.5)
   line_col = "salmon"
   poly_col = scales::alpha(line_col, 0.25)
-
-  # create the data set
-  dat = KuskoHarvData::prepare_regression_data()
 
   # create the y-axis label
   ylab = get_var_name(response)
