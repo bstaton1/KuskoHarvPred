@@ -79,13 +79,7 @@ relationship_plot = function(response, settings = list(), separate_day_types = T
   dat = KuskoHarvData::prepare_regression_data()
 
   # create the y-axis label
-  ylab = switch(response,
-                "effort" = "Drift Trips/Day",
-                "total_cpt" = "Salmon Catch/Trip",
-                "chinook_comp" = "Species Composition: Chinook Salmon",
-                "chum_comp" = "Species Composition: Chum Salmon",
-                "sockeye_comp" = "Species Composition: Sockeye Salmon",
-  )
+  ylab = get_var_name(response)
 
   # create the plot with two lines: one for not_first_day and one for !not_first_day
   if ("not_first_day" %in% colnames(pred_data[[response]]) & separate_day_types) {
@@ -157,7 +151,7 @@ relationship_plot = function(response, settings = list(), separate_day_types = T
 
     # scatter plot with correct dimensions, labels, etc.
     plot(dat[,response] ~ day, data = dat, type = "n", ylim = ylim, xaxt = "n", yaxt = "n",
-         ylab = ylab, xlab = "Day of Season", axes = FALSE, font.lab = 2)
+         ylab = ylab, xlab = "Date", axes = FALSE, font.lab = 2)
 
     # draw uncertainty if instructed
     if (draw_mape_range) {
@@ -189,17 +183,12 @@ relationship_plot = function(response, settings = list(), separate_day_types = T
   }
 
   # add x-axis
-  at_x = seq(12, 46, by = 5)
-  date_x = KuskoHarvUtils::from_days_past_may31(at_x)
-  month_x = lubridate::month(date_x, label = TRUE, abbr = TRUE)
-  day_x = lubridate::day(date_x)
-  lab_x = paste(month_x, day_x)
-  axis(side = 1, at = at_x, labels = lab_x, lwd = 2)
+  draw_day_axis(min(dat$day), max(dat$day), by = 5, side = 1, lwd = 2)
   segments(usr[1], usr[3], usr[2], usr[3], lwd = 2, xpd = TRUE)
 
   # add y-axis
   if (stringr::str_detect(response, "comp")) {
-    axis(side = 2, at = seq(0, 1, 0.2), labels = paste0(seq(0, 1, 0.2) * 100, "%"), lwd = 2)
+    draw_percent_axis(side = 2, lwd = 2)
   } else {
     axis(side = 2, lwd = 2)
   }
