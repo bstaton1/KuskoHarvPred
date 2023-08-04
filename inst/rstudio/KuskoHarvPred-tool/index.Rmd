@@ -1,5 +1,6 @@
 ---
 title: '**Kuskokwim Salmon Harvest Prediction Tool**'
+subtitle: "For Daily Lower River Drift Harvest Based on 2016 -- 2022 In-Season Data"
 author: "_v0.1.0.9990; DRAFT FOR USE IN 2023_"
 output: html_document
 runtime: shiny
@@ -230,7 +231,7 @@ fillRow(
       numericInput(inputId = "chum_btf_cpue", label = "Chum CPUE", value = 10, min = 0),
       numericInput(inputId = "sockeye_btf_cpue", label = "Sockeye CPUE", value = 10, min = 0),
       a(icon("table"), "View BTF Data Webpage", href = "https://www.adfg.alaska.gov/index.cfm?adfg=commercialbyareakuskokwim.btf"),
-      actionButton(inputId = "use_avg_btf", label = "Get 2016 — 2021 Average", width = "100%")
+      actionButton(inputId = "use_avg_btf", label = paste0("Get 2016 — ", max(dat$year), " Average"), width = "100%")
     )
   ),
   # input widgets for weather info
@@ -664,6 +665,7 @@ div(
     par(mar = c(3.5,3.5,1,1), mgp = c(1.5,0.2,0), tcl = -0.25, cex = 1.5)
     relationship_plot(response = input$plot_response,
            settings = rvals$plot_settings,
+           dat = dat,
            separate_day_types = TRUE,
            # pred_day = KuskoHarvUtils::to_days_past_may31(input$date),
            # pred_response = rvals$preds[,input$plot_response]
@@ -1008,6 +1010,36 @@ observeEvent(rvals$pred_kable, {
   nrows_pred_kable = max(stringr::str_count(as.character(rvals$pred_kable), "<tr>") - 2, 0)
   updateActionLink(inputId = "show_hide_pred_kable_filters", label = paste0("Show/Hide Filters (", nrows_pred_kable, "/", nrow(dat), " records shown)"))
 })
+```
+
+### Scatterplots
+
+```{r scatterplots-ui}
+resp_vars = c("effort", "total_cpt", "chinook_comp", "chum_comp", "sockeye_comp")
+pred_vars = c("day", "hours_open", "p_before_noon", "weekend", "not_first_day", "total_btf_cpue", "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp", "mean_Nwind", "mean_Ewind")
+names(resp_vars) = sapply(resp_vars, function(v) KuskoHarvPred:::get_var_name(v))
+names(pred_vars) = sapply(pred_vars, function(v) KuskoHarvPred:::get_var_name(v))
+
+selectInput("scatterplot_xvar", label = "X-Axis Variable", choices = list("Outcome Variables" = resp_vars, "Condition Variables" = pred_vars), selected = "total_btf_cpue")
+selectInput("scatterplot_yvar", label = "Y-Axis Variable", choices = list("Outcome Variables" = resp_vars, "Condition Variables" = pred_vars), selected = "total_cpt")
+checkboxInput("scatterplot_color_periods", label = "Show Periods", value = FALSE)
+checkboxInput("scatterplot_label_years", label = "Show Years", value = FALSE)
+```
+
+```{r scatterplots-output}
+div(
+  style = "margin: auto; width: 60%",
+  renderPlot(expr = {
+    par(mar = c(3.5,3.5,1,1), mgp = c(1.5,0.025,0), tcl = 0, cex = 1.5, cex.axis = 0.9, cex.lab = 1.1)
+    vars_biplot(
+      xvar = input$scatterplot_xvar,
+      yvar = input$scatterplot_yvar,
+      dat = dat,
+      color_periods = input$scatterplot_color_periods,
+      label_years = input$scatterplot_label_years
+    )
+  })
+)
 ```
 
 ## `r icon("info-circle")` Statistical Info. {.tabset}
