@@ -167,6 +167,7 @@ get_mape = function(response, period) {
 #' For printing axis labels, etc.
 #'
 #' @param var The variable name. Returns `NA` if not a valid variable.
+#'
 
 get_var_name = function(var) {
   switch(var,
