@@ -205,3 +205,43 @@ relationship_plot = function(response, settings = list(), separate_day_types = T
   }
   segments(usr[1], usr[3], usr[1], usr[4], lwd = 2, xpd = TRUE)
 }
+
+#' Draw an Axis showing Dates
+#'
+#' @param fday The first day (1 = June 1)
+#' @param lday The last day (1 = June 1)
+#' @param by The interval to draw axis ticks at
+#' @param side The side of the plot to draw the axis on,
+#'  1 = x-axis, 2 = y-axis
+#' @param ... Optional arguments to be passed to [graphics::axis()]
+
+draw_day_axis = function(fday, lday, by, side = 1, ...) {
+  at = seq(fday, lday, by = by)
+  date = KuskoHarvUtils::from_days_past_may31(at)
+  month = lubridate::month(date)
+  day = lubridate::day(date)
+  lab = paste(month, day, sep = "/")
+  axis(side = side, at = at, labels = lab, ...)
+}
+
+#' Draw an Axis Showing Percentages
+#'
+#' @inheritParams draw_day_axis
+#'
+
+draw_percent_axis = function(side, ...) {
+  usr = par("usr")
+  if (side == 1) i = c(1,2) else i = c(3,4)
+  at = axisTicks(usr[i], log = FALSE)
+  axis(side = side, at = at, labels = paste0(at * 100, "%"), ...)
+}
+
+#' Draw an Axis Showing Percentages
+#'
+#' @inheritParams draw_day_axis
+#'
+
+draw_yn_axis = function(side, ...) {
+  axis(side = side, at = c(0,1), labels = c("No", "Yes"), ...)
+}
+
