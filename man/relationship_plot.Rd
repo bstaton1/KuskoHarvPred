@@ -7,6 +7,7 @@
 relationship_plot(
   response,
   settings = list(),
+  dat = KuskoHarvData::prepare_regression_data(),
   separate_day_types = TRUE,
   pred_day = NULL,
   pred_response = NULL,
@@ -17,6 +18,8 @@ relationship_plot(
 \item{response}{Character; one of \code{"effort"}, \code{"total_cpt"}, \code{"chinook_comp"}, \code{"chum_comp"}, or \code{"sockeye_comp"}}
 
 \item{settings}{List specifying which covariate settings to subset the predicted values for. Passed to \code{\link[=subset_pred_data]{subset_pred_data()}}.}
+
+\item{dat}{Data frame; the input regression data set, defaults to \code{\link[KuskoHarvData:prepare_regression_data]{KuskoHarvData::prepare_regression_data()}}.}
 
 \item{separate_day_types}{Logical; if the variable passed to \code{response} used the predictor variable \code{not_first_day}, should two relationships be drawn?}
 
