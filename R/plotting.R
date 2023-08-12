@@ -91,7 +91,7 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvData::p
 
     # scatter plot with correct dimensions, labels, etc.
     plot(dat[,response] ~ day, data = dat, type = "n", ylim = ylim, xaxt = "n", yaxt = "n",
-         ylab = ylab, xlab = "Day of Season", axes = FALSE, font.lab = 2)
+         ylab = ylab, xlab = "Date", axes = FALSE)
 
     # draw uncertainty if instructed
     if (draw_mape_range) {
@@ -130,10 +130,10 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvData::p
     legend_location = ifelse(response == "total_cpt", "topleft", "topright")
     legend(legend_location, title = "Fished Yesterday?", legend = c("No", "Yes"),
            lty = c(1, 2), col = line_col, lwd = 2, bty = "n", text.col = "white",
-           x.intersp = 2.5, seg.len = 3.5)
+           x.intersp = 2.5, seg.len = 3.5, cex = 0.8)
     legend(legend_location, title = "Fished Yesterday?", legend = c("No", "Yes"),
            pch = c(21, 24), col = pt_col, pt.bg = pt_bg, pt.cex = pt_cex, bty = "n",
-           x.intersp = 2.5)
+           x.intersp = 2.5, text.col = par("col.axis"), cex = 0.8)
 
   } else {
 
@@ -149,7 +149,7 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvData::p
 
     # scatter plot with correct dimensions, labels, etc.
     plot(dat[,response] ~ day, data = dat, type = "n", ylim = ylim, xaxt = "n", yaxt = "n",
-         ylab = ylab, xlab = "Date", axes = FALSE, font.lab = 2)
+         ylab = ylab, xlab = "Date", axes = FALSE)
 
     # draw uncertainty if instructed
     if (draw_mape_range) {
@@ -181,16 +181,15 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvData::p
   }
 
   # add x-axis
-  draw_day_axis(min(dat$day), max(dat$day), by = 5, side = 1, lwd = 2)
-  segments(usr[1], usr[3], usr[2], usr[3], lwd = 2, xpd = TRUE)
+  draw_day_axis(min(dat$day), max(dat$day), by = 5, side = 1)
 
   # add y-axis
   if (stringr::str_detect(response, "comp")) {
-    draw_percent_axis(side = 2, lwd = 2)
+    draw_percent_axis(side = 2)
   } else {
-    axis(side = 2, lwd = 2)
+    axis(side = 2, col = "white")
+    draw_percent_axis(side = 2)
   }
-  segments(usr[1], usr[3], usr[1], usr[4], lwd = 2, xpd = TRUE)
 }
 
 #' Draw an Axis showing Dates
@@ -208,7 +207,8 @@ draw_day_axis = function(fday, lday, by, side = 1, ...) {
   month = lubridate::month(date)
   day = lubridate::day(date)
   lab = paste(month, day, sep = "/")
-  axis(side = side, at = at, labels = lab, ...)
+  axis(side = side, at = at, labels = lab, col = "white", ...)
+  draw_axis_line(side = side)
 }
 
 #' Draw an Axis Showing Percentages
@@ -220,7 +220,8 @@ draw_percent_axis = function(side, ...) {
   usr = par("usr")
   if (side == 1) i = c(1,2) else i = c(3,4)
   at = axisTicks(usr[i], log = FALSE)
-  axis(side = side, at = at, labels = paste0(at * 100, "%"), ...)
+  axis(side = side, at = at, labels = paste0(at * 100, "%"), col = "white", ...)
+  draw_axis_line(side = side)
 }
 
 #' Draw an Axis Showing Percentages
@@ -229,7 +230,10 @@ draw_percent_axis = function(side, ...) {
 #'
 
 draw_yn_axis = function(side, ...) {
-  axis(side = side, at = c(0,1), labels = c("No", "Yes"), ...)
+  axis(side = side, at = c(0,1), labels = c("No", "Yes"), col = "white", ...)
+  draw_axis_line(side = side)
+}
+
 #' Draw an Axis Line with No Ticks or Labels
 #'
 #' @inheritParams draw_day_axis
@@ -293,7 +297,7 @@ vars_biplot = function(xvar = "total_btf_cpue", yvar = "total_cpt", color_period
 
   # make an empty plot with proper labels and dimensions
   plot(x = 1, y = 1, type = "n",xlab = get_var_name(xvar), ylab = get_var_name(yvar),
-       xlim = range(dat[,xvar]) + xoff, ylim = (range(dat[,yvar]) + yoff) * ymult, xaxt = "n", yaxt = "n")
+       xlim = range(dat[,xvar]) + xoff, ylim = (range(dat[,yvar]) + yoff) * ymult, axes = FALSE)
 
   # draw the points
   points(x = x, y = y, pch = 21, cex = 1.75,
@@ -315,7 +319,8 @@ vars_biplot = function(xvar = "total_btf_cpue", yvar = "total_cpt", color_period
       if (x_is_yn) {
         draw_yn_axis(side = 1)
       } else {
-        axis(side = 1)
+        axis(side = 1, col = "white")
+        draw_axis_line(side = 1)
       }
     }
   }
@@ -330,7 +335,8 @@ vars_biplot = function(xvar = "total_btf_cpue", yvar = "total_cpt", color_period
       if (y_is_yn) {
         draw_yn_axis(side = 2)
       } else {
-        axis(side = 2)
+        axis(side = 2, col = "white")
+        draw_axis_line(side = 2)
       }
     }
   }
@@ -340,7 +346,7 @@ vars_biplot = function(xvar = "total_btf_cpue", yvar = "total_cpt", color_period
     legend ("top", horiz = TRUE, title = "Period", legend = c("6/12-6/19", "6/20-6/30", ">= 7/1"), pch = 21,
             col = scales::alpha(c("skyblue", "orange", "salmon"), alpha["col"]),
             pt.bg = scales::alpha(c("skyblue", "orange", "salmon"), alpha["bg"]),
-            pt.cex = 2, cex = 0.9,
+            pt.cex = 2, cex = 0.9, text.col = par("col.axis"),
             bty = "n"
     )
   }
