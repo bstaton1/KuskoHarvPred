@@ -3,7 +3,7 @@
 # REDUCES RUN TIME LATER
 
 # produce the regression data set
-dat = KuskoHarvData::prepare_regression_data()
+fit_data = KuskoHarvData::prepare_regression_data()
 
 # perform LOO analysis
 loo_output = KuskoHarvPred:::whole_loo_analysis(
@@ -14,7 +14,7 @@ loo_output = KuskoHarvPred:::whole_loo_analysis(
     chum_comp = "day + chum_btf_comp",
     sockeye_comp = "day + sockeye_btf_comp"
   ),
-  fit_data = dat
+  fit_data = fit_data
 )
 
 # store all component regression models in a separate object
@@ -23,10 +23,10 @@ loo_output = loo_output[-which(names(loo_output) == "models")]
 
 # build objects needed for constructing predictive data set
 # years
-year_range = sort(unique(lubridate::year(dat$date)))
+year_range = sort(unique(lubridate::year(fit_data$date)))
 
 # build bank of day variable
-day = min(dat$day):max(dat$day)
+day = min(fit_data$day):max(fit_data$day)
 
 # build bank of miscellaneous variables
 misc_bank = list(
@@ -99,7 +99,7 @@ weather_key = data.frame(
   CAT_mean_Ewind = c("strong_westerly", "none", "strong_easterly")
 )
 
-build_pred_data = function(vars, days = min(dat$day):max(dat$day)) {
+build_pred_data = function(vars, days = min(fit_data$day):max(fit_data$day)) {
 
   # extract the names of all BTF variables
   btf_vars = vars[stringr::str_detect(vars, "btf")]
@@ -153,4 +153,4 @@ pred_data = lapply(names(fit_lists), function(r) {
 }); names(pred_data) = names(fit_lists)
 
 # export them to proper structure and location
-usethis::use_data(fit_lists, pred_data, loo_output, internal = TRUE, overwrite = TRUE)
+usethis::use_data(fit_lists, pred_data, loo_output, fit_data, internal = TRUE, overwrite = TRUE)
