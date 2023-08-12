@@ -7,7 +7,7 @@ Description: Contains framework for predicting outcomes from a day of fishing in
     Regression models are model-averaged to obtain predictions of these quantities, which when multiplied, give predictions of species-specific harvest.
     The package contains an interactive web application to enable users without statistical training to interface with the historical data and use it for making predictions of outcomes from proposed fishing opportunities.
 License: MIT + file LICENSE
-Depends: R (>= 3.5.0)
+Depends: R (>= 4.1.0)
 Imports:
     stringr (>= 1.3.1),
     MuMIn,
