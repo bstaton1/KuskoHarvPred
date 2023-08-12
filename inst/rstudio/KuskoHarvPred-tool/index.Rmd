@@ -197,6 +197,8 @@ year = year(today())
 default_date = max(as_date(paste0(year, "-06-12")), today() + 3)
 min_date = as_date(paste0(year, "-06-12"))
 max_date = as_date(paste0(year, "-07-31"))
+if (default_date > max_date) default_date = max_date
+if (default_date < min_date) default_date = min_date
 
 start_time_bank = c("12:00AM (Start of Day)", paste0(1:11, ":00AM"), paste0(c(12, 1:11), ":00PM"))
 end_time_bank = c("12:00AM (Start of Day)", paste0(1:11, ":00AM"), paste0(c(12, 1:11), ":00PM"), "12:00AM (End of Day)")
