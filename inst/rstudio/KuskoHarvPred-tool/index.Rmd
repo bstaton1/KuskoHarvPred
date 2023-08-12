@@ -86,6 +86,7 @@ doc_par = function(
   do.call(par, c(as.list(environment()), list(...), list(col.lab = col.axis)))
 }
 ```
+
 ---
 
 :::{.red}
@@ -673,9 +674,9 @@ br()
 br()
 
 div(
-  style = "margin: auto; width: 75%",
+  style = "margin: auto; width: 60%",
   renderPlot(expr = {
-    par(mar = c(3.5,3.5,1,1), mgp = c(1.5,0.2,0), tcl = -0.25, cex = 1.5)
+    doc_par()
     relationship_plot(response = input$plot_response,
            settings = rvals$plot_settings,
            dat = dat,
@@ -1043,7 +1044,7 @@ checkboxInput("scatterplot_label_years", label = "Show Years", value = FALSE)
 div(
   style = "margin: auto; width: 60%",
   renderPlot(expr = {
-    par(mar = c(3.5,3.5,1,1), mgp = c(1.5,0.025,0), tcl = 0, cex = 1.5, cex.axis = 0.9, cex.lab = 1.1)
+    doc_par()
     vars_biplot(
       xvar = input$scatterplot_xvar,
       yvar = input$scatterplot_yvar,
@@ -1270,11 +1271,11 @@ renderUI(HTML(aic_kable(KuskoHarvPred:::fit_lists[[input$aic_response]])))
 ```{r importance-kable-fn}
 importance_kable = function(fit_list) {
   tab = MuMIn::sw(fit_list)
-tab = as.data.frame(tab)
-tab = cbind(Variable = rownames(tab), Importance = KuskoHarvUtils::percentize(tab$tab))
-tab %>%
-kbl("html", align = "lr") %>%
-  kable_styling(full_width = FALSE, bootstrap_options = c("condensed", "striped")) %>% column_spec(1, monospace = TRUE)
+  tab = as.data.frame(tab)
+  tab = cbind(Variable = sapply(rownames(tab), KuskoHarvPred:::get_var_name), Importance = KuskoHarvUtils::percentize(tab$tab))
+  tab %>%
+    kbl("html", align = "lr", row.names = FALSE) %>%
+    kable_styling(full_width = FALSE, bootstrap_options = c("condensed", "striped"))
 }
 ```
 
@@ -1310,20 +1311,25 @@ eff_size_plot = function(fit_list) {
   x = MuMIn::coefTable(mod_avg, full = TRUE)
   x = x[-1,]
   eff_sizes = sort(x[,"Estimate"]/x[,"Std. Error"])
-  mp = barplot(eff_sizes, horiz = TRUE, las = 1, xlim = max(abs(eff_sizes)) * c(-1.05,1.05),
-               space = 0,
+  names(eff_sizes) = unname(sapply(names(eff_sizes), KuskoHarvPred:::get_var_name))
+  mp = barplot(eff_sizes, horiz = TRUE, las = 1,
+               # xlim = max(abs(eff_sizes)) * c(-1.05,1.05),
+               xlim = 8 * c(-1,1),
+               space = 0, names.arg = rep(" ", length(eff_sizes)),
                col = ifelse(eff_sizes <= 0, "salmon", "skyblue"),
-               border = "white")
+               border = "white", xaxt = "n")
   
-  usr = par("usr")
-  axis(side = 1, at = axisTicks(usr[1:2], log = FALSE), labels = FALSE, lwd = 2)
-  axis(side = 2, at = mp, labels = FALSE, lwd = 2)
-  segments(usr[1], usr[3], usr[2], usr[3], xpd = TRUE, lwd = 2)
-  segments(usr[1], usr[3], usr[1], usr[4], xpd = TRUE, lwd = 2)
-  abline(v = 0, col = "grey50", lty = 1, lwd = 4, lend = "square")
+  axis(side = 1, at = seq(-8, 8, 2), col = "white")
   
-  mtext(side = 1, line = 1.5, "Model-Averaged Effect Size", cex = par("cex"))
-  mtext(side = 1, line = 2.5, "(Est/SE)", cex = par("cex"))
+  par(mgp = c(2,0.1,0))
+  axis(side = 2, at = mp, labels = names(eff_sizes), las = 1, col = "white")
+  
+  KuskoHarvPred:::draw_axis_line(side = 1)
+  KuskoHarvPred:::draw_axis_line(side = 2)
+  abline(v = 0, col = par("col.axis"), lty = 2, lwd = 2)
+  
+  mtext(side = 1, line = 1.5, "Model-Averaged Effect Size", cex = par("cex"), col = par("col.axis"))
+  mtext(side = 1, line = 2.3, "(Est/SE)", cex = par("cex") * 0.85, col = par("col.axis"), font = 3)
 }
 ```
 
@@ -1333,10 +1339,9 @@ selectInput("eff_size_response", "Outcome Variable", choices = response_choices,
 
 ```{r eff-size-plot-output}
 div(
-  style = "margin: auto; width: 75%",
+  style = "margin: auto; width: 70%",
   renderPlot(expr = {
-    par(mar = c(3.5,8,1,1),mgp = c(1.5,0.3,0), tcl = -0.25, cex = 1.5)
-
+    doc_par(mar = c(3.5,12,1,1))
     eff_size_plot(KuskoHarvPred:::fit_lists[[input$eff_size_response]])
     })
 )
@@ -1360,7 +1365,7 @@ div(
   This is important to do since it makes the scale of the error be relative to the magnitude of the actual value.
   For example, if the prediction is wrong by 1,000 fish (error), this is a much larger error if the true value is 2,000 fish (50% error) versus if it was  10,000 fish (10% error).
   Said another way, we should be more concerned about an error of 1,000 fish if that is large relative to the actual value.
-  Because the scale of the outcomes vary throughout the season, standardizing with percents ensures that errors are comparable across data points.
+  Because the scale of the outcomes varies throughout the season, standardizing ensures that errors are comparable across data points.
 
   We use two statistics to summarize the errors:
 
@@ -1408,8 +1413,8 @@ loo_plot = function(response) {
   # extract only info needed for plotting
   x = errors[errors$response == response,-which(colnames(errors) %in% c("reduce_colinearity", "cwt_retain", "response", "n_models"))]
   x = unlist(x)
-  x_mpe = x[1:4] * 100
-  x_mape = x[5:8] * 100
+  x_mpe = x[1:4]
+  x_mape = x[5:8]
 
   # make the yaxis limits
   min_val = ifelse(min(x_mpe) < 0, min(x_mpe), 0)
@@ -1421,24 +1426,29 @@ loo_plot = function(response) {
   }
   
   # make the MPE barplot
-  mp = barplot(x_mpe, ylim = ylim, xaxt = "n", yaxt = "n", border = "white", col = ifelse(x_mpe < 0, "salmon", "skyblue"), main = "Mean % LOO Error\n(Accuracy)", space = 0)
+  mp = barplot(x_mpe, ylim = ylim, xaxt = "n", yaxt = "n", border = "white",
+               col = ifelse(x_mpe < 0, "salmon", "skyblue"), space = 0)
   usr = par("usr"); ydiff = diff(usr[3:4])
-  text(x = mp, y = ifelse(x_mpe < 0, x_mpe - ydiff * 0.035, x_mpe + ydiff * 0.035), labels = KuskoHarvUtils::percentize(x_mpe/100), col = "grey50", font = 3)
-  axis(side = 1, at = mp, labels = period_labels, las = 1, lwd = 2)
-  axis(side = 2, at = axisTicks(usr[3:4], log = FALSE), labels = paste0(axisTicks(usr[3:4], log = FALSE), "%"), lwd = 2)
-  abline(h = 0, lwd = 2, col = "grey", lend = "square")
-  segments(usr[1], usr[3], usr[2], usr[3], xpd = TRUE, lwd = 2)
-  segments(usr[1], usr[3], usr[1], usr[4], xpd = TRUE, lwd = 2)
+  text(x = mp, y = ifelse(x_mpe < 0, x_mpe - ydiff * 0.035, x_mpe + ydiff * 0.035),
+       labels = KuskoHarvUtils::percentize(x_mpe), col = par("col.axis"), font = 3)
+  axis(side = 1, at = mp, labels = period_labels, las = 1, col = "white")
+  KuskoHarvPred:::draw_axis_line(side = 1)
+  KuskoHarvPred:::draw_percent_axis(side = 2)
+  if (min_val != 0) abline(h = 0, lty = 2, lwd = 2, col = par("col.axis"))
+  mtext(side = 3, line = 1.5, text = "Mean % LOO Error", col = par("col.axis"), font = 2, adj = 0, cex = 1.5)
+  mtext(side = 3, line = 0.45, text = "Accuracy", col = par("col.axis"), font = 4, adj = 0, cex = 1.25)
   
   # make the MAPE barplot
-  mp = barplot(x_mape, ylim = c(0, max(x_mape)) * 1.2, xaxt = "n", yaxt = "n", border = "white", col = "skyblue", main = "Mean Absolute % LOO Error\n(Precision)", space = 0)
+  mp = barplot(x_mape, ylim = c(0, max(x_mape)) * 1.2, xaxt = "n", yaxt = "n", border = "white",
+               col = scales::alpha("forestgreen", 0.65), space = 0)
   usr = par("usr"); ydiff = diff(usr[3:4])
-  text(x = mp, y = ifelse(x_mape < 0, x_mape - ydiff * 0.035, x_mape + ydiff * 0.035), labels = KuskoHarvUtils::percentize(x_mape/100), col = "grey50", font = 3)
-  axis(side = 1, at = mp, labels = period_labels, las = 1, lwd = 2)
-  axis(side = 4, at = axisTicks(usr[3:4], log = FALSE), labels = paste0(axisTicks(usr[3:4], log = FALSE), "%"), lwd = 2)
-  abline(h = 0, lwd = 2, col = "grey", lend = "square")
-  segments(usr[1], usr[3], usr[2], usr[3], xpd = TRUE, lwd = 2)
-  segments(usr[2], usr[3], usr[2], usr[4], xpd = TRUE, lwd = 2)
+  text(x = mp, y = ifelse(x_mape < 0, x_mape - ydiff * 0.035, x_mape + ydiff * 0.035),
+       labels = KuskoHarvUtils::percentize(x_mape), col = par("col.axis"), font = 3)
+  axis(side = 1, at = mp, labels = period_labels, las = 1, col = "white")
+  KuskoHarvPred:::draw_axis_line(side = 1)
+  KuskoHarvPred:::draw_percent_axis(side = 4)
+  mtext(side = 3, line = 1.5, text = "Mean Absolute % LOO Error", col = par("col.axis"), font = 2, adj = 0, cex = 1.5)
+  mtext(side = 3, line = 0.45, text = "Precision", col = par("col.axis"), font = 4, adj = 0, cex = 1.25)
 }
 ```
 
@@ -1449,9 +1459,9 @@ selectInput("cv_plot_response", "Variable",
 
 ```{r cv-plot-output}
 div(
-  style = "margin: auto; width: 100%",
+  style = "margin: auto;",
   renderPlot(expr = {
-    par(mar = c(0.0,1,4,0.0), mfrow = c(1,2), mgp = c(2,0.35,0), tcl = -0.25, oma = c(2,2,0,2), cex = 1.5, cex.axis = 0.95)
+    doc_par(mfrow = c(1,2), mar = c(0.05,1,4,0.05), oma = c(2,2,0,2), cex.axis = 1.05)
     loo_plot(input$cv_plot_response)
   })
 )
@@ -1461,18 +1471,52 @@ div(
 
 This table shows the leave-one-out (LOO) cross-validation error summaries for each outcome variable and time period of the season.
 The values are the same as those plotted on the "Summary Plots" page.
+The cell color represents the magnitude of the errors -- darker colors correspond to larger relative errors.
 
 ```{r cv-table-output}
 error_summary = KuskoHarvPred:::loo_output$error_summary
-
 error_summary = error_summary[,-which(colnames(error_summary) %in% c("reduce_colinearity", "cwt_retain"))]
 error_summary$n_models[is.na(error_summary$n_models)] = " — "
 error_summary$response = c("Drift Trips/Day", "Salmon Catch/Trip", "Chinook Composition", "Chum Composition", "Sockeye Composition", "Chinook Harvest", "Chum Harvest", "Sockeye Harvest")
 
+# function to assign a color to a cell based on the error summary stat
+# allow_negatives = TRUE if for MPE, FALSE for MAPE
+assign_color = function(p, allow_negatives) {
+  if (allow_negatives) {
+    pal = colorRampPalette(c("red", "white", "blue"))
+    breaks = c(-2,-0.7,-0.55,-0.4,-0.25,0.25,0.4,0.55,0.7,2)
+  } else {
+    pal = colorRampPalette(c("white", "forestgreen"))
+    breaks = c(0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.1, 1.25, 2)
+  }
+  cols = pal(length(breaks))
+  bin_names = levels(cut(runif(1e6, -2, 2), breaks = breaks, include.lowest = TRUE))
+  names(cols) = bin_names
+  cols["(-0.25,0.25]"] = "#FFFFFF"
+  cols["[0,0.15]"] = "#FFFFFF"
+  p[is.na(p)] = 0
+  bins = cut(p, breaks = breaks, include.lowest = TRUE)
+  cols_use = cols[as.character(bins)]
+  scales::alpha(unname(cols_use), 0.5)
+}
+
+error_colors = cbind(
+  error_summary[,1:2],
+  apply(error_summary[,c(3:6)], 2, assign_color, allow_negatives = TRUE),
+  apply(error_summary[,c(7:10)], 2, assign_color, allow_negatives = FALSE)
+  )
 error_summary = cbind(error_summary[,1:2], apply(error_summary[,-c(1,2)], 2, KuskoHarvUtils::percentize))
 
 kbl(error_summary, "html", align = "lccccccccc", col.names = c("Variable", "N Models", period_labels, period_labels),) %>%
   kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) %>%
+  column_spec(column = 3, background = error_colors[,3]) %>%
+  column_spec(column = 4, background = error_colors[,4]) %>%
+  column_spec(column = 5, background = error_colors[,5]) %>%
+  column_spec(column = 6, background = error_colors[,6]) %>%
+  column_spec(column = 7, background = error_colors[,7]) %>%
+  column_spec(column = 8, background = error_colors[,8]) %>%
+  column_spec(column = 9, background = error_colors[,9]) %>%
+  column_spec(column = 10, background = error_colors[,10]) %>%
   add_header_above(c(" " = 2, "Mean % LOO Error (Accuracy)" = 4, "Mean Absolute % LOO Error (Precision)" = 4)) %>%
   column_spec(1, bold = TRUE)
 ```
@@ -1524,15 +1568,15 @@ pred_v_obs_plot = function(var) {
          col = scales::alpha(c("skyblue", "orange", "salmon"), alpha["col"]),
          pt.bg = scales::alpha(c("skyblue", "orange", "salmon"), alpha["bg"]),
          pt.cex = 2, cex = 0.9,
-         bty = "n"
+         bty = "n", text.col = par("col.axis")
          )
 
   # draw axes
   if (str_detect(var, "comp")) {
-    axis(side = 1, at = seq(0, 1, 0.2), labels = paste0(seq(0, 1, 0.2) * 100, "%"), lwd = 2)
-    axis(side = 2, at = seq(0, 1, 0.2), labels = paste0(seq(0, 1, 0.2) * 100, "%"), lwd = 2)
+    KuskoHarvPred:::draw_percent_axis(side = 1)
+    KuskoHarvPred:::draw_percent_axis(side = 2)
   } else {
-    axis(side = 1, lwd = 2); axis(side = 2, lwd = 2)
+    axis(side = 1); axis(side = 2)
   }
 }
 ```
@@ -1546,7 +1590,7 @@ selectInput("obs_v_pred_plot_response", "Variable",
 div(
   style = "margin: auto; width: 60%",
   renderPlot(expr = {
-    par(mar = c(3,3,1,1), mgp = c(2,0.35,0), tcl = -0.25, cex = 1.5, xaxs = "i", yaxs = "i")
+    doc_par(xaxs = "i", yaxs = "i")
     pred_v_obs_plot(input$obs_v_pred_plot_response)
   })
 )
