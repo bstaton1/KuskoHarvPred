@@ -529,11 +529,11 @@ preds_kable = function(input, rvals) {
     header = c(" " = 1, "Predicted Values" = 1)
   }
   
-  kbl(preds, "html", col.names = col_names, align = align) %>%
-    kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) %>%
-    column_spec(1, bold = FALSE, italic = TRUE) %>%
-    pack_rows("Predicted Outcomes", 1, 5) %>%
-    pack_rows("Predicted Harvest", 6, 9, hline_before = TRUE) %>%
+  kbl(preds, "html", col.names = col_names, align = align) |>
+    kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) |>
+    column_spec(1, bold = FALSE, italic = TRUE) |>
+    pack_rows("Predicted Outcomes", 1, 5) |>
+    pack_rows("Predicted Harvest", 6, 9, hline_before = TRUE) |>
     add_header_above(header)
     
 }
@@ -846,12 +846,12 @@ resp_kable = function(period_keep, year_keep, effort_range, total_cpt_range, chi
   
   
   if (nrow(table_dat) > 0) {
-    out = table_dat %>%
+    out = table_dat |>
       kbl("html", row.names = FALSE,
           col.names = c("Year", "Period", "Date", "Start Time", "End Time", "Drift Trips", "Catch/Trip", rep(c("Chinook", "Chum", "Sockeye"), 2), "Total"),
-          align = "cclllccccccccc", format.args = list(big.mark = ",")) %>%
-      kable_styling(full_width = TRUE, bootstrap_options = c("condensed"), fixed_thead = TRUE) %>%
-      collapse_rows(1:2) %>%
+          align = "cclllccccccccc", format.args = list(big.mark = ",")) |>
+      kable_styling(full_width = TRUE, bootstrap_options = c("condensed"), fixed_thead = TRUE) |>
+      collapse_rows(1:2) |>
       add_header_above(c(" " = 7, "Species Composition" = 3, "Harvest" = "4"))
     
   } else {
@@ -990,15 +990,15 @@ pred_kable = function(period_keep, year_keep) {
   
   # create the output: a nice kable if some records available, a nice message if not
   if (nrow(table_dat) > 0) {
-    out = table_dat %>%
+    out = table_dat |>
       kbl("html", row.names = FALSE,
           col.names = c("Year", "Period", "Date",
                         "Hours Open", "%Before Noon", "Weekend?", "Fished Yesterday?",
                         "Total CPUE", "%Chinook", "%Chum", "%Sockeye", "N. Wind", "E. Wind"),
-          align = "cclcccccccccc") %>%
-      kable_styling(full_width = TRUE, bootstrap_options = c("condensed"), fixed_thead = TRUE) %>%
-      collapse_rows(1:2) %>%
-      column_spec(3, width = "65px") %>%
+          align = "cclcccccccccc") |>
+      kable_styling(full_width = TRUE, bootstrap_options = c("condensed"), fixed_thead = TRUE) |>
+      collapse_rows(1:2) |>
+      column_spec(3, width = "65px") |>
       add_header_above(c(" " = 7, "Bethel Test Fishery" = 4, " " = 2))
     
   } else {
@@ -1173,16 +1173,16 @@ type = c(rep("Timing", 6), rep("Bethel Test Fishery", 4), rep("Weather<sup>1<\\s
 tab = cbind(type, tab)
 
 kbl(tab, col.names = c(" ", "Condition Variable", "Description", "Trips/Day", "Catch/Trip", "Chinook", "Chum", "Sockeye"), escape = FALSE, align = "lllccccc",
-    caption = 'All condition variables assessed as part of the predictive analyses for each outcome variable. The symbol meanings are: <span style="font-size: medium;">&#9744;</span> (not assessed), <span style="font-size: medium;">&#9746;</span> (assessed but not part of final analysis), and <span style="font-size: medium;">&#9745;</span> (in final analysis).') %>%
-  kable_styling(full_width = TRUE, bootstrap_options = c("condensed")) %>%
-  add_header_above(c(" " = 5, "% Composition" = 3), bold = TRUE) %>%
-  add_header_above(c(" " = 3, "Outcome Variable" = 5), bold = TRUE) %>%
-  column_spec(1:2, bold = TRUE) %>%
-  column_spec(1, width = "80px") %>%
-  column_spec(2, width = "120px") %>%
-  column_spec(3, width = "180px") %>%
-  collapse_rows(1) %>%
-  footnote(number = c("Weather variables measured at Bethel Airport.", "Water variables measured during daily Bethel Test Fishery sampling."), number_title = "Notes") %>%
+    caption = 'All condition variables assessed as part of the predictive analyses for each outcome variable. The symbol meanings are: <span style="font-size: medium;">&#9744;</span> (not assessed), <span style="font-size: medium;">&#9746;</span> (assessed but not part of final analysis), and <span style="font-size: medium;">&#9745;</span> (in final analysis).') |>
+  kable_styling(full_width = TRUE, bootstrap_options = c("condensed")) |>
+  add_header_above(c(" " = 5, "% Composition" = 3), bold = TRUE) |>
+  add_header_above(c(" " = 3, "Outcome Variable" = 5), bold = TRUE) |>
+  column_spec(1:2, bold = TRUE) |>
+  column_spec(1, width = "80px") |>
+  column_spec(2, width = "120px") |>
+  column_spec(3, width = "180px") |>
+  collapse_rows(1) |>
+  footnote(number = c("Weather variables measured at Bethel Airport.", "Water variables measured during daily Bethel Test Fishery sampling."), number_title = "Notes") |>
   
   column_spec(3:7, width = "65px")
 ```
@@ -1237,10 +1237,10 @@ We then repeat this for all data points and calculate the error made in predicti
 
 ```{r aic-kable-fn}
 aic_kable = function(fit_list) {
-  KuskoHarvPred:::AIC_table(fit_list, digits = 2) %>%
+  KuskoHarvPred:::AIC_table(fit_list, digits = 2) |>
     kbl("html", col.names = c("Model", "K", "Delta AICc", "Weight"), row.names = FALSE,
-        caption = "Models included in the model-averaged prediction for this outcome variable. 'K' is the number of parameters, 'Delta AICc' is an index of predictive performance relative to the single best predictive model, and 'Weight' is the weight that predictions from each model carry in the average.") %>%
-    kable_styling(full_width = TRUE, bootstrap_options = c("striped", "condensed")) %>%
+        caption = "Models included in the model-averaged prediction for this outcome variable. 'K' is the number of parameters, 'Delta AICc' is an index of predictive performance relative to the single best predictive model, and 'Weight' is the weight that predictions from each model carry in the average.") |>
+    kable_styling(full_width = TRUE, bootstrap_options = c("striped", "condensed")) |>
     column_spec(1, monospace = TRUE)
 }
 ```
@@ -1273,8 +1273,8 @@ importance_kable = function(fit_list) {
   tab = MuMIn::sw(fit_list)
   tab = as.data.frame(tab)
   tab = cbind(Variable = sapply(rownames(tab), KuskoHarvPred:::get_var_name), Importance = KuskoHarvUtils::percentize(tab$tab))
-  tab %>%
-    kbl("html", align = "lr", row.names = FALSE) %>%
+  tab |>
+    kbl("html", align = "lr", row.names = FALSE) |>
     kable_styling(full_width = FALSE, bootstrap_options = c("condensed", "striped"))
 }
 ```
@@ -1386,8 +1386,8 @@ tab = data.frame(
   significance = c("First week of drift fishing allowed", "Remainder of June", "Dates in July", "Whole Season")
 )
 
-kbl(tab, "html", col.names = c("Period", "Date Range", "Historical Data Points", "Significance"), align = "clcl") %>%
-  kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) %>%
+kbl(tab, "html", col.names = c("Period", "Date Range", "Historical Data Points", "Significance"), align = "clcl") |>
+  kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) |>
   column_spec(1, bold = TRUE)
 ```
 
@@ -1507,17 +1507,17 @@ error_colors = cbind(
   )
 error_summary = cbind(error_summary[,1:2], apply(error_summary[,-c(1,2)], 2, KuskoHarvUtils::percentize))
 
-kbl(error_summary, "html", align = "lccccccccc", col.names = c("Variable", "N Models", period_labels, period_labels),) %>%
-  kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) %>%
-  column_spec(column = 3, background = error_colors[,3]) %>%
-  column_spec(column = 4, background = error_colors[,4]) %>%
-  column_spec(column = 5, background = error_colors[,5]) %>%
-  column_spec(column = 6, background = error_colors[,6]) %>%
-  column_spec(column = 7, background = error_colors[,7]) %>%
-  column_spec(column = 8, background = error_colors[,8]) %>%
-  column_spec(column = 9, background = error_colors[,9]) %>%
-  column_spec(column = 10, background = error_colors[,10]) %>%
-  add_header_above(c(" " = 2, "Mean % LOO Error (Accuracy)" = 4, "Mean Absolute % LOO Error (Precision)" = 4)) %>%
+kbl(error_summary, "html", align = "lccccccccc", col.names = c("Variable", "N Models", period_labels, period_labels),) |>
+  kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) |>
+  column_spec(column = 3, background = error_colors[,3]) |>
+  column_spec(column = 4, background = error_colors[,4]) |>
+  column_spec(column = 5, background = error_colors[,5]) |>
+  column_spec(column = 6, background = error_colors[,6]) |>
+  column_spec(column = 7, background = error_colors[,7]) |>
+  column_spec(column = 8, background = error_colors[,8]) |>
+  column_spec(column = 9, background = error_colors[,9]) |>
+  column_spec(column = 10, background = error_colors[,10]) |>
+  add_header_above(c(" " = 2, "Mean % LOO Error (Accuracy)" = 4, "Mean Absolute % LOO Error (Precision)" = 4)) |>
   column_spec(1, bold = TRUE)
 ```
 
