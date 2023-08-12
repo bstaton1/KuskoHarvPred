@@ -73,6 +73,19 @@ yrs = sort(unique(year(dat$date)))
 rvals = reactiveValues()
 ```
 
+```{r graphics-parameters-fn}
+doc_par = function(
+    mar = c(3.5, 3.5, 1, 1),
+    mgp = c(1.5, 0.025, 0),
+    tcl = 0,
+    cex = 1.5,
+    cex.axis = 0.9,
+    lend = "square", ljoin = "mitre",
+    cex.lab = 1.1, col.axis = "grey30", ...) {
+  
+  do.call(par, c(as.list(environment()), list(...), list(col.lab = col.axis)))
+}
+```
 ---
 
 :::{.red}
