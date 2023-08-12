@@ -230,6 +230,17 @@ draw_percent_axis = function(side, ...) {
 
 draw_yn_axis = function(side, ...) {
   axis(side = side, at = c(0,1), labels = c("No", "Yes"), ...)
+#' Draw an Axis Line with No Ticks or Labels
+#'
+#' @inheritParams draw_day_axis
+#' @param col Color, defaults to `par("col.axis")`
+
+draw_axis_line = function(side, col = par("col.axis")) {
+  usr = par("usr")
+  if (side == 1) segments(usr[1], usr[3], usr[2], usr[3], col = col, xpd = TRUE)
+  if (side == 2) segments(usr[1], usr[3], usr[1], usr[4], col = col, xpd = TRUE)
+  if (side == 3) segments(usr[1], usr[4], usr[2], usr[4], col = col, xpd = TRUE)
+  if (side == 4) segments(usr[2], usr[3], usr[2], usr[4], col = col, xpd = TRUE)
 }
 
 #' Create a Scatterplot of Two Variables
