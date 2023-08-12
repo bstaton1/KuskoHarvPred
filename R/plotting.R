@@ -188,7 +188,7 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvData::p
     draw_percent_axis(side = 2)
   } else {
     axis(side = 2, col = "white")
-    draw_percent_axis(side = 2)
+    draw_axis_line(side = 2)
   }
 }
 
