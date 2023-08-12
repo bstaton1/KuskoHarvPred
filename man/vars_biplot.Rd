@@ -9,7 +9,7 @@ vars_biplot(
   yvar = "total_cpt",
   color_periods = FALSE,
   label_years = FALSE,
-  dat = KuskoHarvData::prepare_regression_data()
+  dat = KuskoHarvPred:::fit_data
 )
 }
 \arguments{
@@ -22,7 +22,7 @@ See \code{\link[KuskoHarvUtils:get_period]{KuskoHarvUtils::get_period()}}. Defau
 
 \item{label_years}{Logical; should points be labeled to show which year the data came from?}
 
-\item{dat}{Data frame; the input regression data set, defaults to \code{\link[KuskoHarvData:prepare_regression_data]{KuskoHarvData::prepare_regression_data()}}.}
+\item{dat}{Data frame; the input regression data set, defaults to \code{KuskoHarvPred:::fit_data}, which is equivalent to \code{\link[KuskoHarvData:prepare_regression_data]{KuskoHarvData::prepare_regression_data()}}.}
 }
 \description{
 For investigating basic co-linearity in predictors,

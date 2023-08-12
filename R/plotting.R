@@ -60,14 +60,14 @@ subset_pred_data = function(response, settings = list()) {
 #'
 #' @param response Character; one of `"effort"`, `"total_cpt"`, `"chinook_comp"`, `"chum_comp"`, or `"sockeye_comp"`
 #' @param settings List specifying which covariate settings to subset the predicted values for. Passed to [subset_pred_data()].
-#' @param dat Data frame; the input regression data set, defaults to [KuskoHarvData::prepare_regression_data()].
+#' @param dat Data frame; the input regression data set, defaults to `KuskoHarvPred:::fit_data`, which is equivalent to [KuskoHarvData::prepare_regression_data()].
 #' @param separate_day_types Logical; if the variable passed to `response` used the predictor variable `not_first_day`, should two relationships be drawn?
 #' @param pred_day Numeric; the day corresponding to a hypothetical prediction (`pred_response`). Defaults to `NULL` in which case this is not drawn.
 #' @param pred_response Numeric; the predicted response corresponding to a hypothetical day (`pred_day`). Defaults to `NULL` in which case this is not drawn.
 #' @param draw_make_range Logical; should a shaded region around model prediction that shows +/- 1MAPE be shown?
 #' @export
 
-relationship_plot = function(response, settings = list(), dat = KuskoHarvData::prepare_regression_data(), separate_day_types = TRUE, pred_day = NULL, pred_response = NULL, draw_mape_range = FALSE) {
+relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::fit_data, separate_day_types = TRUE, pred_day = NULL, pred_response = NULL, draw_mape_range = FALSE) {
 
   # aesthetic settings here
   pt_cex = 1.5
@@ -258,10 +258,10 @@ draw_axis_line = function(side, col = par("col.axis")) {
 #' @param color_periods Logical; should points be color-coded to show which time period of the season the data came from?
 #'   See [KuskoHarvUtils::get_period()]. Defaults to `FALSE`.
 #' @param label_years Logical; should points be labeled to show which year the data came from?
-#' @param dat Data frame; the input regression data set, defaults to [KuskoHarvData::prepare_regression_data()].
+#' @param dat Data frame; the input regression data set, defaults to `KuskoHarvPred:::fit_data`, which is equivalent to [KuskoHarvData::prepare_regression_data()].
 #' @export
 
-vars_biplot = function(xvar = "total_btf_cpue", yvar = "total_cpt", color_periods = FALSE, label_years = FALSE, dat = KuskoHarvData::prepare_regression_data()) {
+vars_biplot = function(xvar = "total_btf_cpue", yvar = "total_cpt", color_periods = FALSE, label_years = FALSE, dat = KuskoHarvPred:::fit_data) {
 
   # error handle to ensure variables are found
   if (!xvar %in% colnames(dat)) stop ("Value of xvar ('", xvar, "') not in dat")

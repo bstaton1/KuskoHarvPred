@@ -1,6 +1,6 @@
 ---
 title: '**Kuskokwim Salmon Harvest Prediction Tool**'
-subtitle: "For Daily Lower River Drift Harvest Based on 2016 -- 2022 In-Season Data"
+subtitle: "`r paste0('For Daily Lower River Drift Harvest Based on ', min(KuskoHarvPred:::fit_data$year), ' -- ', max(KuskoHarvPred:::fit_data$year), ' In-season Data')`"
 author: "_v0.1.0.9990; DRAFT FOR USE IN 2023_"
 output: html_document
 runtime: shiny
@@ -62,11 +62,11 @@ useShinyjs(rmd = TRUE)
 ```
 
 ```{r data-prep}
-# produce the regression data set
-dat = prepare_regression_data()
+# extract the regression data set
+fit_data = KuskoHarvPred:::fit_data
 
 # extract the unique years available
-yrs = sort(unique(year(dat$date)))
+yrs = sort(unique(year(fit_data$date)))
 ```
 
 ```{r reactive-container}
@@ -156,7 +156,7 @@ doc_par = function(
   *  Mainstem Kuskokwim River (no tributaries are included)
   *  The area between the villages of Tuntutuliak and Akiak
   
-  The data informing this tool were collected in June and July in the years `r min(year(dat$date))` -- `r max(year(dat$date))` and are made up of `r nrow(dat)` individual days of monitored drift fishing.
+  The data informing this tool were collected in June and July in the years `r min(yrs)` -- `r max(yrs)` and are made up of `r nrow(fit_data)` individual days of monitored drift fishing.
   
   </div>
   
@@ -247,7 +247,7 @@ fillRow(
       numericInput(inputId = "chum_btf_cpue", label = "Chum CPUE", value = 10, min = 0),
       numericInput(inputId = "sockeye_btf_cpue", label = "Sockeye CPUE", value = 10, min = 0),
       a(icon("table"), "View BTF Data Webpage", href = "https://www.adfg.alaska.gov/index.cfm?adfg=commercialbyareakuskokwim.btf"),
-      actionButton(inputId = "use_avg_btf", label = paste0("Get 2016 — ", max(dat$year), " Average"), width = "100%")
+      actionButton(inputId = "use_avg_btf", label = paste0("Get 2016 — ", max(yrs), " Average"), width = "100%")
     )
   ),
   # input widgets for weather info
@@ -681,7 +681,7 @@ div(
     doc_par()
     relationship_plot(response = input$plot_response,
            settings = rvals$plot_settings,
-           dat = dat,
+           dat = fit_data,
            separate_day_types = TRUE,
            # pred_day = KuskoHarvUtils::to_days_past_may31(input$date),
            # pred_response = rvals$preds[,input$plot_response]
@@ -754,12 +754,12 @@ hidden(
         h3(icon("filter"), "Outcomes"),
         wellPanel(
           # splitLayout(
-            sliderInput("resp_kable_effort", "Drift Trips", min = min(dat$effort), max = max(dat$effort),
-                        value = range(dat$effort), width = "95%"),
-            sliderInput("resp_kable_total_cpt", "Catch/Trip", min = min(round(dat$total_cpt)), max = max(round(dat$total_cpt)),
-                        value = range(round(dat$total_cpt)), width = "95%"),
-            sliderInput("resp_kable_chinook_comp", "Chinook Composition", min = min(round(dat$chinook_comp, 2)) * 100, max = max(round(dat$chinook_comp, 2)) * 100,
-                        value = range(round(dat$chinook_comp, 2) * 100), post = "%", width = "95%"),
+            sliderInput("resp_kable_effort", "Drift Trips", min = min(fit_data$effort), max = max(fit_data$effort),
+                        value = range(fit_data$effort), width = "95%"),
+            sliderInput("resp_kable_total_cpt", "Catch/Trip", min = min(round(fit_data$total_cpt)), max = max(round(fit_data$total_cpt)),
+                        value = range(round(fit_data$total_cpt)), width = "95%"),
+            sliderInput("resp_kable_chinook_comp", "Chinook Composition", min = min(round(fit_data$chinook_comp, 2)) * 100, max = max(round(fit_data$chinook_comp, 2)) * 100,
+                        value = range(round(fit_data$chinook_comp, 2) * 100), post = "%", width = "95%"),
           # ),
           actionButton("filter_outcomes_select_all", "Select All", width = "100%", icon = icon("check"))
         )
@@ -806,9 +806,9 @@ observeEvent(input$filter_resp_periods_select_all, {
 
 # reset the outcome filters to default when action button is clicked
 observeEvent(input$filter_outcomes_select_all, {
-  updateSliderInput(inputId = "resp_kable_effort", value = range(dat$effort))
-  updateSliderInput(inputId = "resp_kable_total_cpt", value = range(round(dat$total_cpt)))
-  updateSliderInput(inputId = "resp_kable_chinook_comp", value = range(round(dat$chinook_comp, 2) * 100))
+  updateSliderInput(inputId = "resp_kable_effort", value = range(fit_data$effort))
+  updateSliderInput(inputId = "resp_kable_total_cpt", value = range(round(fit_data$total_cpt)))
+  updateSliderInput(inputId = "resp_kable_chinook_comp", value = range(round(fit_data$chinook_comp, 2) * 100))
 })
 
 ```
@@ -881,7 +881,7 @@ renderUI(HTML(rvals$resp_kable))
 # any time the contents of the table change
 observeEvent(rvals$resp_kable, {
   nrows_resp_kable = max(stringr::str_count(as.character(rvals$resp_kable), "<tr>") - 2, 0)
-  updateActionLink(inputId = "show_hide_resp_kable_filters", label = paste0("Show/Hide Filters (", nrows_resp_kable, "/", nrow(dat), " records shown)"))
+  updateActionLink(inputId = "show_hide_resp_kable_filters", label = paste0("Show/Hide Filters (", nrows_resp_kable, "/", nrow(fit_data), " records shown)"))
 })
 ```
 
@@ -1024,7 +1024,7 @@ renderUI(HTML(rvals$pred_kable))
 # any time the contents of the table change
 observeEvent(rvals$pred_kable, {
   nrows_pred_kable = max(stringr::str_count(as.character(rvals$pred_kable), "<tr>") - 2, 0)
-  updateActionLink(inputId = "show_hide_pred_kable_filters", label = paste0("Show/Hide Filters (", nrows_pred_kable, "/", nrow(dat), " records shown)"))
+  updateActionLink(inputId = "show_hide_pred_kable_filters", label = paste0("Show/Hide Filters (", nrows_pred_kable, "/", nrow(fit_data), " records shown)"))
 })
 ```
 
@@ -1050,7 +1050,7 @@ div(
     vars_biplot(
       xvar = input$scatterplot_xvar,
       yvar = input$scatterplot_yvar,
-      dat = dat,
+      dat = fit_data,
       color_periods = input$scatterplot_color_periods,
       label_years = input$scatterplot_label_years
     )
@@ -1377,7 +1377,7 @@ div(
 In summarizing the errors, we categorize them into these three time periods of the season. This allows us to quantify how the reliability of predictions changes throughout the season.
 
 ```{r period-table}
-counts = table(KuskoHarvUtils::get_period(dat$day))
+counts = table(KuskoHarvUtils::get_period(fit_data$day))
 counts = as.numeric(counts)
 counts = c(counts, sum(counts))
 
@@ -1535,8 +1535,8 @@ loo_preds = KuskoHarvPred:::loo_output$loo_preds
 pred_v_obs_plot = function(var) {
   
   yhat = loo_preds[,var]
-  yobs = dat[,var]
-  period = KuskoHarvUtils::get_period(dat$day)
+  yobs = fit_data[,var]
+  period = KuskoHarvUtils::get_period(fit_data$day)
   
   # obtain the axis limits
   if (str_detect(var, "comp")) {
