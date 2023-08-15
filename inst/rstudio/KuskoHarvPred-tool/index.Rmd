@@ -1,6 +1,6 @@
 ---
 title: '**Kuskokwim Salmon Harvest Prediction Tool**'
-subtitle: "`r paste0('For Daily Lower River Drift Harvest Based on ', min(KuskoHarvPred:::fit_data$year), ' -- ', max(KuskoHarvPred:::fit_data$year), ' In-season Data')`"
+subtitle: "`r paste0('For Daily Lower River Drift Harvest Based on ', min(KuskoHarvPred:::fit_data$year), '-', max(KuskoHarvPred:::fit_data$year), ' In-season Data')`"
 author: "_v0.1.0.9990; DRAFT FOR USE IN 2023_"
 output: html_document
 runtime: shiny
@@ -156,7 +156,7 @@ doc_par = function(
   *  Mainstem Kuskokwim River (no tributaries are included)
   *  The area between the villages of Tuntutuliak and Akiak
   
-  The data informing this tool were collected in June and July in the years `r min(yrs)` -- `r max(yrs)` and are made up of `r nrow(fit_data)` individual days of monitored drift fishing.
+  The data informing this tool were collected in June and July in the years `r min(yrs)`-`r max(yrs)` and are made up of `r nrow(fit_data)` individual days of monitored drift fishing.
   
   </div>
   
@@ -247,7 +247,7 @@ fillRow(
       numericInput(inputId = "chum_btf_cpue", label = "Chum CPUE", value = 10, min = 0),
       numericInput(inputId = "sockeye_btf_cpue", label = "Sockeye CPUE", value = 10, min = 0),
       a(icon("table"), "View BTF Data Webpage", href = "https://www.adfg.alaska.gov/index.cfm?adfg=commercialbyareakuskokwim.btf"),
-      actionButton(inputId = "use_avg_btf", label = paste0("Get 2016 — ", max(yrs), " Average"), width = "100%")
+      actionButton(inputId = "use_avg_btf", label = paste0("Get 2016-", max(yrs), " Average"), width = "100%")
     )
   ),
   # input widgets for weather info
@@ -327,7 +327,7 @@ reactive({
   rvals$df = data.frame(
     day = KuskoHarvUtils::to_days_past_may31(dates = input$date),
     weekend = wday(input$date, label = TRUE) %in% c("Sat", "Sun"),
-    not_first_day = input$fished_yesterday,
+    fished_yesterday = input$fished_yesterday,
     hours_open = rvals$hours_open,
     p_before_noon = ifelse(rvals$hours_before_noon < 0, 0, rvals$hours_before_noon/rvals$hours_open),
     total_btf_cpue = input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue,
@@ -962,7 +962,7 @@ pred_kable = function(period_keep, year_keep) {
   # pred_vars = unique(unlist(lapply(fit_lists, KuskoHarvPred:::find_variables)))
   # pred_vars = pred_vars[!stringr::str_detect(pred_vars, "^I\\(")]
   ordered_pred_vars = c("hours_open", "p_before_noon", 
-                        "weekend", "not_first_day", "total_btf_cpue",
+                        "weekend", "fished_yesterday", "total_btf_cpue",
                         "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp",
                         "mean_Nwind", "mean_Ewind")
   
@@ -980,7 +980,7 @@ pred_kable = function(period_keep, year_keep) {
   
   # convert logical variables to yes/no
   table_dat$weekend = ifelse(table_dat$weekend, "Yes", "No")
-  table_dat$not_first_day = ifelse(table_dat$not_first_day, "Yes", "No")
+  table_dat$fished_yesterday = ifelse(table_dat$fished_yesterday, "Yes", "No")
   
   # round numeric variables
   table_dat$total_btf_cpue = round(table_dat$total_btf_cpue)
@@ -1032,7 +1032,7 @@ observeEvent(rvals$pred_kable, {
 
 ```{r scatterplots-ui}
 resp_vars = c("effort", "total_cpt", "chinook_comp", "chum_comp", "sockeye_comp")
-pred_vars = c("day", "hours_open", "p_before_noon", "weekend", "not_first_day", "total_btf_cpue", "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp", "mean_Nwind", "mean_Ewind")
+pred_vars = c("day", "hours_open", "p_before_noon", "weekend", "fished_yesterday", "total_btf_cpue", "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp", "mean_Nwind", "mean_Ewind")
 names(resp_vars) = sapply(resp_vars, function(v) KuskoHarvPred:::get_var_name(v))
 names(pred_vars) = sapply(pred_vars, function(v) KuskoHarvPred:::get_var_name(v))
 
@@ -1383,7 +1383,7 @@ counts = c(counts, sum(counts))
 
 tab = data.frame(
   Period = c(1:3, "All"),
-  dates = c("June 12 -- June 19", "June 20 -- June 30", "July 1 -- End-of-Season", "June 12 -- End-of-Season"),
+  dates = c("6/12-6/19", "6/20-6/30", "7/1-7/31", "6/12-7/31"),
   counts = counts,
   significance = c("First week of drift fishing allowed", "Remainder of June", "Dates in July", "Whole Season")
 )

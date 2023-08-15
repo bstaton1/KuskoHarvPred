@@ -8,8 +8,8 @@ fit_data = KuskoHarvData::prepare_regression_data()
 # perform LOO analysis
 loo_output = KuskoHarvPred:::whole_loo_analysis(
   global_formulae = list(
-    effort = "day + hours_open + not_first_day + weekend + p_before_noon + total_btf_cpue + chinook_btf_comp + mean_Nwind + mean_Ewind",
-    total_cpt = "day + I(day^2) + hours_open + not_first_day + p_before_noon + total_btf_cpue + mean_Nwind + mean_Ewind",
+    effort = "day + hours_open + fished_yesterday + weekend + p_before_noon + total_btf_cpue + chinook_btf_comp + mean_Nwind + mean_Ewind",
+    total_cpt = "day + I(day^2) + hours_open + fished_yesterday + p_before_noon + total_btf_cpue + mean_Nwind + mean_Ewind",
     chinook_comp = "day + chinook_btf_comp",
     chum_comp = "day + chum_btf_comp",
     sockeye_comp = "day + sockeye_btf_comp"
@@ -32,7 +32,7 @@ day = min(fit_data$day):max(fit_data$day)
 misc_bank = list(
   hours_open = seq(6, 24, by = 6),
   p_before_noon = c(0, 0.25, 0.5, 0.75, 1),
-  not_first_day = c(FALSE, TRUE),
+  fished_yesterday = c(FALSE, TRUE),
   weekend = c(FALSE, TRUE)
 )
 

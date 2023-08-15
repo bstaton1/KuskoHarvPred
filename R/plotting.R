@@ -7,7 +7,7 @@
 #'     * `settings$day`: numeric; defaults to `12:46`
 #'     * `settings$hours_open`: numeric; must contain any combination of 6, 12, 18, 24, defaults to 12
 #'     * `settings$p_before_noon`: numeric; must contain any combination of 0.25, 0.5, 0.75, 1; defaults to 0.5
-#'     * `settings$not_first_day`: logical; defaults to `FALSE`
+#'     * `settings$fished_yesterday`: logical; defaults to `FALSE`
 #'     * `settings$weekend`: logical; defaults to `FALSE`
 #'     * `settings$weekend`: logical; defaults to `FALSE`
 #'     * `settings$CAT_total_btf_cpue`: character, must contain any combination of `"min"`, `"mean"`, `"max"`; defaults to `"mean"`
@@ -25,7 +25,7 @@ subset_pred_data = function(response, settings = list()) {
   if (is.null(settings$day)) settings$day = 12:46
   if (is.null(settings$hours_open)) settings$hours_open = 12
   if (is.null(settings$p_before_noon)) settings$p_before_noon = 0.5
-  if (is.null(settings$not_first_day)) settings$not_first_day = FALSE
+  if (is.null(settings$fished_yesterday)) settings$fished_yesterday = FALSE
   if (is.null(settings$weekend)) settings$weekend = FALSE
   if (is.null(settings$CAT_total_btf_cpue)) settings$CAT_total_btf_cpue = "mean"
   if (is.null(settings$CAT_chinook_btf_comp)) settings$CAT_chinook_btf_comp = "mean"
@@ -61,7 +61,7 @@ subset_pred_data = function(response, settings = list()) {
 #' @param response Character; one of `"effort"`, `"total_cpt"`, `"chinook_comp"`, `"chum_comp"`, or `"sockeye_comp"`
 #' @param settings List specifying which covariate settings to subset the predicted values for. Passed to [subset_pred_data()].
 #' @param dat Data frame; the input regression data set, defaults to `KuskoHarvPred:::fit_data`, which is equivalent to [KuskoHarvData::prepare_regression_data()].
-#' @param separate_day_types Logical; if the variable passed to `response` used the predictor variable `not_first_day`, should two relationships be drawn?
+#' @param separate_day_types Logical; if the variable passed to `response` used the predictor variable `fished_yesterday`, should two relationships be drawn?
 #' @param pred_day Numeric; the day corresponding to a hypothetical prediction (`pred_response`). Defaults to `NULL` in which case this is not drawn.
 #' @param pred_response Numeric; the predicted response corresponding to a hypothetical day (`pred_day`). Defaults to `NULL` in which case this is not drawn.
 #' @param draw_make_range Logical; should a shaded region around model prediction that shows +/- 1MAPE be shown?
@@ -79,11 +79,11 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::
   # create the y-axis label
   ylab = get_var_name(response)
 
-  # create the plot with two lines: one for not_first_day and one for !not_first_day
-  if ("not_first_day" %in% colnames(pred_data[[response]]) & separate_day_types) {
+  # create the plot with two lines: one for fished_yesterday and one for !fished_yesterday
+  if ("fished_yesterday" %in% colnames(pred_data[[response]]) & separate_day_types) {
 
     # extract only the data for this response variable and specific covariate settings
-    settings$not_first_day = c(TRUE, FALSE)
+    settings$fished_yesterday = c(TRUE, FALSE)
     sub_pred_data = subset_pred_data(response, settings = settings)
 
     # set the y-axis limits
@@ -95,8 +95,8 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::
 
     # draw uncertainty if instructed
     if (draw_mape_range) {
-      # for first day
-      x = subset(sub_pred_data, !not_first_day)
+      # for not fished yesterday
+      x = subset(sub_pred_data, !fished_yesterday)
       period = KuskoHarvUtils::get_period(x$day)
       mape = sapply(period, function(p) get_mape(response, p))
       lwr = x$pred_response - x$pred_response * mape
@@ -106,8 +106,8 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::
       lines(lwr ~ x$day, col = line_col)
       lines(upr ~ x$day, col = line_col)
 
-      # for not first day
-      x = subset(sub_pred_data, not_first_day)
+      # for fished yesterday
+      x = subset(sub_pred_data, fished_yesterday)
       period = KuskoHarvUtils::get_period(x$day)
       mape = sapply(period, function(p) get_mape(response, p))
       lwr = x$pred_response - x$pred_response * mape
@@ -119,11 +119,11 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::
     }
 
     # draw the fitted curves
-    lines(pred_response ~ day, data = subset(sub_pred_data, !not_first_day), col = line_col, lwd = 2)
-    lines(pred_response ~ day, data = subset(sub_pred_data, not_first_day), lty = 2, col = line_col, lwd = 2)
+    lines(pred_response ~ day, data = subset(sub_pred_data, !fished_yesterday), col = line_col, lwd = 2)
+    lines(pred_response ~ day, data = subset(sub_pred_data, fished_yesterday), lty = 2, col = line_col, lwd = 2)
 
     # draw points
-    points(dat[,response] ~ day, data = dat, pch = ifelse(not_first_day, 24, 21),
+    points(dat[,response] ~ day, data = dat, pch = ifelse(fished_yesterday, 24, 21),
            bg = pt_bg, col = pt_col, cex = pt_cex)
 
     # add a legend
@@ -283,8 +283,8 @@ vars_biplot = function(xvar = "total_btf_cpue", yvar = "total_cpt", color_period
   y_is_comp = stringr::str_detect(yvar, "comp") | yvar == "p_before_noon"
 
   # determine if each variable is a Yes/No variable
-  x_is_yn = xvar %in% c("not_first_day", "weekend")
-  y_is_yn = yvar %in% c("not_first_day", "weekend")
+  x_is_yn = xvar %in% c("fished_yesterday", "weekend")
+  y_is_yn = yvar %in% c("fished_yesterday", "weekend")
 
   # add jitter to points if Yes/No
   if (x_is_yn) x = x + runif(length(x), -0.25, 0.25)

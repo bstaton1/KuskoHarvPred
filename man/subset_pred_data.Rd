@@ -20,7 +20,7 @@ The following elements are acceptable:
 * \code{settings$day}: numeric; defaults to \code{12:46}
 * \code{settings$hours_open}: numeric; must contain any combination of 6, 12, 18, 24, defaults to 12
 * \code{settings$p_before_noon}: numeric; must contain any combination of 0.25, 0.5, 0.75, 1; defaults to 0.5
-* \code{settings$not_first_day}: logical; defaults to \code{FALSE}
+* \code{settings$fished_yesterday}: logical; defaults to \code{FALSE}
 * \code{settings$weekend}: logical; defaults to \code{FALSE}
 * \code{settings$weekend}: logical; defaults to \code{FALSE}
 * \code{settings$CAT_total_btf_cpue}: character, must contain any combination of \code{"min"}, \code{"mean"}, \code{"max"}; defaults to \code{"mean"}
