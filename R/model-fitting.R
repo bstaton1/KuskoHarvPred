@@ -119,9 +119,9 @@ fit_all_subsets_one = function(global_model, fit_data, parallel = FALSE, reduce_
     # prevent mean_Ewind and mean_gust from being in the same model
     if (all(c("mean_Ewind", "mean_gust") %in% vars)) M["mean_gust","mean_Ewind"] = FALSE
 
-    # prevent not_first_day and hours open from being in the same model
+    # prevent fished_yesterday and hours open from being in the same model
     # these are pretty confounded: all <12hrs are first day, all >12 are second day, only 12hrs are mixed
-    if (all(c("not_first_day", "hours_open") %in% vars)) M["hours_open","not_first_day"] = FALSE
+    if (all(c("fished_yesterday", "hours_open") %in% vars)) M["hours_open","fished_yesterday"] = FALSE
   }
 
   # fit all allowable subsets, depending on whether ran in parallel or not
