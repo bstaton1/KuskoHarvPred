@@ -1,7 +1,7 @@
 ---
 title: '**Kuskokwim Salmon Harvest Prediction Tool**'
 subtitle: "`r paste0('For Daily Lower River Drift Harvest Based on ', min(KuskoHarvPred:::fit_data$year), '-', max(KuskoHarvPred:::fit_data$year), ' In-season Data')`"
-author: "_v0.1.0.9990; DRAFT FOR USE IN 2023_"
+author: "_v0.1.0.9990; DRAFT FOR USE IN 2024_"
 output: html_document
 runtime: shiny
 resource_files:

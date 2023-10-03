@@ -5,6 +5,9 @@
 # produce the regression data set
 fit_data = KuskoHarvData::prepare_regression_data()
 
+# discard any data collected
+fit_data = fit_data[lubridate::month(fit_data$date) %in% c(6,7),]
+
 # perform LOO analysis
 loo_output = KuskoHarvPred:::whole_loo_analysis(
   global_formulae = list(
