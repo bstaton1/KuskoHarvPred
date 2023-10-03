@@ -30,7 +30,7 @@ all points will be grey. If provided, the points will be color-coded by period.}
 
 \item{main}{Character string for main plot title.}
 
-\item{include_summaries}{Logical: should error summaries (obtained via \code{\link[=get_errors]{get_errors()}}) be displayed on the plot?}
+\item{include_summaries}{Logical: should error summaries (obtained via \code{\link[KuskoHarvUtils:get_errors]{KuskoHarvUtils::get_errors()}}) be displayed on the plot?}
 
 \item{period_legend}{Logical: if points are colored by period, should the legend be displayed?
 Defaults to \code{TRUE} if \code{period} is not \code{NULL}; ignored if \code{period} is \code{NULL}.}

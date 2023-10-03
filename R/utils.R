@@ -94,7 +94,7 @@ count_params = function(fit) {
 #' @title Produce a Concise AICc Table
 #' @param fit_list List of fitted model objects of class [`lm`][stats::lm]
 #' @param digits Numeric value controlling the number of decimal places to round to.
-#'   Passed to [base::round()] for `"delta"` and [KuskoHarvEst::smart_round()] for model weights.
+#'   Passed to [base::round()] for `"delta"` and [KuskoHarvUtils::smart_round()] for model weights.
 #'   Defaults to 3.
 #' @return Data frame with columns:
 #'   * `terms`: the right-hand-side of each fitted model formula; from [get_formula()].
@@ -118,7 +118,7 @@ AIC_table = function(fit_list, digits = 3) {
   # if rounding, do so for relevant variables
   if (!is.null(digits)) {
     tab$delta = round(tab$delta, digits = digits)
-    tab$wt = KuskoHarvEst:::smart_round(tab$wt, digits = digits)
+    tab$wt = KuskoHarvUtils::smart_round(tab$wt, digits = digits)
   }
 
   # return the output table
@@ -160,4 +160,38 @@ get_mape = function(response, period) {
 
   # extract only the specific MAPE of interest and convert to a proportion
   errors[errors$response == response,paste0("MAPE_", period)]
+}
+
+#' Obtain the 'Pretty Name' of a Variable
+#'
+#' For printing axis labels, etc.
+#'
+#' @param var The variable name. Returns `NA` if not a valid variable.
+#'
+
+get_var_name = function(var) {
+  switch(var,
+         "effort" = "Drift Trips/Day",
+         "total_cpt" = "Salmon Catch/Trip",
+         "chinook_comp" = "% Chinook Salmon (Harvest)",
+         "chum_comp" = "% Chum Salmon (Harvest)",
+         "sockeye_comp" = "% Sockeye Salmon (Harvest)",
+         "day" = "Date",
+         "I(day^2)" = "Date (Quadratic)",
+         "hours_open" = "Hours Open",
+         "fished_yesterday" = "Fished Yesterday?",
+         "fished_yesterdayTRUE" = "Fished Yesterday? (Yes)",
+         "fished_yesterdayFALSE" = "Fished Yesterday? (No)",
+         "weekend" = "Weekend?",
+         "weekendTRUE" = "Weekend? (Yes)",
+         "weekendFALSE" = "Weekend? (No)",
+         "p_before_noon" = "% Before Noon",
+         "total_btf_cpue" = "Total BTF CPUE",
+         "chinook_btf_comp" = "% Chinook Composition (BTF)",
+         "chum_btf_comp" = "% Chum Composition (BTF)",
+         "sockeye_btf_comp" = "% Sockeye Composition (BTF)",
+         "mean_Nwind" = "Northerly Wind Speed",
+         "mean_Ewind" = "Easterly Wind Speed",
+         NA
+  )
 }

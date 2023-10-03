@@ -7,6 +7,7 @@
 relationship_plot(
   response,
   settings = list(),
+  dat = KuskoHarvPred:::fit_data,
   separate_day_types = TRUE,
   pred_day = NULL,
   pred_response = NULL,
@@ -18,7 +19,9 @@ relationship_plot(
 
 \item{settings}{List specifying which covariate settings to subset the predicted values for. Passed to \code{\link[=subset_pred_data]{subset_pred_data()}}.}
 
-\item{separate_day_types}{Logical; if the variable passed to \code{response} used the predictor variable \code{not_first_day}, should two relationships be drawn?}
+\item{dat}{Data frame; the input regression data set, defaults to \code{KuskoHarvPred:::fit_data}, which is equivalent to \code{\link[KuskoHarvData:prepare_regression_data]{KuskoHarvData::prepare_regression_data()}}.}
+
+\item{separate_day_types}{Logical; if the variable passed to \code{response} used the predictor variable \code{fished_yesterday}, should two relationships be drawn?}
 
 \item{pred_day}{Numeric; the day corresponding to a hypothetical prediction (\code{pred_response}). Defaults to \code{NULL} in which case this is not drawn.}
 

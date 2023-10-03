@@ -58,49 +58,6 @@ loo_pred_model_avg = function(fit_list) {
   return(loo_pred_model_avg)
 }
 
-#' @title Obtain Prediction Errors and Summaries
-#'
-#' @param yhat Numeric vector of predicted values.
-#' @param yobs Numeric vector of observed values.
-#' @note If `yhat` and `yobs` are of unequal lengths, the function will fail with a useful error message.
-#' @return A [`list`][base::list] object with elements `$error` (`yhat - yobs`), `$p_error` (`(yhat - yobs)/yobs`), and `$summary`.
-#'   `$summary` is a named vector with elements:
-#'   * `RHO` -- Pearson correlation coefficient between `yhat` and `yobs`.
-#'   * `RMSE` -- Root mean squared error: `sqrt(mean(error^2))`.
-#'   * `ME` -- Mean error: `mean(error)`.
-#'   * `MAE` -- Mean absolute error: `mean(abs(error))`.
-#'   * `MPE` -- Mean proportional error: `mean(p_error)`.
-#'   * `MAPE` -- Mean absolution proportional error: `mean(abs(p_error))`.
-#' @export
-
-get_errors = function(yhat, yobs) {
-
-  # return an error if the two input vectors are unequal lengths
-  if (length(yhat) != length(yobs)) {
-    stop ("yhat and yobs must be of equal length")
-  }
-
-  # calculate raw errors
-  error = yhat - yobs
-
-  # calculate proportional errors
-  p_error = error/yobs
-
-  # calculate summaries and return
-  list(
-    error = error,
-    p_error = p_error,
-    summary = c(
-      RHO = cor(yhat, yobs),
-      RMSE = sqrt(mean(error^2)),
-      ME = mean(error),
-      MAE = mean(abs(error)),
-      MPE = mean(p_error),
-      MAPE = mean(abs(p_error))
-    )
-  )
-}
-
 #' @title Plot Predicted vs. Observed Points
 #'
 #' @param yhat Numeric vector of predicted values.
@@ -111,7 +68,7 @@ get_errors = function(yhat, yobs) {
 #' @param xlab Character string for x-axis label.
 #' @param ylab Character string for y-axis label.
 #' @param main Character string for main plot title.
-#' @param include_summaries Logical: should error summaries (obtained via [get_errors()]) be displayed on the plot?
+#' @param include_summaries Logical: should error summaries (obtained via [KuskoHarvUtils::get_errors()]) be displayed on the plot?
 #' @param period_legend Logical: if points are colored by period, should the legend be displayed?
 #'   Defaults to `TRUE` if `period` is not `NULL`; ignored if `period` is `NULL`.
 #' @export
@@ -141,7 +98,7 @@ pred_vs_obs = function(yhat, yobs, period = NULL, xlab = "Observed", ylab = "Pre
 
   # obtain error summaries and add to plot if requested
   if (include_summaries) {
-    vals = get_errors(yhat = yhat, yobs = yobs)$summary
+    vals = KuskoHarvUtils::get_errors(yhat = yhat, yobs = yobs)$summary
     names = paste0(names(vals), ": ")
     vals = round(vals, 2)
     vals[c("MPE", "MAPE")] = paste0(vals[c("MPE", "MAPE")] * 100, "%")
@@ -165,14 +122,14 @@ pred_vs_obs = function(yhat, yobs, period = NULL, xlab = "Observed", ylab = "Pre
 #'   `formula` argument of [fit_global_model_one()] separately.
 #' @param var_desc Optional character string describing the variables used in fitting.
 #'   If supplied, will become the first column in the `error_summary` element of the output list.
-#' @param error_types A character vector specifying which types of error summaries (obtained by [get_errors()]) to return.
+#' @param error_types A character vector specifying which types of error summaries (obtained by [KuskoHarvUtils::get_errors()]) to return.
 #'   Options are any combination of `"RHO"`, `"RMSE"`, `"ME"`, `"MAE"`, `"MPE"`, or `"MAPE"`.
 #' @param ... Optional arguments passed to [fit_all_subsets()]
 #' @details This function conducts several steps in a self-contained wrapper:
 #'   1. Fits the global models to each response variable using [fit_global_model_one()].
 #'   2. Fits all subsets of these global models using [fit_all_subsets()].
 #'   3. Obtains model-averaged leave-one-out predictions for each record using [loo_pred_model_avg()].
-#'   4. Summarizes the errors made in step 3 by response variable type and period (see [get_errors()] [get_period()]).
+#'   4. Summarizes the errors made in step 3 by response variable type and period (see [KuskoHarvUtils::get_errors()] and [KuskoHarvUtils::get_period()]).
 #' @return A [`list`][base::list] object with elements:
 #'   * `error_summary`: a [`data.frame`][base::data.frame] object storing info about the settings of the run (the values of `reduce_colinearity`,
 #'      `cwt_retain`, and `var_desc`) and the period- and response variable-specific error summaries.
@@ -213,17 +170,17 @@ whole_loo_analysis = function(global_formulae, fit_data, var_desc = NULL, error_
   # STEP 4: summarize the errors
   summarize_errors = function(yhat, response, fit_data, error_types) {
       # build a data.frame with time period, prediction, and observed values
-      df = data.frame(period = KuskoHarvData:::get_period(fit_data$day), yhat = yhat, yobs = fit_data[,response])
+      df = data.frame(period = KuskoHarvUtils::get_period(fit_data$day), yhat = yhat, yobs = fit_data[,response])
 
       # calculate MPE and MAPE for each period separately
       errors = lapply(unique(df$period), function(p) {
-        get_errors(yhat = df$yhat[df$period == p], yobs = df$yobs[df$period == p])$summary[error_types]
+        KuskoHarvUtils::get_errors(yhat = df$yhat[df$period == p], yobs = df$yobs[df$period == p])$summary[error_types]
       })
 
       # calculate MPE and MAPE for all periods combined, and append to period-specific values
       errors = append(
         errors,
-        list(get_errors(yhat = df$yhat, yobs = df$yobs)$summary[error_types])
+        list(KuskoHarvUtils::get_errors(yhat = df$yhat, yobs = df$yobs)$summary[error_types])
       )
 
       # convert errors to a data frame: periods as rows

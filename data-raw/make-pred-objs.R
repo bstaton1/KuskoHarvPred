@@ -3,18 +3,21 @@
 # REDUCES RUN TIME LATER
 
 # produce the regression data set
-dat = KuskoHarvData::prepare_regression_data()
+fit_data = KuskoHarvData::prepare_regression_data()
+
+# discard any data collected
+fit_data = fit_data[lubridate::month(fit_data$date) %in% c(6,7),]
 
 # perform LOO analysis
 loo_output = KuskoHarvPred:::whole_loo_analysis(
   global_formulae = list(
-    effort = "day + hours_open + not_first_day + weekend + p_before_noon + total_btf_cpue + chinook_btf_comp + mean_Nwind + mean_Ewind",
-    total_cpt = "day + I(day^2) + hours_open + not_first_day + p_before_noon + total_btf_cpue + mean_Nwind + mean_Ewind",
+    effort = "day + hours_open + fished_yesterday + weekend + p_before_noon + total_btf_cpue + chinook_btf_comp + mean_Nwind + mean_Ewind",
+    total_cpt = "day + I(day^2) + hours_open + fished_yesterday + p_before_noon + total_btf_cpue + mean_Nwind + mean_Ewind",
     chinook_comp = "day + chinook_btf_comp",
     chum_comp = "day + chum_btf_comp",
     sockeye_comp = "day + sockeye_btf_comp"
   ),
-  fit_data = dat
+  fit_data = fit_data
 )
 
 # store all component regression models in a separate object
@@ -23,22 +26,22 @@ loo_output = loo_output[-which(names(loo_output) == "models")]
 
 # build objects needed for constructing predictive data set
 # years
-year_range = 2016:2021
+year_range = sort(unique(lubridate::year(fit_data$date)))
 
 # build bank of day variable
-day = 12:46
+day = min(fit_data$day):max(fit_data$day)
 
 # build bank of miscellaneous variables
 misc_bank = list(
   hours_open = seq(6, 24, by = 6),
   p_before_noon = c(0, 0.25, 0.5, 0.75, 1),
-  not_first_day = c(FALSE, TRUE),
+  fished_yesterday = c(FALSE, TRUE),
   weekend = c(FALSE, TRUE)
 )
 
 # extract BTF total CPUE summaries for each day of each year
 total_btf_cpue = lapply(year_range, function(y) {
-  dates = KuskoHarvData:::from_days_past_may31(day, y)
+  dates = KuskoHarvUtils::from_days_past_may31(day, y)
   out = sapply(dates, KuskoHarvData:::summarize_btf, stat = "total_cpue", plus_minus = 1)
   out = data.frame(var = "total_btf_cpue", day = day, year = y, value = out)
   return(out)
@@ -46,7 +49,7 @@ total_btf_cpue = lapply(year_range, function(y) {
 
 # extract BTF Chinook composition summaries for each day of each year
 chinook_btf_comp = lapply(year_range, function(y) {
-  dates = KuskoHarvData:::from_days_past_may31(day, y)
+  dates = KuskoHarvUtils::from_days_past_may31(day, y)
   out = sapply(dates, KuskoHarvData:::summarize_btf, stat = "chinook_comp", plus_minus = 1)
   out = data.frame(var = "chinook_btf_comp", day = day, year = y, value = out)
   return(out)
@@ -54,7 +57,7 @@ chinook_btf_comp = lapply(year_range, function(y) {
 
 # extract BTF chum composition summaries for each day of each year
 chum_btf_comp = lapply(year_range, function(y) {
-  dates = KuskoHarvData:::from_days_past_may31(day, y)
+  dates = KuskoHarvUtils::from_days_past_may31(day, y)
   out = sapply(dates, KuskoHarvData:::summarize_btf, stat = "chum_comp", plus_minus = 1)
   out = data.frame(var = "chum_btf_comp", day = day, year = y, value = out)
   return(out)
@@ -62,7 +65,7 @@ chum_btf_comp = lapply(year_range, function(y) {
 
 # extract BTF sockeye composition summaries for each day of each year
 sockeye_btf_comp = lapply(year_range, function(y) {
-  dates = KuskoHarvData:::from_days_past_may31(day, y)
+  dates = KuskoHarvUtils::from_days_past_may31(day, y)
   out = sapply(dates, KuskoHarvData:::summarize_btf, stat = "sockeye_comp", plus_minus = 1)
   out = data.frame(var = "sockeye_btf_comp", day = day, year = y, value = out)
   return(out)
@@ -99,7 +102,7 @@ weather_key = data.frame(
   CAT_mean_Ewind = c("strong_westerly", "none", "strong_easterly")
 )
 
-build_pred_data = function(vars, days = 12:46) {
+build_pred_data = function(vars, days = min(fit_data$day):max(fit_data$day)) {
 
   # extract the names of all BTF variables
   btf_vars = vars[stringr::str_detect(vars, "btf")]
@@ -149,8 +152,8 @@ pred_data = lapply(fit_lists, function(fit_list) build_pred_data(KuskoHarvPred::
 
 # add model averaged predictions
 pred_data = lapply(names(fit_lists), function(r) {
-  cbind(pred_data[[r]], pred_response = predict_model_avg(fit_lists[[r]], pred_data[[r]]))
+  cbind(pred_data[[r]], pred_response = KuskoHarvPred::predict_model_avg(fit_lists[[r]], pred_data[[r]]))
 }); names(pred_data) = names(fit_lists)
 
 # export them to proper structure and location
-usethis::use_data(fit_lists, pred_data, loo_output, internal = TRUE, overwrite = TRUE)
+usethis::use_data(fit_lists, pred_data, loo_output, fit_data, internal = TRUE, overwrite = TRUE)

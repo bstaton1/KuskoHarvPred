@@ -1,13 +1,13 @@
 Package: KuskoHarvPred
 Title: Harvest and Effort Predictions for Lower Kuskokwim River Subsistence Salmon Fisheries
-Version: 0.1.0
+Version: 0.1.0.9990
 Authors@R: person(given = "Ben", family = "Staton", role = c("aut", "cre"), email = "bstaton.qes@gmail.com", comment = c(ORCID = "0000-0002-2342-3482"))
 Description: Contains framework for predicting outcomes from a day of fishing in the Lower Kuskokwim River subsistence salmon fishery.
     Functions are included to interface with the data sets in the package 'KuskoHarvData' to obtain regression relationships between daily observations of total boat trips, salmon catch per boat, and species composition.
     Regression models are model-averaged to obtain predictions of these quantities, which when multiplied, give predictions of species-specific harvest.
     The package contains an interactive web application to enable users without statistical training to interface with the historical data and use it for making predictions of outcomes from proposed fishing opportunities.
 License: MIT + file LICENSE
-Depends: R (>= 3.5.0)
+Depends: R (>= 4.1.0)
 Imports:
     stringr (>= 1.3.1),
     MuMIn,
@@ -23,11 +23,12 @@ Imports:
     details,
     usethis
 Remotes:
+    bstaton1/KuskoHarvUtils,
     bstaton1/KuskoHarvEst,
     bstaton1/KuskoHarvData
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.3
 Roxygen: list(markdown = TRUE)
 URL: https://bstaton1.github.io/KuskoHarvPred/
 BugReports: https://github.com/bstaton1/KuskoHarvPred/issues
