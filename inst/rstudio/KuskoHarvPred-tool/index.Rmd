@@ -47,6 +47,7 @@ caption {
 
 ```{r pkg-setup, warning = FALSE, message = FALSE}
 # load packages
+library(KuskoHarvUtils) # Houses several utility functions that are used across the KuskoHarv* Package Family
 library(KuskoHarvEst)   # Houses workflow for producing harvest estimates, and some helper functions used here
 library(KuskoHarvData)  # Houses historical data and functions to prepare them for analysis
 library(KuskoHarvPred)  # Houses regression infrastructure and output
