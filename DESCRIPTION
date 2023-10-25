@@ -21,7 +21,10 @@ Imports:
     knitr,
     rmarkdown,
     details,
-    usethis
+    usethis,
+    KuskoHarvUtils,
+    KuskoHarvEst,
+    KuskoHarvData
 Remotes:
     bstaton1/KuskoHarvUtils,
     bstaton1/KuskoHarvEst,
