@@ -10,6 +10,12 @@ resource_files:
 ---
 
 ```{r knitr-setup, include = FALSE}
+# NOTE FOR FUTURE PUBLICATION INSTANCES TO SHINYAPPS.IO
+# THE PACKAGES THAT ARE ON GITHUB **MUST** BE INSTALLED TO THE DEPLOYING COMPUTER
+# USING devtools::install_github()
+# AND **NOT** devtools::build()
+# OTHERWISE RSCONNECT WILL NOT KNOW WHERE TO FIND THESE PACKAGES
+
 knitr::opts_chunk$set(echo = FALSE, fig.align = "center")
 ```
 
