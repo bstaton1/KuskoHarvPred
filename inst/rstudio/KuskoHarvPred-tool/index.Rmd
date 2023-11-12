@@ -1118,7 +1118,7 @@ Notice that not all condition variables were assessed as predictors for all outc
 tab = c(
 # Variable               Description                                                      EFFORT CPT    %CHIN  %CHUM  %SOCK  
   "Day",                 "Number of days past May 31st",                                  "YES", "YES", "YES", "YES", "YES",
-  "Day^2",               "Quadratic form; allows non-linear time trends",                 "NO" , "YES", "NO" , "NO" , "NO" ,
+  "Day^2",               "Quadratic form; allows non-linear time trends",                 "YES", "YES", "NO" , "NO" , "NO" ,
   "Hours Open",          "Number of hours fishing was allowed that day",                  "YES", "NO" , "NO" , "NO" , "NO" ,
   "Fished Yesterday",    "Yes/No; whether fishing was allowed the previous day",          "YES", "YES", "NO" , "NO" , "NO" ,
   "Weekend",             "Yes/No; whether the day was Saturday or Sunday",                "YES", "NO" , "NO" , "NO" , "NO" ,
