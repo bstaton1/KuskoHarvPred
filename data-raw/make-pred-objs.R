@@ -11,8 +11,8 @@ fit_data = fit_data[lubridate::month(fit_data$date) %in% c(6,7),]
 # perform LOO analysis
 loo_output = KuskoHarvPred:::whole_loo_analysis(
   global_formulae = list(
-    effort = "day + hours_open + fished_yesterday + weekend + p_before_noon + total_btf_cpue + chinook_btf_comp + mean_Nwind + mean_Ewind",
-    total_cpt = "day + I(day^2) + hours_open + fished_yesterday + p_before_noon + total_btf_cpue + mean_Nwind + mean_Ewind",
+    effort = "day + hours_open + fished_yesterday + weekend + p_before_noon + total_btf_cpue + chinook_btf_comp",
+    total_cpt = "day + I(day^2) + hours_open + fished_yesterday + p_before_noon + total_btf_cpue",
     chinook_comp = "day + chinook_btf_comp",
     chum_comp = "day + chum_btf_comp",
     sockeye_comp = "day + sockeye_btf_comp"
