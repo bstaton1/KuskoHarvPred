@@ -89,29 +89,13 @@ btf_out = rbind(btf_means, btf_mins, btf_maxs)
 btf_out = btf_out[order(btf_out$day),]
 rownames(btf_out) = NULL
 
-# build bank of weather variables
-weather_bank = list(
-  mean_Nwind = c(-10, 0, 10),
-  mean_Ewind = c(-10, 0, 10)
-)
-
-weather_key = data.frame(
-  mean_Nwind = c(-10, 0, 10),
-  mean_Ewind = c(-10, 0, 10),
-  CAT_mean_Nwind = c("strong_southerly", "none", "strong_northerly"),
-  CAT_mean_Ewind = c("strong_westerly", "none", "strong_easterly")
-)
-
 build_pred_data = function(vars, days = min(fit_data$day):max(fit_data$day)) {
 
   # extract the names of all BTF variables
   btf_vars = vars[stringr::str_detect(vars, "btf")]
 
-  # extract the names of all weather variables
-  weather_vars = vars[stringr::str_detect(vars, "wind")]
-
   # extract the names of all miscellaneous variables
-  misc_vars = vars[!(vars %in% c("day", btf_vars, weather_vars))]
+  misc_vars = vars[!(vars %in% c("day", btf_vars))]
 
   # remove the quadratic term if it is present
   if (any(misc_vars == "I(day^2)")) misc_vars = misc_vars[-which(misc_vars == "I(day^2)")]
@@ -120,7 +104,7 @@ build_pred_data = function(vars, days = min(fit_data$day):max(fit_data$day)) {
   # must be daily because BTF variables vary throughout season
   out = lapply(days, function(day_keep) {
     btf_bank_day = as.list(subset(btf_out[,c("day", btf_vars)], day == day_keep))
-    day_bank = append(append(btf_bank_day, misc_bank[misc_vars]), weather_bank[weather_vars])
+    day_bank = append(btf_bank_day, misc_bank[misc_vars])
     day_bank = lapply(day_bank, unique)
     do.call(expand.grid, day_bank)
   })
@@ -133,14 +117,6 @@ build_pred_data = function(vars, days = min(fit_data$day):max(fit_data$day)) {
     btf_merge = btf_out[,c("day", "cat", btf_var)]
     colnames(btf_merge)[2] = paste0("CAT_", btf_var)
     out = merge(out, btf_merge, by = c("day", btf_var))
-  }
-
-  # combine the weather variable categorical names
-  if (any(weather_vars %in% colnames(weather_key))) {
-    for (weather_var in weather_vars) {
-      weather_merge = weather_key[stringr::str_detect(colnames(weather_key),weather_var)]
-      out = merge(out, weather_merge, by = weather_var)
-    }
   }
 
   # return the output data frame
