@@ -224,8 +224,6 @@ process_end_date = function(date, time) {
   new_datetime = parse_date_time(paste(date, new_time), '%Y-%m-%d %I:%M:%S %p', tz = "US/Alaska")
   as_datetime(new_datetime, tz = "US/Alaska")
 }
-
-wind_angle_key = c("N" = 0, "NE" = 45, "E" = 90, "SE" = 135, "S" = 180, "SW" = 225, "W" = 270, "NW" = 315)
 ```
 
 ```{r input-widgets}
@@ -255,17 +253,6 @@ fillRow(
       numericInput(inputId = "sockeye_btf_cpue", label = "Sockeye CPUE", value = 10, min = 0),
       a(icon("table"), "View BTF Data Webpage", href = "https://www.adfg.alaska.gov/index.cfm?adfg=commercialbyareakuskokwim.btf"),
       actionButton(inputId = "use_avg_btf", label = paste0("Get 2016-", max(yrs), " Average"), width = "100%")
-    )
-  ),
-  # input widgets for weather info
-  column(
-    width = 12,
-    h3("Weather"),
-    wellPanel(
-      numericInput(inputId = "wind_speed", label = "Wind Speed (MPH)", value = 0),
-      selectInput(inputId = "wind_direction", label = "Wind Direction",
-                         choices = c("N", "NE", "E", "SE", "S", "SW", "W", "NW"), selected = "SW"),
-      a(icon("search"), "Search Google Wind Forecast", href = "https://www.google.co.in/search?q=bethel+AK+wind+forecast"),
     )
   )
 )
@@ -326,7 +313,6 @@ reactive({
   rvals$end_time = process_end_date(input$date, input$end_time)
   rvals$hours_open = as.numeric(as.duration(interval(rvals$start_time, rvals$end_time)), units = "hours")
   rvals$hours_before_noon = as.numeric(as.duration(interval(rvals$start_time, as_datetime(paste0(input$date, " 12:00:00"), tz = "US/Alaska"))), units = "hours")
-  rvals$wind_angle = wind_angle_key[input$wind_direction]
 })
 
 # create the complete predictive data set based on widget inputs
@@ -340,9 +326,7 @@ reactive({
     total_btf_cpue = input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue,
     chinook_btf_comp = input$chinook_btf_cpue/(input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue),
     chum_btf_comp = input$chum_btf_cpue/(input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue),
-    sockeye_btf_comp = input$sockeye_btf_cpue/(input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue),
-    mean_Nwind = KuskoHarvUtils::get_Nwind(speed = input$wind_speed, angle = rvals$wind_angle),
-    mean_Ewind = KuskoHarvUtils::get_Ewind(speed = input$wind_speed, angle = rvals$wind_angle)
+    sockeye_btf_comp = input$sockeye_btf_cpue/(input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue)
   )
 })
 
@@ -622,17 +606,6 @@ fillRow(
     hidden(
       selectInput(inputId = "plot_p_before_noon", label = "Percent of Fishing Before Noon", choices = c("0%" = "0", "25%" = "0.25", "50%" = "0.50", "75%" = "0.75", "100%" = 1), selected = "0.25")
     )
-  ),
-  
-  column(
-    width = 12,
-    hidden(
-      selectInput(inputId = "plot_CAT_mean_Nwind", label = "North/South Wind", choices = c("Strong Southerly Wind" = "strong_southerly", "No North/South Wind" = "none", "Strong Northerly Wind" = "strong_northerly"), selected = "none")
-    ),
-    
-    hidden(
-      selectInput(inputId = "plot_CAT_mean_Ewind", label = "East/West Wind", choices = c("Strong Westerly Wind" = "strong_westerly", "No East/West Wind" = "none", "Strong Easterly Wind" = "strong_easterly"), selected = "none")
-    )
   )
 )
 hr()
@@ -652,8 +625,6 @@ observe({
   toggle(id = "plot_CAT_chinook_btf_comp", condition = "chinook_btf_comp" %in% rvals$vars)
   toggle(id = "plot_CAT_chum_btf_comp", condition = "chum_btf_comp" %in% rvals$vars)
   toggle(id = "plot_CAT_sockeye_btf_comp", condition = "sockeye_btf_comp" %in% rvals$vars)
-  toggle(id = "plot_CAT_mean_Nwind", condition = "mean_Nwind" %in% rvals$vars)
-  toggle(id = "plot_CAT_mean_Ewind", condition = "mean_Ewind" %in% rvals$vars)
 })
 
 # Construct the settings for subsetting pre-processed predictions for plotting
@@ -970,8 +941,9 @@ pred_kable = function(period_keep, year_keep) {
   # pred_vars = pred_vars[!stringr::str_detect(pred_vars, "^I\\(")]
   ordered_pred_vars = c("hours_open", "p_before_noon", 
                         "weekend", "fished_yesterday", "total_btf_cpue",
-                        "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp",
-                        "mean_Nwind", "mean_Ewind")
+                        "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp"
+                        # "mean_Nwind", "mean_Ewind"
+                        )
   
   # check to make sure everything is included
   # all(pred_vars %in% ordered_pred_vars)
@@ -991,8 +963,6 @@ pred_kable = function(period_keep, year_keep) {
   
   # round numeric variables
   table_dat$total_btf_cpue = round(table_dat$total_btf_cpue)
-  table_dat$mean_Nwind = round(table_dat$mean_Nwind, 1)
-  table_dat$mean_Ewind = round(table_dat$mean_Ewind, 1)
   
   # format the date
   table_dat$date = paste(lubridate::month(table_dat$date, label = TRUE, abbr = TRUE), lubridate::day(table_dat$date))
@@ -1003,12 +973,14 @@ pred_kable = function(period_keep, year_keep) {
       kbl("html", row.names = FALSE,
           col.names = c("Year", "Period", "Date",
                         "Hours Open", "%Before Noon", "Weekend?", "Fished Yesterday?",
-                        "Total CPUE", "%Chinook", "%Chum", "%Sockeye", "N. Wind", "E. Wind"),
-          align = "cclcccccccccc") |>
+                        "Total CPUE", "%Chinook", "%Chum", "%Sockeye"
+                        ),
+          align = "cclcccccccc") |>
       kable_styling(full_width = TRUE, bootstrap_options = c("condensed"), fixed_thead = TRUE) |>
       collapse_rows(1:2) |>
       column_spec(3, width = "65px") |>
-      add_header_above(c(" " = 7, "Bethel Test Fishery" = 4, " " = 2))
+      add_header_above(c(" " = 7, "Bethel Test Fishery" = 4
+                         ))
     
   } else {
     out = '<p align="center" style="color:tomato; font-size:150%;">No records match the selected filters.</p>'
@@ -1039,7 +1011,7 @@ observeEvent(rvals$pred_kable, {
 
 ```{r scatterplots-ui}
 resp_vars = c("effort", "total_cpt", "chinook_comp", "chum_comp", "sockeye_comp")
-pred_vars = c("day", "hours_open", "p_before_noon", "weekend", "fished_yesterday", "total_btf_cpue", "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp", "mean_Nwind", "mean_Ewind")
+pred_vars = c("day", "hours_open", "p_before_noon", "weekend", "fished_yesterday", "total_btf_cpue", "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp")
 names(resp_vars) = sapply(resp_vars, function(v) KuskoHarvPred:::get_var_name(v))
 names(pred_vars) = sapply(pred_vars, function(v) KuskoHarvPred:::get_var_name(v))
 
