@@ -17,7 +17,8 @@ loo_output = KuskoHarvPred:::whole_loo_analysis(
     chum_comp = "day + chum_btf_comp",
     sockeye_comp = "day + sockeye_btf_comp"
   ),
-  fit_data = fit_data
+  fit_data = fit_data,
+  cwt_retain = 1
 )
 
 # store all component regression models in a separate object
