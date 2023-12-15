@@ -22,11 +22,10 @@ The following elements are acceptable:
 * \code{settings$p_before_noon}: numeric; must contain any combination of 0.25, 0.5, 0.75, 1; defaults to 0.5
 * \code{settings$fished_yesterday}: logical; defaults to \code{FALSE}
 * \code{settings$weekend}: logical; defaults to \code{FALSE}
-* \code{settings$weekend}: logical; defaults to \code{FALSE}
-* \code{settings$CAT_total_btf_cpue}: character, must contain any combination of \code{"min"}, \code{"mean"}, \code{"max"}; defaults to \code{"mean"}
-* \code{settings$CAT_chinook_btf_comp}: character, must contain any combination of \code{"min"}, \code{"mean"}, \code{"max"}; defaults to \code{"mean"}
-* \code{settings$CAT_chum_btf_comp}: character, must contain any combination of \code{"min"}, \code{"mean"}, \code{"max"}; defaults to \code{"mean"}
-* \code{settings$CAT_sockeye_btf_comp}: character, must contain any combination of \code{"min"}, \code{"mean"}, \code{"max"}; defaults to \code{"mean"}
+* \code{settings$CAT_total_btf_cpue}: character, must contain any combination of \code{"q10"}, \code{"q25"}, \code{"q50"}, \code{"q75"}, \code{"q90"}; defaults to \code{"q50"}
+* \code{settings$CAT_chinook_btf_comp}: same as \code{settings$CAT_total_btf_cpue}
+* \code{settings$CAT_chum_btf_comp}: same as \code{settings$CAT_total_btf_cpue}
+* \code{settings$CAT_sockeye_btf_comp}: same as \code{settings$CAT_total_btf_cpue}
 * \code{settings$CAT_mean_Nwind}: character, must contain any combination of \code{"strong_northerly"}, \code{"none"}, \code{"strong_southerly"}; defaults to \code{"none"}
 * \code{settings$CAT_mean_Ewind}: character, must contain any combination of \code{"strong_easterly"}, \code{"none"}, \code{"strong_westerly"}; defaults to \code{"none"}
 @note Because not every predictor variable is used for all responses, it is possible to change the \code{settings} argument and receive the same output.

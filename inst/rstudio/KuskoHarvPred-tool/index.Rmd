@@ -566,7 +566,7 @@ reactive({
 
 ```{r plot-ui}
 
-CAT_btf_choices = c("Maximum" = "max", "Average" = "mean", "Minimum" = "min")
+CAT_btf_choices = c("10th Percentile (Near Lowest)" = "q10", "25th Percentile" = "q25", "50th Percentile (Median)" = "q50", "75th Percentile" = "q75", "90th Percentile (Near Highest)" = "q90")
 response_choices = c("Drift Trips/Day" = "effort", "Salmon Catch/Trip" = "total_cpt", "Chinook Composition" = "chinook_comp", "Chum Composition" = "chum_comp", "Sockeye Composition" = "sockeye_comp")
 hr()
 selectInput(inputId = "plot_response", label = p("Outcome Variable", style = "font-size: 15pt;"), choices = response_choices, width = "25%")
@@ -578,19 +578,19 @@ fillRow(
   column(
     width = 12,
     hidden(
-      selectInput(inputId = "plot_CAT_total_btf_cpue", label = "Total BTF CPUE", choices = CAT_btf_choices, selected = "mean")
+      selectInput(inputId = "plot_CAT_total_btf_cpue", label = "Total BTF CPUE", choices = CAT_btf_choices, selected = "q50")
     ),
     
     hidden(
-      selectInput(inputId = "plot_CAT_chinook_btf_comp", label = "Chinook BTF Composition", choices = CAT_btf_choices, selected = "mean")
+      selectInput(inputId = "plot_CAT_chinook_btf_comp", label = "Chinook BTF Composition", choices = CAT_btf_choices, selected = "q50")
     ),
     
     hidden(
-      selectInput(inputId = "plot_CAT_chum_btf_comp", label = "Chum BTF Composition", choices = CAT_btf_choices, selected = "mean")
+      selectInput(inputId = "plot_CAT_chum_btf_comp", label = "Chum BTF Composition", choices = CAT_btf_choices, selected = "q50")
     ),
     
     hidden(
-      selectInput(inputId = "plot_CAT_sockeye_btf_comp", label = "Sockeye BTF Composition", choices = CAT_btf_choices, selected = "mean")
+      selectInput(inputId = "plot_CAT_sockeye_btf_comp", label = "Sockeye BTF Composition", choices = CAT_btf_choices, selected = "q50")
     )
   ),
   
