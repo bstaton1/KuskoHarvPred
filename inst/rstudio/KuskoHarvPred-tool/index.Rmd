@@ -126,7 +126,6 @@ doc_par = function(
   *  The time of the season
   *  The time of day or length of fishing period
   *  The abundance and species composition in the river
-  *  The weather
   
   Please see the `r icon("chart-line")` **Predictive Relationships** tab to view how each outcome has historically varied throughout the season and how the predicted value changes depending on the fishery conditions.
   The `r icon("info-circle")` **Statistical Info.** tab (Methods Overview section) includes more details on how the tool works.
@@ -137,7 +136,7 @@ doc_par = function(
   
   <div style="margin-left: 5px;">
 
-  1.  Enter the expected conditions of the proposed fishery opportunity (e.g., day, start/end times, Bethel Test Fishery index values, wind speed/direction) on the `r icon("sliders-h")` **Inputs** tab
+  1.  Enter the expected conditions of the proposed fishery opportunity (day, start/end times, Bethel Test Fishery index values) on the `r icon("sliders-h")` **Inputs** tab
   2.  Navigate to the `r icon("table")` **Outputs** tab -- the predictions of each outcome and species-specific harvest for the fishing period described in the inputs is shown in two tables.
   3.  To explore how the tool works and to see good its predictions are, see the `r icon("chart-line")` **Predictive Relationships** and `r icon("info-circle")` **Statistical Info.** tabs.
   
@@ -154,7 +153,7 @@ doc_par = function(
   
   <div style="margin-left: 30px;">
 
-  The historical fishery outcomes are informed by data collected collaboratively involving several projects/agencies: Orutsararmiut Native Council, the [Community-Based Harvest Monitoring Program](https://static1.squarespace.com/static/5afdc3d5e74940913f78773d/t/622fc731ca40712f2235eda1/1647298414521/CBHM+2021+Report_final.pdf) (Kuskokwim River Inter-Tribal Fisheries Commission/Bering Sea Fisherman's Association), and the U.S. Fish and Wildlife Service. 
+  The historical fishery outcomes are informed by data collected collaboratively involving several projects/agencies: Orutsararmiut Native Council, the [Community-Based Harvest Monitoring Program](https://static1.squarespace.com/static/5afdc3d5e74940913f78773d/t/622fc731ca40712f2235eda1/1647298414521/CBHM+2021+Report_final.pdf) (Kuskokwim River Inter-Tribal Fisheries Commission), and the U.S. Fish and Wildlife Service. 
   More information about data collection and harvest/effort estimation can be found in recent reports that document these topics for individual seasons (e.g., [Russell et al. 2021](https://static1.squarespace.com/static/5afdc3d5e74940913f78773d/t/61a6b1098494ce51e26b4460/1638314257230/2021+Kuskokwim+Subsistence+Harvest+Report.pdf); [Staton 2018](https://github.com/bstaton1/KuskoHarvEst/blob/main/inst/rstudio/templates/project/resources/04-documentation/Staton%20-%202018%20-%20In-season%20harvest%20and%20effort%20estimates.pdf)).
   
   Because of the scope of the monitoring data, predictions made by this tool apply only to:
@@ -192,8 +191,6 @@ doc_par = function(
   Next, enter the expected Bethel Test Fishery daily CPUE for the proposed fishing day.
   If you have no idea, click the button to get the historical average values for the day you selected, or you can easily navigate to the Bethel Test Fishery data webpage by clicking the link.
   
-  Finally, enter the expected weather (wind) conditions; click the link to obtain a wind forecast for Bethel.
-  
 </details>
 :::
 
@@ -224,8 +221,6 @@ process_end_date = function(date, time) {
   new_datetime = parse_date_time(paste(date, new_time), '%Y-%m-%d %I:%M:%S %p', tz = "US/Alaska")
   as_datetime(new_datetime, tz = "US/Alaska")
 }
-
-wind_angle_key = c("N" = 0, "NE" = 45, "E" = 90, "SE" = 135, "S" = 180, "SW" = 225, "W" = 270, "NW" = 315)
 ```
 
 ```{r input-widgets}
@@ -255,17 +250,6 @@ fillRow(
       numericInput(inputId = "sockeye_btf_cpue", label = "Sockeye CPUE", value = 10, min = 0),
       a(icon("table"), "View BTF Data Webpage", href = "https://www.adfg.alaska.gov/index.cfm?adfg=commercialbyareakuskokwim.btf"),
       actionButton(inputId = "use_avg_btf", label = paste0("Get 2016-", max(yrs), " Average"), width = "100%")
-    )
-  ),
-  # input widgets for weather info
-  column(
-    width = 12,
-    h3("Weather"),
-    wellPanel(
-      numericInput(inputId = "wind_speed", label = "Wind Speed (MPH)", value = 0),
-      selectInput(inputId = "wind_direction", label = "Wind Direction",
-                         choices = c("N", "NE", "E", "SE", "S", "SW", "W", "NW"), selected = "SW"),
-      a(icon("search"), "Search Google Wind Forecast", href = "https://www.google.co.in/search?q=bethel+AK+wind+forecast"),
     )
   )
 )
@@ -326,7 +310,6 @@ reactive({
   rvals$end_time = process_end_date(input$date, input$end_time)
   rvals$hours_open = as.numeric(as.duration(interval(rvals$start_time, rvals$end_time)), units = "hours")
   rvals$hours_before_noon = as.numeric(as.duration(interval(rvals$start_time, as_datetime(paste0(input$date, " 12:00:00"), tz = "US/Alaska"))), units = "hours")
-  rvals$wind_angle = wind_angle_key[input$wind_direction]
 })
 
 # create the complete predictive data set based on widget inputs
@@ -340,9 +323,7 @@ reactive({
     total_btf_cpue = input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue,
     chinook_btf_comp = input$chinook_btf_cpue/(input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue),
     chum_btf_comp = input$chum_btf_cpue/(input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue),
-    sockeye_btf_comp = input$sockeye_btf_cpue/(input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue),
-    mean_Nwind = KuskoHarvUtils::get_Nwind(speed = input$wind_speed, angle = rvals$wind_angle),
-    mean_Ewind = KuskoHarvUtils::get_Ewind(speed = input$wind_speed, angle = rvals$wind_angle)
+    sockeye_btf_comp = input$sockeye_btf_cpue/(input$chinook_btf_cpue + input$chum_btf_cpue + input$sockeye_btf_cpue)
   )
 })
 
@@ -622,17 +603,6 @@ fillRow(
     hidden(
       selectInput(inputId = "plot_p_before_noon", label = "Percent of Fishing Before Noon", choices = c("0%" = "0", "25%" = "0.25", "50%" = "0.50", "75%" = "0.75", "100%" = 1), selected = "0.25")
     )
-  ),
-  
-  column(
-    width = 12,
-    hidden(
-      selectInput(inputId = "plot_CAT_mean_Nwind", label = "North/South Wind", choices = c("Strong Southerly Wind" = "strong_southerly", "No North/South Wind" = "none", "Strong Northerly Wind" = "strong_northerly"), selected = "none")
-    ),
-    
-    hidden(
-      selectInput(inputId = "plot_CAT_mean_Ewind", label = "East/West Wind", choices = c("Strong Westerly Wind" = "strong_westerly", "No East/West Wind" = "none", "Strong Easterly Wind" = "strong_easterly"), selected = "none")
-    )
   )
 )
 hr()
@@ -652,8 +622,6 @@ observe({
   toggle(id = "plot_CAT_chinook_btf_comp", condition = "chinook_btf_comp" %in% rvals$vars)
   toggle(id = "plot_CAT_chum_btf_comp", condition = "chum_btf_comp" %in% rvals$vars)
   toggle(id = "plot_CAT_sockeye_btf_comp", condition = "sockeye_btf_comp" %in% rvals$vars)
-  toggle(id = "plot_CAT_mean_Nwind", condition = "mean_Nwind" %in% rvals$vars)
-  toggle(id = "plot_CAT_mean_Ewind", condition = "mean_Ewind" %in% rvals$vars)
 })
 
 # Construct the settings for subsetting pre-processed predictions for plotting
@@ -970,8 +938,9 @@ pred_kable = function(period_keep, year_keep) {
   # pred_vars = pred_vars[!stringr::str_detect(pred_vars, "^I\\(")]
   ordered_pred_vars = c("hours_open", "p_before_noon", 
                         "weekend", "fished_yesterday", "total_btf_cpue",
-                        "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp",
-                        "mean_Nwind", "mean_Ewind")
+                        "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp"
+                        # "mean_Nwind", "mean_Ewind"
+                        )
   
   # check to make sure everything is included
   # all(pred_vars %in% ordered_pred_vars)
@@ -991,8 +960,6 @@ pred_kable = function(period_keep, year_keep) {
   
   # round numeric variables
   table_dat$total_btf_cpue = round(table_dat$total_btf_cpue)
-  table_dat$mean_Nwind = round(table_dat$mean_Nwind, 1)
-  table_dat$mean_Ewind = round(table_dat$mean_Ewind, 1)
   
   # format the date
   table_dat$date = paste(lubridate::month(table_dat$date, label = TRUE, abbr = TRUE), lubridate::day(table_dat$date))
@@ -1003,12 +970,14 @@ pred_kable = function(period_keep, year_keep) {
       kbl("html", row.names = FALSE,
           col.names = c("Year", "Period", "Date",
                         "Hours Open", "%Before Noon", "Weekend?", "Fished Yesterday?",
-                        "Total CPUE", "%Chinook", "%Chum", "%Sockeye", "N. Wind", "E. Wind"),
-          align = "cclcccccccccc") |>
+                        "Total CPUE", "%Chinook", "%Chum", "%Sockeye"
+                        ),
+          align = "cclcccccccc") |>
       kable_styling(full_width = TRUE, bootstrap_options = c("condensed"), fixed_thead = TRUE) |>
       collapse_rows(1:2) |>
       column_spec(3, width = "65px") |>
-      add_header_above(c(" " = 7, "Bethel Test Fishery" = 4, " " = 2))
+      add_header_above(c(" " = 7, "Bethel Test Fishery" = 4
+                         ))
     
   } else {
     out = '<p align="center" style="color:tomato; font-size:150%;">No records match the selected filters.</p>'
@@ -1039,7 +1008,7 @@ observeEvent(rvals$pred_kable, {
 
 ```{r scatterplots-ui}
 resp_vars = c("effort", "total_cpt", "chinook_comp", "chum_comp", "sockeye_comp")
-pred_vars = c("day", "hours_open", "p_before_noon", "weekend", "fished_yesterday", "total_btf_cpue", "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp", "mean_Nwind", "mean_Ewind")
+pred_vars = c("day", "hours_open", "p_before_noon", "weekend", "fished_yesterday", "total_btf_cpue", "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp")
 names(resp_vars) = sapply(resp_vars, function(v) KuskoHarvPred:::get_var_name(v))
 names(pred_vars) = sapply(pred_vars, function(v) KuskoHarvPred:::get_var_name(v))
 
@@ -1149,11 +1118,11 @@ Notice that not all condition variables were assessed as predictors for all outc
 tab = c(
 # Variable               Description                                                      EFFORT CPT    %CHIN  %CHUM  %SOCK  
   "Day",                 "Number of days past May 31st",                                  "YES", "YES", "YES", "YES", "YES",
-  "Day^2",               "Quadratic form; allows non-linear time trends",                 "NO" , "YES", "NO" , "NO" , "NO" ,
-  "Hours Open",          "Number of hours fishing was allowed that day",                  "YES", "YES", "NO" , "NO" , "NO" ,
+  "Day^2",               "Quadratic form; allows non-linear time trends",                 "YES", "YES", "NO" , "NO" , "NO" ,
+  "Hours Open",          "Number of hours fishing was allowed that day",                  "YES", "NO" , "NO" , "NO" , "NO" ,
   "Fished Yesterday",    "Yes/No; whether fishing was allowed the previous day",          "YES", "YES", "NO" , "NO" , "NO" ,
   "Weekend",             "Yes/No; whether the day was Saturday or Sunday",                "YES", "NO" , "NO" , "NO" , "NO" ,
-  "% Before Noon",       "Proportion of fishing hours that occured before noon that day", "YES", "YES", "NO" , "NO" , "NO" ,
+  "% Before Noon",       "Proportion of fishing hours that occured before noon that day", "YES", "NO" , "NO" , "NO" , "NO" ,
   "BTF CPUE",            "Total daily Bethel Test Fishery CPUE (Chinook+chum+sockeye)",   "YES", "YES", "NO" , "NO" , "NO" ,
   "BTF % Chinook",       "Daily proportion that Chinook CPUE made up of the total",       "YES", "NO" , "YES", "NO" , "NO" ,
   "BTF % Chum",          "Daily proportion that chum CPUE made up of the total",          "NO" , "NO" , "NO" , "YES", "NO" ,
@@ -1163,8 +1132,8 @@ tab = c(
   "Precipitation",       "Daily total precipitation",                                     "TRY", "NO" , "NO" , "NO" , "NO" ,
   "Wind Speed",          "Daily average wind speed",                                      "TRY", "TRY", "NO" , "NO" , "NO" ,
   "Gust Wind Speed",     "Daily maximum gust speed",                                      "TRY", "TRY", "NO" , "NO" , "NO" ,
-  "Northerly Wind Speed","Daily average northerly wind speed vector",                     "YES", "YES", "NO" , "NO" , "NO" ,
-  "Easterly Wind Speed", "Daily average easterly wind speed vector",                      "YES", "YES", "NO" , "NO" , "NO" ,
+  "Northerly Wind Speed","Daily average northerly wind speed vector",                     "TRY", "TRY", "NO" , "NO" , "NO" ,
+  "Easterly Wind Speed", "Daily average easterly wind speed vector",                      "TRY", "TRY", "NO" , "NO" , "NO" ,
   "Water Clarity",       "Daily index of water clarity",                                  "NO" , "TRY", "NO" , "NO" , "NO" ,
   "Water Temperature",   "Daily water temperature",                                       "NO" , "TRY", "NO" , "NO" , "NO" 
 )

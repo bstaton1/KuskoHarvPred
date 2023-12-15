@@ -201,13 +201,13 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::
 #'  1 = x-axis, 2 = y-axis
 #' @param ... Optional arguments to be passed to [graphics::axis()]
 
-draw_day_axis = function(fday, lday, by, side = 1, ...) {
+draw_day_axis = function(fday, lday, by, side = 1, col = "white", ...) {
   at = seq(fday, lday, by = by)
   date = KuskoHarvUtils::from_days_past_may31(at)
   month = lubridate::month(date)
   day = lubridate::day(date)
   lab = paste(month, day, sep = "/")
-  axis(side = side, at = at, labels = lab, col = "white", ...)
+  axis(side = side, at = at, labels = lab, col = col, ...)
   draw_axis_line(side = side)
 }
 
@@ -216,11 +216,11 @@ draw_day_axis = function(fday, lday, by, side = 1, ...) {
 #' @inheritParams draw_day_axis
 #'
 
-draw_percent_axis = function(side, ...) {
+draw_percent_axis = function(side, col = "white", ...) {
   usr = par("usr")
   if (side == 1) i = c(1,2) else i = c(3,4)
   at = axisTicks(usr[i], log = FALSE)
-  axis(side = side, at = at, labels = paste0(at * 100, "%"), col = "white", ...)
+  axis(side = side, at = at, labels = paste0(at * 100, "%"), col = col, ...)
   draw_axis_line(side = side)
 }
 
@@ -229,8 +229,8 @@ draw_percent_axis = function(side, ...) {
 #' @inheritParams draw_day_axis
 #'
 
-draw_yn_axis = function(side, ...) {
-  axis(side = side, at = c(0,1), labels = c("No", "Yes"), col = "white", ...)
+draw_yn_axis = function(side, col = "white", ...) {
+  axis(side = side, at = c(0,1), labels = c("No", "Yes"), col = col, ...)
   draw_axis_line(side = side)
 }
 
