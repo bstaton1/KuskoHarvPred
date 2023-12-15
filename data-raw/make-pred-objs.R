@@ -25,13 +25,6 @@ loo_output = KuskoHarvPred:::whole_loo_analysis(
 fit_lists = loo_output$models
 loo_output = loo_output[-which(names(loo_output) == "models")]
 
-# build objects needed for constructing predictive data set
-# years
-year_range = sort(unique(lubridate::year(fit_data$date)))
-
-# build bank of day variable
-day = min(fit_data$day):max(fit_data$day)
-
 # build bank of miscellaneous variables
 misc_bank = list(
   hours_open = seq(6, 24, by = 6),
@@ -40,55 +33,13 @@ misc_bank = list(
   weekend = c(FALSE, TRUE)
 )
 
-# extract BTF total CPUE summaries for each day of each year
-total_btf_cpue = lapply(year_range, function(y) {
-  dates = KuskoHarvUtils::from_days_past_may31(day, y)
-  out = sapply(dates, KuskoHarvData:::summarize_btf, stat = "total_cpue", plus_minus = 1)
-  out = data.frame(var = "total_btf_cpue", day = day, year = y, value = out)
-  return(out)
-}); total_btf_cpue = do.call(rbind, total_btf_cpue)
 
-# extract BTF Chinook composition summaries for each day of each year
-chinook_btf_comp = lapply(year_range, function(y) {
-  dates = KuskoHarvUtils::from_days_past_may31(day, y)
-  out = sapply(dates, KuskoHarvData:::summarize_btf, stat = "chinook_comp", plus_minus = 1)
-  out = data.frame(var = "chinook_btf_comp", day = day, year = y, value = out)
-  return(out)
-}); chinook_btf_comp = do.call(rbind, chinook_btf_comp)
 
-# extract BTF chum composition summaries for each day of each year
-chum_btf_comp = lapply(year_range, function(y) {
-  dates = KuskoHarvUtils::from_days_past_may31(day, y)
-  out = sapply(dates, KuskoHarvData:::summarize_btf, stat = "chum_comp", plus_minus = 1)
-  out = data.frame(var = "chum_btf_comp", day = day, year = y, value = out)
-  return(out)
-}); chum_btf_comp = do.call(rbind, chum_btf_comp)
 
-# extract BTF sockeye composition summaries for each day of each year
-sockeye_btf_comp = lapply(year_range, function(y) {
-  dates = KuskoHarvUtils::from_days_past_may31(day, y)
-  out = sapply(dates, KuskoHarvData:::summarize_btf, stat = "sockeye_comp", plus_minus = 1)
-  out = data.frame(var = "sockeye_btf_comp", day = day, year = y, value = out)
-  return(out)
-}); sockeye_btf_comp = do.call(rbind, sockeye_btf_comp)
 
-# combine into one large data frame
-btf = rbind(total_btf_cpue, chinook_btf_comp, chum_btf_comp, sockeye_btf_comp)
 
-# calculate daily means, mins, and maxs for each variable across years
-btf_means = aggregate(value ~ var + day, data = btf, FUN = mean); btf_means = cbind(btf_means, cat = "mean")
-btf_mins = aggregate(value ~ var + day, data = btf, FUN = min); btf_mins = cbind(btf_mins, cat = "min")
-btf_maxs = aggregate(value ~ var + day, data = btf, FUN = max); btf_maxs = cbind(btf_maxs, cat = "max")
 
-# convert each to wide format
-btf_means = reshape2::dcast(btf_means, day + cat ~ var, value.var = "value")
-btf_mins = reshape2::dcast(btf_mins, day + cat ~ var, value.var = "value")
-btf_maxs = reshape2::dcast(btf_maxs, day + cat ~ var, value.var = "value")
 
-# combine summary statistics
-btf_out = rbind(btf_means, btf_mins, btf_maxs)
-btf_out = btf_out[order(btf_out$day),]
-rownames(btf_out) = NULL
 
 build_pred_data = function(vars, days = min(fit_data$day):max(fit_data$day)) {
 
