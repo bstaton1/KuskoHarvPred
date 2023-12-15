@@ -9,11 +9,10 @@
 #'     * `settings$p_before_noon`: numeric; must contain any combination of 0.25, 0.5, 0.75, 1; defaults to 0.5
 #'     * `settings$fished_yesterday`: logical; defaults to `FALSE`
 #'     * `settings$weekend`: logical; defaults to `FALSE`
-#'     * `settings$weekend`: logical; defaults to `FALSE`
-#'     * `settings$CAT_total_btf_cpue`: character, must contain any combination of `"min"`, `"mean"`, `"max"`; defaults to `"mean"`
-#'     * `settings$CAT_chinook_btf_comp`: character, must contain any combination of `"min"`, `"mean"`, `"max"`; defaults to `"mean"`
-#'     * `settings$CAT_chum_btf_comp`: character, must contain any combination of `"min"`, `"mean"`, `"max"`; defaults to `"mean"`
-#'     * `settings$CAT_sockeye_btf_comp`: character, must contain any combination of `"min"`, `"mean"`, `"max"`; defaults to `"mean"`
+#'     * `settings$CAT_total_btf_cpue`: character, must contain any combination of `"q10"`, `"q25"`, `"q50"`, `"q75"`, `"q90"`; defaults to `"q50"`
+#'     * `settings$CAT_chinook_btf_comp`: same as `settings$CAT_total_btf_cpue`
+#'     * `settings$CAT_chum_btf_comp`: same as `settings$CAT_total_btf_cpue`
+#'     * `settings$CAT_sockeye_btf_comp`: same as `settings$CAT_total_btf_cpue`
 #'     * `settings$CAT_mean_Nwind`: character, must contain any combination of `"strong_northerly"`, `"none"`, `"strong_southerly"`; defaults to `"none"`
 #'     * `settings$CAT_mean_Ewind`: character, must contain any combination of `"strong_easterly"`, `"none"`, `"strong_westerly"`; defaults to `"none"`
 #'  @note Because not every predictor variable is used for all responses, it is possible to change the `settings` argument and receive the same output.
@@ -27,10 +26,10 @@ subset_pred_data = function(response, settings = list()) {
   if (is.null(settings$p_before_noon)) settings$p_before_noon = 0.5
   if (is.null(settings$fished_yesterday)) settings$fished_yesterday = FALSE
   if (is.null(settings$weekend)) settings$weekend = FALSE
-  if (is.null(settings$CAT_total_btf_cpue)) settings$CAT_total_btf_cpue = "mean"
-  if (is.null(settings$CAT_chinook_btf_comp)) settings$CAT_chinook_btf_comp = "mean"
-  if (is.null(settings$CAT_chum_btf_comp)) settings$CAT_chum_btf_comp = "mean"
-  if (is.null(settings$CAT_sockeye_btf_comp)) settings$CAT_sockeye_btf_comp = "mean"
+  if (is.null(settings$CAT_total_btf_cpue)) settings$CAT_total_btf_cpue = "q50"
+  if (is.null(settings$CAT_chinook_btf_comp)) settings$CAT_chinook_btf_comp = "q50"
+  if (is.null(settings$CAT_chum_btf_comp)) settings$CAT_chum_btf_comp = "q50"
+  if (is.null(settings$CAT_sockeye_btf_comp)) settings$CAT_sockeye_btf_comp = "q50"
   if (is.null(settings$CAT_mean_Nwind)) settings$CAT_mean_Nwind = "none"
   if (is.null(settings$CAT_mean_Ewind)) settings$CAT_mean_Ewind = "none"
 
