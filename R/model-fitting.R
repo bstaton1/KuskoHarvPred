@@ -140,6 +140,21 @@ fit_all_subsets_one = function(global_model, fit_data, parallel = FALSE, reduce_
     dredge_out = subset(dredge_out, dc("day", "I(day^2)"))
   }
 
+  # drop models that have chinook_btf_comp^2 but not chinook_btf_comp
+  if("I(chinook_btf_comp^2)" %in% vars) {
+    dredge_out = subset(dredge_out, dc("chinook_btf_comp", "I(chinook_btf_comp^2)"))
+  }
+
+  # drop models that have chum_btf_comp^2 but not chum_btf_comp
+  if("I(chum_btf_comp^2)" %in% vars) {
+    dredge_out = subset(dredge_out, dc("chum_btf_comp", "I(chum_btf_comp^2)"))
+  }
+
+  # drop models that have sockeye_btf_comp^2 but not sockeye_btf_comp
+  if("I(sockeye_btf_comp^2)" %in% vars) {
+    dredge_out = subset(dredge_out, dc("sockeye_btf_comp", "I(sockeye_btf_comp^2)"))
+  }
+
   # trim the model set to only those within the top X% of all model weight
   # but only do this calculation if a subset comprised of at least two models is available.
   # e.g., if there are 3 models assessed and their weights are: 0.85, 0.14, and 0.01
