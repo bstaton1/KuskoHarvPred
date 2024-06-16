@@ -190,6 +190,9 @@ get_var_name = function(var) {
          "chinook_btf_comp" = "% Chinook Composition (BTF)",
          "chum_btf_comp" = "% Chum Composition (BTF)",
          "sockeye_btf_comp" = "% Sockeye Composition (BTF)",
+         "I(chinook_btf_comp^2)" = "% Chinook Composition (BTF, Quadratic)",
+         "I(chum_btf_comp^2)" = "% Chum Composition (BTF, Quadratic)",
+         "I(sockeye_btf_comp^2)" = "% Sockeye Composition (BTF, Quadratic)",
          "mean_Nwind" = "Northerly Wind Speed",
          "mean_Ewind" = "Easterly Wind Speed",
          NA
