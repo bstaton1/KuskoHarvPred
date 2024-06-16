@@ -167,34 +167,58 @@ get_mape = function(response, period) {
 #' For printing axis labels, etc.
 #'
 #' @param var The variable name. Returns `NA` if not a valid variable.
-#'
+#' @param escape Should percent symbols be escaped and `"^2"` converted to `"\\textsuperscript{2}"`? Defaults to `FALSE`.
+#' @param is_title Should title case be used? Defaults to `TRUE`.
+#'     Either way, proper capitalization of "Chinook" and "BTF" will always be respected.
+#' @param long_species_comp Should "Percent Salmon Species Composition" be used in place of "% Spp"?
 
-get_var_name = function(var) {
-  switch(var,
-         "effort" = "Drift Trips/Day",
-         "total_cpt" = "Salmon Catch/Trip",
-         "chinook_comp" = "% Chinook Salmon (Harvest)",
-         "chum_comp" = "% Chum Salmon (Harvest)",
-         "sockeye_comp" = "% Sockeye Salmon (Harvest)",
-         "day" = "Date",
-         "I(day^2)" = "Date (Quadratic)",
-         "hours_open" = "Hours Open",
-         "fished_yesterday" = "Fished Yesterday?",
-         "fished_yesterdayTRUE" = "Fished Yesterday? (Yes)",
-         "fished_yesterdayFALSE" = "Fished Yesterday? (No)",
-         "weekend" = "Weekend?",
-         "weekendTRUE" = "Weekend? (Yes)",
-         "weekendFALSE" = "Weekend? (No)",
-         "p_before_noon" = "% Before Noon",
-         "total_btf_cpue" = "Total BTF CPUE",
-         "chinook_btf_comp" = "% Chinook Composition (BTF)",
-         "chum_btf_comp" = "% Chum Composition (BTF)",
-         "sockeye_btf_comp" = "% Sockeye Composition (BTF)",
-         "I(chinook_btf_comp^2)" = "% Chinook Composition (BTF, Quadratic)",
-         "I(chum_btf_comp^2)" = "% Chum Composition (BTF, Quadratic)",
-         "I(sockeye_btf_comp^2)" = "% Sockeye Composition (BTF, Quadratic)",
-         "mean_Nwind" = "Northerly Wind Speed",
-         "mean_Ewind" = "Easterly Wind Speed",
-         NA
+get_var_name = function(var, escape = FALSE, is_title = TRUE, long_species_comp = FALSE) {
+
+  var_name = switch(var,
+                    "effort" = "Trips/Day",
+                    "total_cpt" = "Catch/Trip",
+                    "chinook_comp" = "% Chinook",
+                    "chum_comp" = "% Chum",
+                    "sockeye_comp" = "% Sockeye",
+                    "day" = "Day",
+                    "I(day^2)" = "Day^2",
+                    "hours_open" = "Hours Open",
+                    "fished_yesterday" = "Fished Yesterday",
+                    "fished_yesterdayTRUE" = "Fished Yesterday",
+                    "fished_yesterdayFALSE" = "Did Not Fish Yesterday",
+                    "weekend" = "Weekend",
+                    "weekendTRUE" = "Weekend",
+                    "weekendFALSE" = "Not Weekend",
+                    "p_before_noon" = "% Before Noon",
+                    "total_btf_cpue" = "BTF CPUE",
+                    "chinook_btf_comp" = "BTF % Chinook",
+                    "I(chinook_btf_comp^2)" = "BTF % Chinook^2",
+                    "chum_btf_comp" = "BTF % Chum",
+                    "I(chum_btf_comp^2)" = "BTF % Chum^2",
+                    "sockeye_btf_comp" = "BTF % Sockeye",
+                    "I(sockeye_btf_comp^2)" = "BTF % Sockeye^2",
+                    "chinook_harv" = "Chinook Harvest",
+                    "chum_harv" = "Chum Harvest",
+                    "sockeye_harv" = "Sockeye Harvest",
+                    NA
   )
+
+  if (long_species_comp & stringr::str_detect(var, "comp")) {
+    var_name = paste0(var_name, " Salmon Species Composition") |>
+      stringr::str_replace("\\%", "Percent")
+  }
+
+  if (escape) {
+    var_name = var_name |>
+      stringr::str_replace("\\%", "\\\\%") |>
+      stringr::str_replace("\\^2", "\\\\textsuperscript{2}")
+  }
+
+  if (!is_title) {
+    var_name = tolower(var_name) |>
+      stringr::str_replace("chinook", "Chinook") |>
+      stringr::str_replace("btf", "BTF")
+  }
+
+  return(var_name)
 }

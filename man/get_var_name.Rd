@@ -4,10 +4,17 @@
 \alias{get_var_name}
 \title{Obtain the 'Pretty Name' of a Variable}
 \usage{
-get_var_name(var)
+get_var_name(var, escape = FALSE, is_title = TRUE, long_species_comp = FALSE)
 }
 \arguments{
 \item{var}{The variable name. Returns \code{NA} if not a valid variable.}
+
+\item{escape}{Should percent symbols be escaped and \code{"^2"} converted to \code{"\\\\textsuperscript{2}"}? Defaults to \code{FALSE}.}
+
+\item{is_title}{Should title case be used? Defaults to \code{TRUE}.
+Either way, proper capitalization of "Chinook" and "BTF" will always be respected.}
+
+\item{long_species_comp}{Should "Percent Salmon Species Composition" be used in place of "\% Spp"?}
 }
 \description{
 For printing axis labels, etc.
