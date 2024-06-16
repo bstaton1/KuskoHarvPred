@@ -1125,8 +1125,11 @@ tab = c(
   "% Before Noon",       "Proportion of fishing hours that occured before noon that day", "YES", "NO" , "NO" , "NO" , "NO" ,
   "BTF CPUE",            "Total daily Bethel Test Fishery CPUE (Chinook+chum+sockeye)",   "YES", "YES", "NO" , "NO" , "NO" ,
   "BTF % Chinook",       "Daily proportion that Chinook CPUE made up of the total",       "YES", "NO" , "YES", "NO" , "NO" ,
+  "BTF % Chinook^2",     "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "YES", "NO" , "NO" ,
   "BTF % Chum",          "Daily proportion that chum CPUE made up of the total",          "NO" , "NO" , "NO" , "YES", "NO" ,
+  "BTF % Chum^2",        "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "NO" , "YES", "NO" ,
   "BTF % Sockeye",       "Daily proportion that sockeye CPUE made up of the total",       "NO" , "NO" , "NO" , "NO" , "YES",
+  "BTF % Sockeye^2",     "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "NO" , "NO" , "YES",
   "Air Temperature",     "Daily average air temperature",                                 "TRY", "NO" , "NO" , "NO" , "NO" ,
   "Relative Humidity",   "Daily average percent relative humidity",                       "TRY", "NO" , "NO" , "NO" , "NO" ,
   "Precipitation",       "Daily total precipitation",                                     "TRY", "NO" , "NO" , "NO" , "NO" ,
@@ -1145,14 +1148,15 @@ tab[tab == "NO"] = "&#9744;"
 tab[tab == "TRY"] = "&#9746;"
 
 tab[,3:7] = cell_spec(tab[,3:7], "html", font_size = "x-large", escape = FALSE)
+tab[,1] = stringr::str_replace(tab[,1], "\\^2", "<sup>2</sup>")
 
-type = c(rep("Timing", 6), rep("Bethel Test Fishery", 4), rep("Weather<sup>1<\\sup>", 7), rep("Water<sup>2<\\sup>", 2))
+type = c(rep("Timing", 6), rep("Bethel Test Fishery", 7), rep("Weather<sup>a<\\sup>", 7), rep("Water<sup>b<\\sup>", 2))
 
 tab = cbind(type, tab)
 
 kbl(tab, col.names = c(" ", "Condition Variable", "Description", "Trips/Day", "Catch/Trip", "Chinook", "Chum", "Sockeye"), escape = FALSE, align = "lllccccc",
     caption = 'All condition variables assessed as part of the predictive analyses for each outcome variable. The symbol meanings are: <span style="font-size: medium;">&#9744;</span> (not assessed), <span style="font-size: medium;">&#9746;</span> (assessed but not part of final analysis), and <span style="font-size: medium;">&#9745;</span> (in final analysis).') |>
-  kable_styling(full_width = TRUE, bootstrap_options = c("condensed")) |>
+  kable_styling(full_width = TRUE, bootstrap_options = c("condensed"), fixed_thead = TRUE) |>
   add_header_above(c(" " = 5, "% Composition" = 3), bold = TRUE) |>
   add_header_above(c(" " = 3, "Outcome Variable" = 5), bold = TRUE) |>
   column_spec(1:2, bold = TRUE) |>
@@ -1160,7 +1164,7 @@ kbl(tab, col.names = c(" ", "Condition Variable", "Description", "Trips/Day", "C
   column_spec(2, width = "120px") |>
   column_spec(3, width = "180px") |>
   collapse_rows(1) |>
-  footnote(number = c("Weather variables measured at Bethel Airport.", "Water variables measured during daily Bethel Test Fishery sampling."), number_title = "Notes") |>
+  footnote(alphabet = c("Weather variables measured at Bethel Airport.", "Water variables measured during daily Bethel Test Fishery sampling."), alphabet_title = "Notes") |>
   
   column_spec(3:7, width = "65px")
 ```
