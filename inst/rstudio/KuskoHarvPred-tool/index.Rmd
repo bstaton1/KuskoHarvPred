@@ -1009,8 +1009,8 @@ observeEvent(rvals$pred_kable, {
 ```{r scatterplots-ui}
 resp_vars = c("effort", "total_cpt", "chinook_comp", "chum_comp", "sockeye_comp")
 pred_vars = c("day", "hours_open", "p_before_noon", "weekend", "fished_yesterday", "total_btf_cpue", "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp")
-names(resp_vars) = sapply(resp_vars, function(v) KuskoHarvPred:::get_var_name(v))
-names(pred_vars) = sapply(pred_vars, function(v) KuskoHarvPred:::get_var_name(v))
+names(resp_vars) = sapply(resp_vars, function(v) KuskoHarvUtils::get_var_name(v))
+names(pred_vars) = sapply(pred_vars, function(v) KuskoHarvUtils::get_var_name(v))
 
 selectInput("scatterplot_xvar", label = "X-Axis Variable", choices = list("Outcome Variables" = resp_vars, "Condition Variables" = pred_vars), selected = "total_btf_cpue")
 selectInput("scatterplot_yvar", label = "Y-Axis Variable", choices = list("Outcome Variables" = resp_vars, "Condition Variables" = pred_vars), selected = "total_cpt")
@@ -1254,7 +1254,7 @@ renderUI(HTML(aic_kable(KuskoHarvPred:::fit_lists[[input$aic_response]])))
 importance_kable = function(fit_list) {
   tab = MuMIn::sw(fit_list)
   tab = as.data.frame(tab)
-  tab = cbind(Variable = sapply(rownames(tab), KuskoHarvPred:::get_var_name), Importance = KuskoHarvUtils::percentize(tab$tab))
+  tab = cbind(Variable = sapply(rownames(tab), KuskoHarvUtils::get_var_name), Importance = KuskoHarvUtils::percentize(tab$tab))
   tab |>
     kbl("html", align = "lr", row.names = FALSE) |>
     kable_styling(full_width = FALSE, bootstrap_options = c("condensed", "striped"))
@@ -1293,7 +1293,7 @@ eff_size_plot = function(fit_list) {
   x = MuMIn::coefTable(mod_avg, full = TRUE)
   x = x[-1,]
   eff_sizes = sort(x[,"Estimate"]/x[,"Std. Error"])
-  names(eff_sizes) = unname(sapply(names(eff_sizes), KuskoHarvPred:::get_var_name))
+  names(eff_sizes) = unname(sapply(names(eff_sizes), KuskoHarvUtils::get_var_name))
   mp = barplot(eff_sizes, horiz = TRUE, las = 1,
                # xlim = max(abs(eff_sizes)) * c(-1.05,1.05),
                xlim = 8 * c(-1,1),
