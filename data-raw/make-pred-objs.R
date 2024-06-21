@@ -34,7 +34,7 @@ misc_bank = list(
 )
 
 # function to return smoothed btf summaries using quantile generalized additive models fitted to btf data
-smooth_btf = function(stat, days = seq(min(KuskoHarvPred:::fit_data$day), max(KuskoHarvPred:::fit_data$day)), plus_minus = 1, plot = interactive()) {
+smooth_btf = function(stat, days = seq(min(fit_data$day), max(fit_data$day)), plus_minus = 1, plot = interactive()) {
 
   # load the BTF data set
   data(btf_master, package = "KuskoHarvData")
@@ -61,7 +61,7 @@ smooth_btf = function(stat, days = seq(min(KuskoHarvPred:::fit_data$day), max(Ku
   # set the transformation function: keeps predictions positive and <1 for species composition
   if(stat == "total_cpue") {
     f = log; f_inv = exp
-    ylim = c(0, max(btf_summary$value, max(KuskoHarvPred:::fit_data[,btf_stat]))) * 1.25
+    ylim = c(0, max(btf_summary$value, max(fit_data[,btf_stat]))) * 1.25
   } else {
     f = qlogis; f_inv = plogis
     # qlogis(1) = Inf; don't allow but retain information that it was near 100%
@@ -98,7 +98,7 @@ smooth_btf = function(stat, days = seq(min(KuskoHarvPred:::fit_data$day), max(Ku
     lines(pred ~ day, data = subset(qu_preds, qu == 0.9), lty = 3)
     lines(pred ~ day, data = subset(qu_preds, qu == 0.1), lty = 3)
 
-    points(x = KuskoHarvPred:::fit_data$day, y = KuskoHarvPred:::fit_data[,btf_stat], pch = 16)
+    points(x = fit_data$day, y = fit_data[,btf_stat], pch = 16)
 
   }
 
