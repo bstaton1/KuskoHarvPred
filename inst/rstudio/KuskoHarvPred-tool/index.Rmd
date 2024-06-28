@@ -555,7 +555,7 @@ reactive({
   The figure shows how the value of different outcome variables change throughout the season.
   Additionally, you can see how changes in the other condition variables impact the predicted value from the model by selecting different options for the other condition variables.
   
-  If you check "Show Uncertainty", a region around the model predicted value will be displayed -- this represents +/- 1 mean absolute % error, obtained using leave-one-out cross-validation and is the area we would expect outcomes to occur due to random variability that the model cannot predict (see `r icon("info-circle")` Statistical Info. > Cross-Validation for more information).
+  If you check "Show Uncertainty", a region around the model predicted value will be displayed -- this represents +/- 1 median absolute % error, obtained using leave-one-out cross-validation and is the area we would expect outcomes to occur due to random variability that the model cannot predict (see `r icon("info-circle")` Statistical Info. > Cross-Validation for more information).
   
   Not all condition variables are used to predict all outcome variables.
   For example, "hours of fishing" is a condition variable that is used to predict drift trips/day and salmon catch/day, but not the species composition outcome variables.

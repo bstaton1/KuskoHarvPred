@@ -2,10 +2,12 @@
 # SPECIFY THEM HERE SO THE OBJECTS CAN BE EXPORTED AND LOADED ON THE FLY
 # REDUCES RUN TIME LATER
 
+# RUNNING THIS REQUIRES THAT KUSKOHARVPRED IS INSTALLED FIRST
+
 # produce the regression data set
 fit_data = KuskoHarvData::prepare_regression_data()
 
-# discard any data collected
+# discard any data collected outside of June or July
 fit_data = fit_data[lubridate::month(fit_data$date) %in% c(6,7),]
 
 # perform LOO analysis
