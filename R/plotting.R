@@ -76,7 +76,7 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::
   poly_col = scales::alpha(line_col, 0.25)
 
   # create the y-axis label
-  ylab = get_var_name(response)
+  ylab = KuskoHarvUtils::get_var_name(response)
 
   # create the plot with two lines: one for fished_yesterday and one for !fished_yesterday
   if ("fished_yesterday" %in% colnames(pred_data[[response]]) & separate_day_types) {
@@ -295,7 +295,7 @@ vars_biplot = function(xvar = "total_btf_cpue", yvar = "total_cpt", color_period
   if (color_periods) ymult = c(1,1.2) else ymult = c(1,1)
 
   # make an empty plot with proper labels and dimensions
-  plot(x = 1, y = 1, type = "n",xlab = get_var_name(xvar), ylab = get_var_name(yvar),
+  plot(x = 1, y = 1, type = "n",xlab = KuskoHarvUtils::get_var_name(xvar), ylab = KuskoHarvUtils::get_var_name(yvar),
        xlim = range(dat[,xvar]) + xoff, ylim = (range(dat[,yvar]) + yoff) * ymult, axes = FALSE)
 
   # draw the points

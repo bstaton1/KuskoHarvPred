@@ -555,7 +555,7 @@ reactive({
   The figure shows how the value of different outcome variables change throughout the season.
   Additionally, you can see how changes in the other condition variables impact the predicted value from the model by selecting different options for the other condition variables.
   
-  If you check "Show Uncertainty", a region around the model predicted value will be displayed -- this represents +/- 1 mean absolute % error, obtained using leave-one-out cross-validation and is the area we would expect outcomes to occur due to random variability that the model cannot predict (see `r icon("info-circle")` Statistical Info. > Cross-Validation for more information).
+  If you check "Show Uncertainty", a region around the model predicted value will be displayed -- this represents +/- 1 median absolute % error, obtained using leave-one-out cross-validation and is the area we would expect outcomes to occur due to random variability that the model cannot predict (see `r icon("info-circle")` Statistical Info. > Cross-Validation for more information).
   
   Not all condition variables are used to predict all outcome variables.
   For example, "hours of fishing" is a condition variable that is used to predict drift trips/day and salmon catch/day, but not the species composition outcome variables.
@@ -1009,8 +1009,8 @@ observeEvent(rvals$pred_kable, {
 ```{r scatterplots-ui}
 resp_vars = c("effort", "total_cpt", "chinook_comp", "chum_comp", "sockeye_comp")
 pred_vars = c("day", "hours_open", "p_before_noon", "weekend", "fished_yesterday", "total_btf_cpue", "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp")
-names(resp_vars) = sapply(resp_vars, function(v) KuskoHarvPred:::get_var_name(v))
-names(pred_vars) = sapply(pred_vars, function(v) KuskoHarvPred:::get_var_name(v))
+names(resp_vars) = sapply(resp_vars, function(v) KuskoHarvUtils::get_var_name(v))
+names(pred_vars) = sapply(pred_vars, function(v) KuskoHarvUtils::get_var_name(v))
 
 selectInput("scatterplot_xvar", label = "X-Axis Variable", choices = list("Outcome Variables" = resp_vars, "Condition Variables" = pred_vars), selected = "total_btf_cpue")
 selectInput("scatterplot_yvar", label = "Y-Axis Variable", choices = list("Outcome Variables" = resp_vars, "Condition Variables" = pred_vars), selected = "total_cpt")
@@ -1125,8 +1125,11 @@ tab = c(
   "% Before Noon",       "Proportion of fishing hours that occured before noon that day", "YES", "NO" , "NO" , "NO" , "NO" ,
   "BTF CPUE",            "Total daily Bethel Test Fishery CPUE (Chinook+chum+sockeye)",   "YES", "YES", "NO" , "NO" , "NO" ,
   "BTF % Chinook",       "Daily proportion that Chinook CPUE made up of the total",       "YES", "NO" , "YES", "NO" , "NO" ,
+  "BTF % Chinook^2",     "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "YES", "NO" , "NO" ,
   "BTF % Chum",          "Daily proportion that chum CPUE made up of the total",          "NO" , "NO" , "NO" , "YES", "NO" ,
+  "BTF % Chum^2",        "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "NO" , "YES", "NO" ,
   "BTF % Sockeye",       "Daily proportion that sockeye CPUE made up of the total",       "NO" , "NO" , "NO" , "NO" , "YES",
+  "BTF % Sockeye^2",     "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "NO" , "NO" , "YES",
   "Air Temperature",     "Daily average air temperature",                                 "TRY", "NO" , "NO" , "NO" , "NO" ,
   "Relative Humidity",   "Daily average percent relative humidity",                       "TRY", "NO" , "NO" , "NO" , "NO" ,
   "Precipitation",       "Daily total precipitation",                                     "TRY", "NO" , "NO" , "NO" , "NO" ,
@@ -1145,14 +1148,15 @@ tab[tab == "NO"] = "&#9744;"
 tab[tab == "TRY"] = "&#9746;"
 
 tab[,3:7] = cell_spec(tab[,3:7], "html", font_size = "x-large", escape = FALSE)
+tab[,1] = stringr::str_replace(tab[,1], "\\^2", "<sup>2</sup>")
 
-type = c(rep("Timing", 6), rep("Bethel Test Fishery", 4), rep("Weather<sup>1<\\sup>", 7), rep("Water<sup>2<\\sup>", 2))
+type = c(rep("Timing", 6), rep("Bethel Test Fishery", 7), rep("Weather<sup>a<\\sup>", 7), rep("Water<sup>b<\\sup>", 2))
 
 tab = cbind(type, tab)
 
 kbl(tab, col.names = c(" ", "Condition Variable", "Description", "Trips/Day", "Catch/Trip", "Chinook", "Chum", "Sockeye"), escape = FALSE, align = "lllccccc",
     caption = 'All condition variables assessed as part of the predictive analyses for each outcome variable. The symbol meanings are: <span style="font-size: medium;">&#9744;</span> (not assessed), <span style="font-size: medium;">&#9746;</span> (assessed but not part of final analysis), and <span style="font-size: medium;">&#9745;</span> (in final analysis).') |>
-  kable_styling(full_width = TRUE, bootstrap_options = c("condensed")) |>
+  kable_styling(full_width = TRUE, bootstrap_options = c("condensed"), fixed_thead = TRUE) |>
   add_header_above(c(" " = 5, "% Composition" = 3), bold = TRUE) |>
   add_header_above(c(" " = 3, "Outcome Variable" = 5), bold = TRUE) |>
   column_spec(1:2, bold = TRUE) |>
@@ -1160,7 +1164,7 @@ kbl(tab, col.names = c(" ", "Condition Variable", "Description", "Trips/Day", "C
   column_spec(2, width = "120px") |>
   column_spec(3, width = "180px") |>
   collapse_rows(1) |>
-  footnote(number = c("Weather variables measured at Bethel Airport.", "Water variables measured during daily Bethel Test Fishery sampling."), number_title = "Notes") |>
+  footnote(alphabet = c("Weather variables measured at Bethel Airport.", "Water variables measured during daily Bethel Test Fishery sampling."), alphabet_title = "Notes") |>
   
   column_spec(3:7, width = "65px")
 ```
@@ -1250,7 +1254,7 @@ renderUI(HTML(aic_kable(KuskoHarvPred:::fit_lists[[input$aic_response]])))
 importance_kable = function(fit_list) {
   tab = MuMIn::sw(fit_list)
   tab = as.data.frame(tab)
-  tab = cbind(Variable = sapply(rownames(tab), KuskoHarvPred:::get_var_name), Importance = KuskoHarvUtils::percentize(tab$tab))
+  tab = cbind(Variable = sapply(rownames(tab), KuskoHarvUtils::get_var_name), Importance = KuskoHarvUtils::percentize(tab$tab))
   tab |>
     kbl("html", align = "lr", row.names = FALSE) |>
     kable_styling(full_width = FALSE, bootstrap_options = c("condensed", "striped"))
@@ -1289,7 +1293,7 @@ eff_size_plot = function(fit_list) {
   x = MuMIn::coefTable(mod_avg, full = TRUE)
   x = x[-1,]
   eff_sizes = sort(x[,"Estimate"]/x[,"Std. Error"])
-  names(eff_sizes) = unname(sapply(names(eff_sizes), KuskoHarvPred:::get_var_name))
+  names(eff_sizes) = unname(sapply(names(eff_sizes), KuskoHarvUtils::get_var_name))
   mp = barplot(eff_sizes, horiz = TRUE, las = 1,
                # xlim = max(abs(eff_sizes)) * c(-1.05,1.05),
                xlim = 8 * c(-1,1),

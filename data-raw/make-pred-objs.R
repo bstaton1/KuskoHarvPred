@@ -2,10 +2,12 @@
 # SPECIFY THEM HERE SO THE OBJECTS CAN BE EXPORTED AND LOADED ON THE FLY
 # REDUCES RUN TIME LATER
 
+# RUNNING THIS REQUIRES THAT KUSKOHARVPRED IS INSTALLED FIRST
+
 # produce the regression data set
 fit_data = KuskoHarvData::prepare_regression_data()
 
-# discard any data collected
+# discard any data collected outside of June or July
 fit_data = fit_data[lubridate::month(fit_data$date) %in% c(6,7),]
 
 # perform LOO analysis
@@ -13,9 +15,9 @@ loo_output = KuskoHarvPred:::whole_loo_analysis(
   global_formulae = list(
     effort = "day + I(day^2) + hours_open + fished_yesterday + weekend + p_before_noon + total_btf_cpue + chinook_btf_comp",
     total_cpt = "day + I(day^2) + fished_yesterday + total_btf_cpue",
-    chinook_comp = "day + chinook_btf_comp",
-    chum_comp = "day + chum_btf_comp",
-    sockeye_comp = "day + sockeye_btf_comp"
+    chinook_comp = "day + I(day^2) + chinook_btf_comp + I(chinook_btf_comp^2)",
+    chum_comp = "day + I(day^2) + chum_btf_comp + I(chum_btf_comp^2)",
+    sockeye_comp = "day + I(day^2) + sockeye_btf_comp + I(sockeye_btf_comp^2)"
   ),
   fit_data = fit_data,
   cwt_retain = 1
@@ -124,12 +126,16 @@ build_pred_data = function(vars, days = min(fit_data$day):max(fit_data$day)) {
 
   # extract the names of all BTF variables
   btf_vars = vars[stringr::str_detect(vars, "btf")]
+  btf_vars = btf_vars[!stringr::str_detect(btf_vars, "\\^2")]
 
   # extract the names of all miscellaneous variables
   misc_vars = vars[!(vars %in% c("day", btf_vars))]
 
   # remove the quadratic term if it is present
   if (any(misc_vars == "I(day^2)")) misc_vars = misc_vars[-which(misc_vars == "I(day^2)")]
+  if (any(misc_vars == "I(chinook_btf_comp^2)")) misc_vars = misc_vars[-which(misc_vars == "I(chinook_btf_comp^2)")]
+  if (any(misc_vars == "I(chum_btf_comp^2)")) misc_vars = misc_vars[-which(misc_vars == "I(chum_btf_comp^2)")]
+  if (any(misc_vars == "I(sockeye_btf_comp^2)")) misc_vars = misc_vars[-which(misc_vars == "I(sockeye_btf_comp^2)")]
 
   # build an expanded grid data frame for all desired combos of all variables
   # must be daily because BTF variables vary throughout season
