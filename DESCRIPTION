@@ -2,10 +2,11 @@ Package: KuskoHarvPred
 Title: Harvest and Effort Predictions for Lower Kuskokwim River Subsistence Salmon Fisheries
 Version: 0.1.0.9990
 Authors@R: person(given = "Ben", family = "Staton", role = c("aut", "cre"), email = "bstaton.qes@gmail.com", comment = c(ORCID = "0000-0002-2342-3482"))
-Description: Contains framework for predicting outcomes from a day of fishing in the Lower Kuskokwim River subsistence salmon fishery.
-    Functions are included to interface with the data sets in the package 'KuskoHarvData' to obtain regression relationships between daily observations of total boat trips, salmon catch per boat, and species composition.
-    Regression models are model-averaged to obtain predictions of these quantities, which when multiplied, give predictions of species-specific harvest.
-    The package contains an interactive web application to enable users without statistical training to interface with the historical data and use it for making predictions of outcomes from proposed fishing opportunities.
+Description: A framework for predicting daily fishery outcomes from openers in the Lower Kuskokwim River subsistence salmon fishery.
+    Fishery outcomes include drift boat trips/day, salmon catch/trip, and % species composition, and these are treated as response variables in linear regression models with predictions made via AIC-based model-averaging.
+    Harvest predictions by species are then obtained by multiplying predictions of the response variables. 
+    Leave-one-out cross-validation is used to assess predictive performance.
+    The principle user-facing feature is an interactive web application, which is a user-friendly interface to the predictive models and data and contains much information about how predictions are made and how well they perform.
 License: MIT + file LICENSE
 Depends: R (>= 4.1.0)
 Imports:
