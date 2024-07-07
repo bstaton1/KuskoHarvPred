@@ -70,8 +70,8 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::
 
   # aesthetic settings here
   pt_cex = 1.5
-  pt_col = scales::alpha("royalblue", 0.5)
-  pt_bg = scales::alpha("skyblue", 0.5)
+  pt_col = scales::alpha("royalblue", 0.75)
+  pt_bg = scales::alpha("royalblue", 0.5)
   line_col = "salmon"
   poly_col = scales::alpha(line_col, 0.25)
 
@@ -86,7 +86,16 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::
     sub_pred_data = subset_pred_data(response, settings = settings)
 
     # set the y-axis limits
-    ylim = c(0, max(sub_pred_data$pred_response, max(dat[,response]))) * 1.05
+    if (draw_mape_range) {
+      x = subset(sub_pred_data, !fished_yesterday)
+      period = KuskoHarvUtils::get_period(x$day)
+      mape = sapply(period, function(p) get_mape(response, p))
+      lwr = x$pred_response - x$pred_response * mape
+      upr = x$pred_response + x$pred_response * mape
+      ylim = c(0, max(sub_pred_data$pred_response, dat[,response], upr)) * 1.05
+    } else {
+      ylim = c(0, max(sub_pred_data$pred_response, dat[,response])) * 1.05
+    }
 
     # scatter plot with correct dimensions, labels, etc.
     plot(dat[,response] ~ day, data = dat, type = "n", ylim = ylim, xaxt = "n", yaxt = "n",
@@ -143,7 +152,19 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::
     if (stringr::str_detect(response, "comp")) {
       ylim = c(0,1)
     } else {
-      ylim = c(0, max(sub_pred_data$pred_response, max(dat[,response])))
+      if (draw_mape_range) {
+
+        ylim = c(0, max(sub_pred_data$pred_response, dat[,response]))
+      } else {
+        x = sub_pred_data
+        period = KuskoHarvUtils::get_period(x$day)
+        mape = sapply(period, function(p) get_mape(response, p))
+        lwr = x$pred_response - x$pred_response * mape
+        upr = x$pred_response + x$pred_response * mape
+        lwr = ifelse(lwr < 0, 0, lwr)
+        ylim = c(0, max(sub_pred_data$pred_response, dat[,response], upr))
+      }
+
     }
 
     # scatter plot with correct dimensions, labels, etc.
@@ -186,7 +207,7 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::
   if (stringr::str_detect(response, "comp")) {
     draw_percent_axis(side = 2)
   } else {
-    axis(side = 2, col = "white")
+    axis(side = 2, col = "white", col.ticks = par("col.axis"))
     draw_axis_line(side = 2)
   }
 }
@@ -200,13 +221,13 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::
 #'  1 = x-axis, 2 = y-axis
 #' @param ... Optional arguments to be passed to [graphics::axis()]
 
-draw_day_axis = function(fday, lday, by, side = 1, col = "white", ...) {
+draw_day_axis = function(fday, lday, by, side = 1, col = par("col.axis"), ...) {
   at = seq(fday, lday, by = by)
   date = KuskoHarvUtils::from_days_past_may31(at)
   month = lubridate::month(date)
   day = lubridate::day(date)
   lab = paste(month, day, sep = "/")
-  axis(side = side, at = at, labels = lab, col = col, ...)
+  axis(side = side, at = at, labels = lab, col = "white", col.ticks = col, ...)
   draw_axis_line(side = side)
 }
 
@@ -215,11 +236,11 @@ draw_day_axis = function(fday, lday, by, side = 1, col = "white", ...) {
 #' @inheritParams draw_day_axis
 #'
 
-draw_percent_axis = function(side, col = "white", ...) {
+draw_percent_axis = function(side, col = par("col.axis"), ...) {
   usr = par("usr")
   if (side == 1) i = c(1,2) else i = c(3,4)
   at = axisTicks(usr[i], log = FALSE)
-  axis(side = side, at = at, labels = paste0(at * 100, "%"), col = col, ...)
+  axis(side = side, at = at, labels = paste0(at * 100, "%"), col = "white", col.ticks = col, ...)
   draw_axis_line(side = side)
 }
 
@@ -228,8 +249,8 @@ draw_percent_axis = function(side, col = "white", ...) {
 #' @inheritParams draw_day_axis
 #'
 
-draw_yn_axis = function(side, col = "white", ...) {
-  axis(side = side, at = c(0,1), labels = c("No", "Yes"), col = col, ...)
+draw_yn_axis = function(side, col = par("col.axis"), ...) {
+  axis(side = side, at = c(0,1), labels = c("No", "Yes"), col = "white", col.ticks = col, ...)
   draw_axis_line(side = side)
 }
 
@@ -246,44 +267,98 @@ draw_axis_line = function(side, col = par("col.axis")) {
   if (side == 4) segments(usr[2], usr[3], usr[2], usr[4], col = col, xpd = TRUE)
 }
 
+#' Auto-select the Type of Axis to Draw
+#'
+#' For use in generalized plotting functions where
+#' the type of variable (and thus axis) needs to change
+#'
+#' @param var Variable name. Must be a character vector of length 1.
+#' @return Character vector of length 1; one of:
+#'   * `"yn"` -- if `var %in% c("fished_yesterday", "weekend")`
+#'   * `"day"` -- if `var == "day"`
+#'   * `"percent"` -- e.g., if `var %in% c("chinook_comp", "btf_chinook_comp")`
+#'   * `"regular"` -- otherwise
+
+choose_axis_type = function(var) {
+
+  # error handle to make sure var is a single element vector
+  if (length(var) > 1) stop ("var must be a vector of length 1")
+
+  # error handle to make sure var is a character
+  if (!is.character(var)) stop ("var must be a character vector")
+
+  # set the variable names that use each specialty axis type
+  yn_vars = c("fished_yesterday", "weekend")
+  day_vars = c("day")
+  percent_vars = c(
+    "chinook_comp", "chum_comp", "sockeye_comp",
+    "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp",
+    "p_before_noon"
+  )
+
+  # initialize an empty type
+  type = NA
+  if (is.na(type) & var %in% yn_vars) type = "yn"
+  if (is.na(type) & var %in% day_vars) type = "day"
+  if (is.na(type) & var %in% percent_vars) type = "percent"
+  if (is.na(type)) type = "regular"
+
+  return(type)
+}
+
 #' Create a Scatterplot of Two Variables
 #'
-#' For investigating basic co-linearity in predictors,
-#' relationships among variables not available
-#' from [relationship_plot()].
+#' For investigating basic relationships not available
+#' from [relationship_plot()], which only allows day on the _x_-axis.
 #'
-#' @param xvar Character; name of variable to show on the x-axis, defaults to `"total_btf_cpue"`
-#' @param yvar Character; name of variable to show on the y-axis, defaults to `"total_cpt"`
-#' @param color_periods Logical; should points be color-coded to show which time period of the season the data came from?
-#'   See [KuskoHarvUtils::get_period()]. Defaults to `FALSE`.
-#' @param label_years Logical; should points be labeled to show which year the data came from?
-#' @param dat Data frame; the input regression data set, defaults to `KuskoHarvPred:::fit_data`, which is equivalent to [KuskoHarvData::prepare_regression_data()].
+#' @param x Numeric vector; variable to show on the x-axis
+#' @param y Numeric vector; variable to show on the y-axis
+#' @param x_axis_type Character vector of length 1, output of [choose_axis_type()] applicable to `x`.
+#' @param y_axis_type Character vector of length 1, output of [choose_axis_type()] applicable to `y`.
+#' @param period Optional numeric vector (values 1, 2, or 3) indicating the period each element of `x` and `y` belong to.
+#'   See [KuskoHarvUtils::get_period()]. Defaults to `NULL`, in which case points are grey; otherwise points are color-coded.
+#' @param year Optional numeric vector (values 1, 2, or 3) indicating the year each element of `x` and `y` belong to.
+#'   Defaults to `NULL`, in which case points are not labeled; otherwise, points are labeled with the last two digits of the year.
+#' @param legend Optional character vector of length 1 indicating where to place the legend if `!is.null(period)`.
+#'   Defaults to `NULL`, in which case no legend is drawn; otherwise supply a value such as `"top"` or `"bottomright"`.
+#' @param xlab,ylab,xlim,ylim Supplied to [graphics::plot()].
 #' @export
 
-vars_biplot = function(xvar = "total_btf_cpue", yvar = "total_cpt", color_periods = FALSE, label_years = FALSE, dat = KuskoHarvPred:::fit_data) {
+vars_biplot = function(x, y, x_axis_type, y_axis_type, period = NULL, year = NULL, legend = NULL, xlab = NULL, ylab = NULL, xlim = NULL, ylim = NULL) {
 
-  # error handle to ensure variables are found
-  if (!xvar %in% colnames(dat)) stop ("Value of xvar ('", xvar, "') not in dat")
-  if (!yvar %in% colnames(dat)) stop ("Value of yvar ('", yvar, "') not in dat")
+  # error handle to ensure axis type is accepted
+  accepted_axis_types = c("percent", "yn", "day", "regular")
+  if (!x_axis_type %in% accepted_axis_types) {
+    stop ("x_axis_type must be one of: ", knitr::combine_words(accepted_axis_types, before = "'", and = "or"))
+  }
+  if (!y_axis_type %in% accepted_axis_types) {
+    stop ("y_axis_type must be one of: ", knitr::combine_words(accepted_axis_types, before = "'", and = "or"))
+  }
 
-  # make colors
-  if (color_periods) {
-    base_col = ifelse(dat$period == 1, "skyblue", ifelse(dat$period == 2, "orange", ifelse(dat$period == 3, "salmon", "grey20")))
+  # check to make sure lengths of variables are good
+  if (length(x) != length(y)) stop ("x and y must be the same length")
+  if (!is.null(period)) {if (length(period) != length(x)) stop ("period and x must be the same length")}
+  if (!is.null(year)) {if (length(year) != length(x)) stop ("year and x must be the same length")}
+
+  # set colors
+  if (!is.null(period)) {
+    base_col = ifelse(period == 1, "royalblue", ifelse(period == 2, "orange", ifelse(period == 3, "salmon", "grey20")))
   } else {
     base_col = "grey50"
   }
   alpha = c(bg = 0.5, col = 0.75)
 
-  # extract the values of each variable
-  x = dat[,xvar]; y = dat[,yvar]
-
   # determine if each variable is a percentage
-  x_is_comp = stringr::str_detect(xvar, "comp") | xvar == "p_before_noon"
-  y_is_comp = stringr::str_detect(yvar, "comp") | yvar == "p_before_noon"
+  x_is_percent = x_axis_type == "percent"
+  y_is_percent = y_axis_type == "percent"
 
   # determine if each variable is a Yes/No variable
-  x_is_yn = xvar %in% c("fished_yesterday", "weekend")
-  y_is_yn = yvar %in% c("fished_yesterday", "weekend")
+  x_is_yn = x_axis_type == "yn"
+  y_is_yn = y_axis_type == "yn"
+
+  # determine if each variable is a day variable
+  x_is_day = x_axis_type == "day"
+  y_is_day = y_axis_type == "day"
 
   # add jitter to points if Yes/No
   if (x_is_yn) x = x + runif(length(x), -0.25, 0.25)
@@ -292,61 +367,69 @@ vars_biplot = function(xvar = "total_btf_cpue", yvar = "total_cpt", color_period
   # widen axis limits if Yes/No variable
   if (x_is_yn) xoff = c(-0.3, 0.3) else xoff = c(0,0)
   if (y_is_yn) yoff = c(-0.3, 0.3) else yoff = c(0,0)
-  if (color_periods) ymult = c(1,1.2) else ymult = c(1,1)
+
+  # set x and y limits if not already supplied
+  if (is.null(xlim)) xlim = range(x)
+  if (is.null(ylim)) ylim = range(y)
+  if (!is.null(legend) & !is.null(period)) {if (legend == "top") y_mult = c(1,1.2) else y_mult = c(1,1.05)} else y_mult = c(1,1.05)
 
   # make an empty plot with proper labels and dimensions
-  plot(x = 1, y = 1, type = "n",xlab = KuskoHarvUtils::get_var_name(xvar), ylab = KuskoHarvUtils::get_var_name(yvar),
-       xlim = range(dat[,xvar]) + xoff, ylim = (range(dat[,yvar]) + yoff) * ymult, axes = FALSE)
+  plot(x = 1, y = 1, type = "n", xlab = xlab, ylab = ylab,
+       xlim = xlim + xoff, ylim = (ylim + yoff) * y_mult, axes = FALSE)
 
   # draw the points
-  points(x = x, y = y, pch = 21, cex = 1.75,
-         bg = scales::alpha(base_col, alpha["bg"]),
-         col = scales::alpha(base_col, alpha["col"]))
+  points(
+    x = x, y = y, pch = 21, cex = 1.75,
+    bg = scales::alpha(base_col, alpha["bg"]),
+    col = scales::alpha(base_col, alpha["col"])
+  )
 
   # label the years if requested
-  if (label_years) {
-    text(x = x, y = y, labels = substr(dat$year, 3, 4), cex = 0.8)
+  if (!is.null(year)) {
+    text(x = x, y = y, labels = substr(year, 3, 4), cex = 0.8)
   }
 
   # draw the appropriate X-axis ticks and labels
-  if (x_is_comp) {
+  if (x_is_percent) {
     draw_percent_axis(side = 1)
   } else {
-    if (xvar == "day") {
-      draw_day_axis(min(dat$day), max(dat$day), by = 5, side = 1)
+    if (x_is_day) {
+      draw_day_axis(min(x), max(x), by = 5, side = 1)
     } else {
       if (x_is_yn) {
         draw_yn_axis(side = 1)
       } else {
-        axis(side = 1, col = "white")
+        axis(side = 1, col = "white", col.ticks = par("col.axis"))
         draw_axis_line(side = 1)
       }
     }
   }
 
   # draw the appropriate Y-axis ticks and labels
-  if (y_is_comp) {
+  if (y_is_percent) {
     draw_percent_axis(side = 2)
   } else {
-    if (yvar == "day") {
-      draw_day_axis(min(dat$day), max(dat$day), by = 5, side = 2)
+    if (y_is_day) {
+      draw_day_axis(min(y), max(y), by = 5, side = 2)
     } else {
       if (y_is_yn) {
         draw_yn_axis(side = 2)
       } else {
-        axis(side = 2, col = "white")
+        axis(side = 2, col = "white", col.ticks = par("col.axis"))
         draw_axis_line(side = 2)
       }
     }
   }
 
   # include a legend to differentiate time periods
-  if (color_periods) {
-    legend ("top", horiz = TRUE, title = "Period", legend = c("6/12-6/19", "6/20-6/30", ">= 7/1"), pch = 21,
-            col = scales::alpha(c("skyblue", "orange", "salmon"), alpha["col"]),
-            pt.bg = scales::alpha(c("skyblue", "orange", "salmon"), alpha["bg"]),
-            pt.cex = 2, cex = 0.9, text.col = par("col.axis"),
-            bty = "n"
+  if (!is.null(period) & !is.null(legend)) {
+    legend (
+      legend, horiz = ifelse(legend == "top", TRUE, FALSE), title = "Period",
+      legend = c("6/12-6/19", "6/20-6/30", expression("">="7/1")), pch = 21,
+      col = scales::alpha(c("royalblue", "orange", "salmon"), alpha["col"]),
+      pt.bg = scales::alpha(c("royalblue", "orange", "salmon"), alpha["bg"]),
+      pt.cex = 2, cex = 0.8, text.col = par("col.axis"),
+      bty = "n"
     )
   }
 }
