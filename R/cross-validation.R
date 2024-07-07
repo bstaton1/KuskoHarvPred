@@ -131,15 +131,15 @@ pred_vs_obs = function(yhat, yobs, period = NULL, xlab = "Observed", ylab = "Pre
 #'   3. Obtains model-averaged leave-one-out predictions for each record using [loo_pred_model_avg()].
 #'   4. Summarizes the errors made in step 3 by response variable type and period (see [KuskoHarvUtils::get_errors()] and [KuskoHarvUtils::get_period()]).
 #' @return A [`list`][base::list] object with elements:
-#'   * `error_summary`: a [`data.frame`][base::data.frame] object storing info about the settings of the run (the values of `reduce_colinearity`,
-#'      `cwt_retain`, and `var_desc`) and the period- and response variable-specific error summaries.
+#'   * `error_summary`: a [`list`][base::list] object with elements storing [`data.frame`][base::data.frame] objects, where each data frame stores
+#'      info about the settings of the run (the values of `reduce_colinearity`, `cwt_retain`, and `var_desc`) and the period- and response variable-specific error summaries.
 #'   * `elapsed`: a [`data.frame`][base::data.frame] object similar to the `error_summary` element, except with a column for minutes elapsed.
 #'   * `loo_preds`: a [`data.frame`][base::data.frame] object with the model-averaged leave-one-out predictions by record and response variable.
 #'   * `models`: a [`list`][base::list] object with three elements, one each for `effort`, `cpt`, and `comp`. Each element is the [`list`][base::list]
 #'     of fitted [`lm`][stats::lm] model objects returned by [fit_all_subsets()].
 #' @export
 
-whole_loo_analysis = function(global_formulae, fit_data, var_desc = NULL, error_types = c("MPE", "MAPE"),  ...) {
+whole_loo_analysis = function(global_formulae, fit_data, var_desc = NULL, error_types = c("RHO", "ME", "MAE", "MPE", "MAPE"),  ...) {
 
   # start a timer
   start = lubridate::now()
@@ -158,7 +158,7 @@ whole_loo_analysis = function(global_formulae, fit_data, var_desc = NULL, error_
   loo_preds$chum_comp = chum_comp_new
   loo_preds$sockeye_comp = sockeye_comp_new
 
-  # STEP 3: obtain model-averaged leave-one-out harvest predictions for all species that had composition models fitted
+  # STEP 4: obtain model-averaged leave-one-out harvest predictions for all species that had composition models fitted
   spp = c("chinook", "chum", "sockeye")
   harv_loo_preds = lapply(spp, function(x) {
     spp_comp = paste0(x, "_comp")
@@ -166,8 +166,9 @@ whole_loo_analysis = function(global_formulae, fit_data, var_desc = NULL, error_
   })
   names(harv_loo_preds) = paste0(spp, "_harv")
   loo_preds = append(loo_preds, harv_loo_preds)
+  # MAIN = loo_preds
 
-  # STEP 4: summarize the errors
+  # STEP 5: summarize the errors
   summarize_errors = function(yhat, response, fit_data, error_types) {
       # build a data.frame with time period, prediction, and observed values
       df = data.frame(period = KuskoHarvUtils::get_period(fit_data$day), yhat = yhat, yobs = fit_data[,response])
@@ -219,6 +220,12 @@ whole_loo_analysis = function(global_formulae, fit_data, var_desc = NULL, error_
   rownames(error_summary) = error_summary$response
   error_summary = error_summary[c("effort", "total_cpt", "chinook_comp", "chum_comp", "sockeye_comp", "chinook_harv", "chum_harv", "sockeye_harv"),]
   rownames(error_summary) = NULL
+
+  # split up error summaries
+  error_summary = lapply(error_types, function(x) {
+    id_vars = colnames(error_summary)[!stringr::str_detect(colnames(error_summary), paste(error_types, collapse = "|"))]
+    error_summary[,c(id_vars, colnames(error_summary)[stringr::str_detect(colnames(error_summary), x)])]
+  }); names(error_summary) = error_types
 
   # stop the timer
   stop = lubridate::now()
