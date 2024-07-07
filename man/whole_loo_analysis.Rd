@@ -8,7 +8,7 @@ whole_loo_analysis(
   global_formulae,
   fit_data,
   var_desc = NULL,
-  error_types = c("MPE", "MAPE"),
+  error_types = c("RHO", "ME", "MAE", "MPE", "MAPE"),
   ...
 )
 }
@@ -27,8 +27,8 @@ Options are any combination of \code{"RHO"}, \code{"RMSE"}, \code{"ME"}, \code{"
 \value{
 A \code{\link[base:list]{list}} object with elements:
 \itemize{
-\item \code{error_summary}: a \code{\link[base:data.frame]{data.frame}} object storing info about the settings of the run (the values of \code{reduce_colinearity},
-\code{cwt_retain}, and \code{var_desc}) and the period- and response variable-specific error summaries.
+\item \code{error_summary}: a \code{\link[base:list]{list}} object with elements storing \code{\link[base:data.frame]{data.frame}} objects, where each data frame stores
+info about the settings of the run (the values of \code{reduce_colinearity}, \code{cwt_retain}, and \code{var_desc}) and the period- and response variable-specific error summaries.
 \item \code{elapsed}: a \code{\link[base:data.frame]{data.frame}} object similar to the \code{error_summary} element, except with a column for minutes elapsed.
 \item \code{loo_preds}: a \code{\link[base:data.frame]{data.frame}} object with the model-averaged leave-one-out predictions by record and response variable.
 \item \code{models}: a \code{\link[base:list]{list}} object with three elements, one each for \code{effort}, \code{cpt}, and \code{comp}. Each element is the \code{\link[base:list]{list}}

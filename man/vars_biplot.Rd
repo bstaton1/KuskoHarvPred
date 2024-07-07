@@ -5,27 +5,40 @@
 \title{Create a Scatterplot of Two Variables}
 \usage{
 vars_biplot(
-  xvar = "total_btf_cpue",
-  yvar = "total_cpt",
-  color_periods = FALSE,
-  label_years = FALSE,
-  dat = KuskoHarvPred:::fit_data
+  x,
+  y,
+  x_axis_type,
+  y_axis_type,
+  period = NULL,
+  year = NULL,
+  legend = NULL,
+  xlab = NULL,
+  ylab = NULL,
+  xlim = NULL,
+  ylim = NULL
 )
 }
 \arguments{
-\item{xvar}{Character; name of variable to show on the x-axis, defaults to \code{"total_btf_cpue"}}
+\item{x}{Numeric vector; variable to show on the x-axis}
 
-\item{yvar}{Character; name of variable to show on the y-axis, defaults to \code{"total_cpt"}}
+\item{y}{Numeric vector; variable to show on the y-axis}
 
-\item{color_periods}{Logical; should points be color-coded to show which time period of the season the data came from?
-See \code{\link[KuskoHarvUtils:get_period]{KuskoHarvUtils::get_period()}}. Defaults to \code{FALSE}.}
+\item{x_axis_type}{Character vector of length 1, output of \code{\link[=choose_axis_type]{choose_axis_type()}} applicable to \code{x}.}
 
-\item{label_years}{Logical; should points be labeled to show which year the data came from?}
+\item{y_axis_type}{Character vector of length 1, output of \code{\link[=choose_axis_type]{choose_axis_type()}} applicable to \code{y}.}
 
-\item{dat}{Data frame; the input regression data set, defaults to \code{KuskoHarvPred:::fit_data}, which is equivalent to \code{\link[KuskoHarvData:prepare_regression_data]{KuskoHarvData::prepare_regression_data()}}.}
+\item{period}{Optional numeric vector (values 1, 2, or 3) indicating the period each element of \code{x} and \code{y} belong to.
+See \code{\link[KuskoHarvUtils:get_period]{KuskoHarvUtils::get_period()}}. Defaults to \code{NULL}, in which case points are grey; otherwise points are color-coded.}
+
+\item{year}{Optional numeric vector (values 1, 2, or 3) indicating the year each element of \code{x} and \code{y} belong to.
+Defaults to \code{NULL}, in which case points are not labeled; otherwise, points are labeled with the last two digits of the year.}
+
+\item{legend}{Optional character vector of length 1 indicating where to place the legend if \code{!is.null(period)}.
+Defaults to \code{NULL}, in which case no legend is drawn; otherwise supply a value such as \code{"top"} or \code{"bottomright"}.}
+
+\item{xlab, ylab, xlim, ylim}{Supplied to \code{\link[graphics:plot.default]{graphics::plot()}}.}
 }
 \description{
-For investigating basic co-linearity in predictors,
-relationships among variables not available
-from \code{\link[=relationship_plot]{relationship_plot()}}.
+For investigating basic relationships not available
+from \code{\link[=relationship_plot]{relationship_plot()}}, which only allows day on the \emph{x}-axis.
 }

@@ -4,7 +4,7 @@
 \alias{draw_percent_axis}
 \title{Draw an Axis Showing Percentages}
 \usage{
-draw_percent_axis(side, col = "white", ...)
+draw_percent_axis(side, col = par("col.axis"), ...)
 }
 \arguments{
 \item{side}{The side of the plot to draw the axis on,

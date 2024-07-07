@@ -4,7 +4,7 @@
 \alias{draw_day_axis}
 \title{Draw an Axis showing Dates}
 \usage{
-draw_day_axis(fday, lday, by, side = 1, col = "white", ...)
+draw_day_axis(fday, lday, by, side = 1, col = par("col.axis"), ...)
 }
 \arguments{
 \item{fday}{The first day (1 = June 1)}
