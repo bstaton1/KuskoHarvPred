@@ -1,0 +1,131 @@
+---
+title: "Updating Predictions"
+subtitle: '`r htmltools::tagList(paste0("Version: ", packageVersion("KuskoHarvPred")), htmltools::img(src="../man/figures/sticker/KuskoHarvPred-logo.png", align = "right", height = "200px", style = "margin-top: -50px;"))`'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Updating Predictions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, collapse = TRUE, comment = NA)
+options(rmarkdown.html_vignette.check_title = FALSE)
+library(fontawesome)
+```
+
+```{r set-css}
+# select the CSS file
+css_file = system.file("resources/KuskoHarv-vignette-styles.css", package = "KuskoHarvUtils")
+
+# combine with style tags
+css = c("<style>", readLines(css_file), "</style>") |> 
+  paste(collapse = "\n")
+```
+
+`r css`
+
+This vignette describes the process for updating predictive models when data from new years are added.
+As a first step, obtain the most current versions of the packages you will need:
+
+```R
+install.packages("usethis")
+install.packages("remotes")
+remotes::install_github("bstaton1/KuskoHarvData")
+remotes::install_github("bstaton1/KuskoHarvPred")
+```
+
+The steps in this vignette only need to be completed if the most current version number year of the 'KuskoHarvData' package exceeds that of 'KuskoHarvPred':
+
+```{r, echo = TRUE}
+packageVersion("KuskoHarvData")
+```
+
+```{r, echo = TRUE}
+packageVersion("KuskoHarvPred")
+```
+
+## _Before You Begin: `r fa("git-alt")` Git and `r fa("github")` GitHub_
+
+:::{.indent}
+
+Updating the predictions in 'KuskoHarvPred' requires basic operating knowledge of Git and GitHub (remote vs. local repositories, forking, pulling/pushing, committing, branching, and pull requests), and you are advised to use [GitHub Desktop](https://docs.github.com/en/desktop/installing-and-authenticating-to-github-desktop/installing-github-desktop) to interact with local and remote repositories.
+**If this makes you uncomfortable or if you have _any_ questions, please contact the package developer (<bstaton.qes@gmail.com>) and he will assist as he is able.**
+
+If you are unfamiliar with these topics but wish to proceed, you can learn about them by reading the articles on each topic linked below; ignore any content regarding the command line or GitHub CLI -- these topics are unnecessary for our purposes.
+
+* [`r fa("git-alt")` Git overview](https://docs.github.com/en/get-started/using-git/about-git)
+* [`r fa("github")` GitHub Desktop](https://docs.github.com/en/desktop/overview/getting-started-with-github-desktop)
+* [`r fa("code-fork")` Forking workflow](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project?tool=desktop)
+* [`r fa("code-commit")` Commits from GitHub Desktop](https://docs.github.com/en/desktop/making-changes-in-a-branch/committing-and-reviewing-changes-to-your-project-in-github-desktop#selecting-changes-to-include-in-a-commit)
+* [`r fa("arrow-up-from-bracket")` Pushing changes from GitHub Desktop](https://docs.github.com/en/desktop/making-changes-in-a-branch/pushing-changes-to-github-from-github-desktop)
+* [`r fa("code-pull-request")` Submitting a pull request](https://docs.github.com/en/get-started/exploring-projects-on-github/contributing-to-a-project?tool=desktop#making-a-pull-request)
+
+Specific instructions about how to perform the necessary GitHub tasks will not be described here, so please familiarize yourself before beginning.
+These instructions also assume you have installed [R](https://cran.rstudio.com/) and [RStudio Desktop](https://posit.co/download/rstudio-desktop/) (accept all defaults when prompted).
+
+:::
+
+```{r make-header-fn, echo = FALSE}
+# create a global section counter
+counter <<- -1
+
+# function to create the html tags to build the sectoin header
+make_header = function(text, icon) {
+  counter <<- counter + 1
+  '<font size="+3">NUM</font> ICON _TEXT_' |> 
+    stringr::str_replace("NUM", as.character(counter)) |> 
+    stringr::str_replace("ICON", as.character(fa(icon))) |> 
+    stringr::str_replace("TEXT", text)
+}
+```
+
+## `r make_header("Fork & Clone (One Time Only)", "code-fork")`
+
+:::{.indent}
+
+**Complete this step only if you have not already done so in a previous year.**
+
+This R package is contained in the GitHub repository: [bstaton1/KuskoHarvPred](https://github.com/bstaton1/KuskoHarvPred).
+
+Ensure you have a GitHub account, and fork the repository to your account.
+Clone your remote forked repository to a local repository.
+You will make changes to the local repository, then push them up to your remote repository.
+After you are done with changes, you will submit a pull request to have them reviewed before they are merged in with the centralized repository.
+
+:::
+
+## `r make_header("Sync/Fetch/Pull", "download")`
+
+:::{.indent}
+
+**This step is essential to make sure your repository is current with the centralized version.**
+
+First, make sure your remote forked repository is up-to-date with the centralized repository by [syncing your fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork#syncing-a-fork-branch-from-the-web-ui).
+Then, from GitHub Desktop, fetch and pull any changes to your local repository.
+This should not occur, but if you have any errors about [merge conflicts](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/addressing-merge-conflicts), they will need to be addressed before proceeding.
+
+:::
+
+## `r make_header("Create a New Branch", "code-branch")`
+
+:::{.indent}
+
+**Do not ever** make changes directly to the `main` (or `master`) branch -- instead, create a new branch in your local repository before proceeding.
+This will ensure that any changes you make will not interfere (_just in case_) with the current working version until they have been reviewed.
+Name the branch something like `add-20YY-data`.
+All changes you make from here forward should be on this branch.
+
+:::
+
+## `r make_header("Recalculate Predictions", "sync")`
+
+:::{.indent}
+
+This step performs some of the longer-running calculations and saves the output for shipping with the package -- this saves computation time later.
+
+```{r, eval = FALSE}
+source("data-raw/make-pred-objs.R")
+```
+
+:::
