@@ -113,7 +113,7 @@ This should not occur, but if you have any errors about [merge conflicts](https:
 
 **Do not ever** make changes directly to the `main` (or `master`) branch -- instead, create a new branch in your local repository before proceeding.
 This will ensure that any changes you make will not interfere (_just in case_) with the current working version until they have been reviewed.
-Name the branch something like `add-20YY-data`.
+Name the branch something like `add-20YY-predictions`.
 All changes you make from here forward should be on this branch.
 
 :::
@@ -124,8 +124,65 @@ All changes you make from here forward should be on this branch.
 
 This step performs some of the longer-running calculations and saves the output for shipping with the package -- this saves computation time later.
 
-```{r, eval = FALSE}
+From within your local repository, open the R project file (`KuskoHarvPred.Rproj`) in RStudio Desktop.
+Then execute the following command:
+
+```{r, echo = TRUE, eval = FALSE}
 source("data-raw/make-pred-objs.R")
 ```
 
+This step should take several minutes and you will be notified with a message saying that the objects `fit_lists`, `pred_data`, `loo_output`, and `fit_data` have been saved to the location `R/sysdata.rda` -- **if you see any errors, you must stop and resolve them**.
+Please do not hesitate to contact the package developer (<bstaton.qes@gmail.com>).
 :::
+
+## `r make_header("Increment Package Version", "plus")`
+
+:::{.indent}
+
+From within your local repository, open the file named `DESCRIPTION` in RStudio Desktop, and change this field to reflect the year you just added:
+
+```
+Version: 20YY.0
+```
+
+For example, if the current version is `2023.1` this means data and predictions are current through 2023, and the package been patched 1 time (updated once after adding 2023 data to data through 2022).
+After adding the 2024 data, the version should be updated to `2024.0`.
+
+:::
+
+## `r make_header("Commit Changes", "code-commit")`
+
+:::{.indent}
+
+Open GitHub Desktop and commit the changes you've made as follows (except swap `YY` for the appropriate year information):
+
+1. Commit all changes to exported objects (`R/sysdata.rda`).
+
+    <u>Commit message</u>: `Rebuild predictions with 20YY harvest monitoring data`
+2. Commit all changes to the `DESCRIPTION` file.
+
+    <u>Commit message</u>: `Update package version (now 20YY.0)`
+    
+There should be no remaining changes to commit now.
+
+:::
+
+## `r make_header("Submit Pull Request", "code-pull-request")`
+
+:::{.indent}
+
+You are now ready to push your branch to your forked remote repository and submit a pull request.
+
+Name your pull request something like "Add 20YY Predictions" and ensure you are requesting to **merge into `bstaton1/KuskoHarvPred` from `YourUserName/KuskoHarvPred`.**
+
+In the description, please note any quirks with the process or issues with the data that are of note.
+When you are done, submit the request -- this will notify the package developer that your changes are ready for review.
+
+:::
+
+<br>
+<br>
+
+<p style="text-align: center; font-size:18px;">
+  <b>THANK YOU for your contributions!!</b>
+</p>
