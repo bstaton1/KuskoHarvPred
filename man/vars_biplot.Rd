@@ -23,9 +23,9 @@ vars_biplot(
 
 \item{y}{Numeric vector; variable to show on the y-axis}
 
-\item{x_axis_type}{Character vector of length 1, output of \code{\link[=choose_axis_type]{choose_axis_type()}} applicable to \code{x}.}
+\item{x_axis_type}{Character vector of length 1, output of \code{\link[KuskoHarvUtils:choose_axis_type]{KuskoHarvUtils::choose_axis_type()}} applicable to \code{x}.}
 
-\item{y_axis_type}{Character vector of length 1, output of \code{\link[=choose_axis_type]{choose_axis_type()}} applicable to \code{y}.}
+\item{y_axis_type}{Character vector of length 1, output of \code{\link[KuskoHarvUtils:choose_axis_type]{KuskoHarvUtils::choose_axis_type()}} applicable to \code{y}.}
 
 \item{period}{Optional numeric vector (values 1, 2, or 3) indicating the period each element of \code{x} and \code{y} belong to.
 See \code{\link[KuskoHarvUtils:get_period]{KuskoHarvUtils::get_period()}}. Defaults to \code{NULL}, in which case points are grey; otherwise points are color-coded.}

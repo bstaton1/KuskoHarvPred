@@ -15,8 +15,8 @@ resource_files:
 **Lower Kuskokwim River Subsistence Fishery**
 :::
 
-:::{.subtext}
-`r paste0('Daily Drift Harvest Based on ', min(KuskoHarvPred:::fit_data$year), '-', max(KuskoHarvPred:::fit_data$year), ' In-Season Monitoring')`
+:::{.subtext style="font-size: 18px;"}
+`r paste0('Daily Drift Gillnet Harvest Based on ', min(KuskoHarvPred:::fit_data$year), '-', max(KuskoHarvPred:::fit_data$year), ' In-Season Monitoring')`
 :::
 
 :::{.subtext style="margin-top: 8px; margin-bottom: 2px; font-size: 14px;"}
@@ -1339,7 +1339,7 @@ pred_kable = function(period_keep, year_keep) {
   # create the data set
   table_dat = fit_data
   data("meta", package = "KuskoHarvData")
-  meta$date = date(meta$start)
+  meta$date = date(x = meta$start)
   table_dat = merge(x = meta, y = table_dat, by = "date", sort = FALSE, all.x = FALSE, all.y = TRUE)
   
   # keep only the relevant records
@@ -1499,8 +1499,8 @@ div(
     vars_biplot(
       x = fit_data[,input$scatterplot_xvar],
       y = fit_data[,input$scatterplot_yvar],
-      x_axis_type = KuskoHarvPred:::choose_axis_type(input$scatterplot_xvar),
-      y_axis_type = KuskoHarvPred:::choose_axis_type(input$scatterplot_yvar),
+      x_axis_type = KuskoHarvUtils::choose_axis_type(input$scatterplot_xvar),
+      y_axis_type = KuskoHarvUtils::choose_axis_type(input$scatterplot_yvar),
       xlab = get_var_name(input$scatterplot_xvar),
       ylab = get_var_name(input$scatterplot_yvar),
       legend = "top", year = year_use, period = period_use
@@ -1883,8 +1883,8 @@ eff_size_plot = function(fit_list) {
   axis(side = 1, at = seq(-8, 8, 2), col = "white", col.ticks = par("col.axis"))
   par(mgp = c(2,0.15,0))
   axis(side = 2, at = mp, labels = sapply(names(eff_sizes), f), las = 1, col = "white", col.ticks = par("col.axis"))
-  KuskoHarvPred:::draw_axis_line(side = 1)
-  KuskoHarvPred:::draw_axis_line(side = 2)
+  KuskoHarvUtils::draw_axis_line(side = 1)
+  KuskoHarvUtils::draw_axis_line(side = 2)
   
   # draw reference line at zero
   abline(v = 0, col = par("col.axis"), lty = 2, lwd = 2)
@@ -2034,7 +2034,7 @@ div(
     if (input$obs_v_pred_plot_color_periods) period_use = fit_data$period else period_use = NULL
     if (input$obs_v_pred_plot_label_years) year_use = fit_data$year else year_use = NULL
     
-    axis_type = KuskoHarvPred:::choose_axis_type(input$obs_v_pred_plot_response)
+    axis_type = KuskoHarvUtils::choose_axis_type(input$obs_v_pred_plot_response)
     
     if (axis_type != "percent") {
       lim = range(0, fit_data[,input$obs_v_pred_plot_response], loo_output$loo_preds[,input$obs_v_pred_plot_response])
