@@ -1,8 +1,8 @@
 Package: KuskoHarvPred
 Title: Harvest and Effort Predictions for Lower Kuskokwim River Subsistence Salmon Fisheries
-Version: 0.1.0.9990
+Version: 2023.0
 Authors@R: person(given = "Ben", family = "Staton", role = c("aut", "cre"), email = "bstaton.qes@gmail.com", comment = c(ORCID = "0000-0002-2342-3482"))
-Description: A framework for predicting daily fishery outcomes from openers in the Lower Kuskokwim River subsistence salmon fishery.
+Description: A framework for predicting daily fishery outcomes from openers in the lower Kuskokwim River subsistence salmon fishery.
     Fishery outcomes include drift boat trips/day, salmon catch/trip, and % species composition, and these are treated as response variables in linear regression models with predictions made via AIC-based model-averaging.
     Harvest predictions by species are then obtained by multiplying predictions of the response variables. 
     Leave-one-out cross-validation is used to assess predictive performance.
