@@ -201,14 +201,14 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::
   }
 
   # add x-axis
-  draw_day_axis(min(dat$day), max(dat$day), by = 5, side = 1)
+  KuskoHarvUtils::draw_day_axis(min(dat$day), max(dat$day), by = 5, side = 1)
 
   # add y-axis
   if (stringr::str_detect(response, "comp")) {
-    draw_percent_axis(side = 2)
+    KuskoHarvUtils::draw_percent_axis(side = 2)
   } else {
     axis(side = 2, col = "white", col.ticks = par("col.axis"))
-    draw_axis_line(side = 2)
+    KuskoHarvUtils::draw_axis_line(side = 2)
   }
 }
 
@@ -219,8 +219,8 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::
 #'
 #' @param x Numeric vector; variable to show on the x-axis
 #' @param y Numeric vector; variable to show on the y-axis
-#' @param x_axis_type Character vector of length 1, output of [choose_axis_type()] applicable to `x`.
-#' @param y_axis_type Character vector of length 1, output of [choose_axis_type()] applicable to `y`.
+#' @param x_axis_type Character vector of length 1, output of [KuskoHarvUtils::choose_axis_type()] applicable to `x`.
+#' @param y_axis_type Character vector of length 1, output of [KuskoHarvUtils::choose_axis_type()] applicable to `y`.
 #' @param period Optional numeric vector (values 1, 2, or 3) indicating the period each element of `x` and `y` belong to.
 #'   See [KuskoHarvUtils::get_period()]. Defaults to `NULL`, in which case points are grey; otherwise points are color-coded.
 #' @param year Optional numeric vector (values 1, 2, or 3) indicating the year each element of `x` and `y` belong to.
@@ -297,32 +297,32 @@ vars_biplot = function(x, y, x_axis_type, y_axis_type, period = NULL, year = NUL
 
   # draw the appropriate X-axis ticks and labels
   if (x_is_percent) {
-    draw_percent_axis(side = 1)
+    KuskoHarvUtils::draw_percent_axis(side = 1)
   } else {
     if (x_is_day) {
-      draw_day_axis(min(x), max(x), by = 5, side = 1)
+      KuskoHarvUtils::draw_day_axis(min(x), max(x), by = 5, side = 1)
     } else {
       if (x_is_yn) {
-        draw_yn_axis(side = 1)
+        KuskoHarvUtils::draw_yn_axis(side = 1)
       } else {
         axis(side = 1, col = "white", col.ticks = par("col.axis"))
-        draw_axis_line(side = 1)
+        KuskoHarvUtils::draw_axis_line(side = 1)
       }
     }
   }
 
   # draw the appropriate Y-axis ticks and labels
   if (y_is_percent) {
-    draw_percent_axis(side = 2)
+    KuskoHarvUtils::draw_percent_axis(side = 2)
   } else {
     if (y_is_day) {
-      draw_day_axis(min(y), max(y), by = 5, side = 2)
+      KuskoHarvUtils::draw_day_axis(min(y), max(y), by = 5, side = 2)
     } else {
       if (y_is_yn) {
-        draw_yn_axis(side = 2)
+        KuskoHarvUtils::draw_yn_axis(side = 2)
       } else {
         axis(side = 2, col = "white", col.ticks = par("col.axis"))
-        draw_axis_line(side = 2)
+        KuskoHarvUtils::draw_axis_line(side = 2)
       }
     }
   }
