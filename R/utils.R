@@ -156,7 +156,7 @@ run_predictive_tool = function() {
 get_mape = function(response, period) {
 
   # extract LOO errors
-  errors = KuskoHarvPred:::loo_output$error_summary
+  errors = KuskoHarvPred:::loo_output$error_summary$MAPE
 
   # extract only the specific MAPE of interest and convert to a proportion
   errors[errors$response == response,paste0("MAPE_", period)]
