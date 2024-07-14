@@ -1,6 +1,6 @@
 # KuskoHarvPred <img src="man/figures/sticker/KuskoHarvPred-logo.png" align="right" height=200px/>
 
-> R package for predicting daily fishery outcomes from openers in the Lower Kuskokwim River subsistence salmon fishery.
+> R package for predicting daily fishery outcomes from openers in the lower Kuskokwim River subsistence salmon fishery.
 > Fishery outcomes include drift boat trips/day, salmon catch/trip, and % species composition, and these are treated as response variables in linear regression models with predictions made via AIC-based model-averaging.
 > Harvest predictions by species are then obtained by multiplying predictions of the response variables. 
 > Leave-one-out cross-validation is used to assess predictive performance.
@@ -9,7 +9,7 @@
 
 The motivation and statistical approach used are described in a manuscript that is currently in review (contact <bstaton.qes@gmail.com> to request a copy):
 
-> Staton, B.A., Bechtol, W.R., Coggins, L.G., Jr., and Decossas, G. (In Review). _In-season predictions of daily harvest for Lower Kuskokwim River subsistence salmon fisheries._ Submitted to JOURNAL, July 2024.
+> Staton, B.A., Bechtol, W.R., Coggins, L.G., Jr., and Decossas, G. (In Review). _In-season predictions of daily harvest for lower Kuskokwim River subsistence salmon fisheries._ Submitted to _North American Journal of Fisheries Management_, July 2024.
 
 'KuskoHarvPred' uses data collected by the In-season Harvest Monitoring Program, which is a collaborative effort of the [Kuskokwim River Inter-Tribal Fish Commission](https://www.kuskosalmon.org/), the [Orutsararmiut Native Council](https://orutsararmiut.org/), and the [Yukon Delta National Wildlife Refuge](https://www.fws.gov/refuge/yukon-delta) (U.S. Fish and Wildlife Service).
 The data are analyzed to produce estimates for a single opener using the ['KuskoHarvEst'](https://github.com/bstaton1/KuskoHarvEst) R package and are housed in the ['KuskoHarvData'](https://github.com/bstaton1/KuskoHarvData) R package.
@@ -48,13 +48,22 @@ After installing [R](https://cran.rstudio.com/) and [RStudio Desktop](https://po
 
 ```R
 install.packages("remotes")
-remotes::install_github("bstaton1/KuskoHarvPred")
+remotes::install_github("bstaton1/KuskoHarvPred", build_vignettes = TRUE)
 ```
 
 After installation, run the tool with:
 
 ```R
 KuskoHarvPred::run_predictive_tool()
+```
+
+## Updating the Tool
+
+It is the intent of the package developer that the analyses behind the tool be updated with the most current data.
+Please see the vignette for instructions about how this should be done.
+
+```R
+vignette("updating-predictions", package = "KuskoHarvPred")
 ```
 
 ## Contact
