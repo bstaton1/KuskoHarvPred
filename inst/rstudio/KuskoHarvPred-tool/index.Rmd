@@ -1184,7 +1184,7 @@ resp_kable = function(period_keep, year_keep, effort_range, total_cpt_range, chi
   # create the data set
   table_dat = fit_data
   data("openers_all", package = "KuskoHarvData")
-  openers_all$date = date(openers_all$start)
+  openers_all$date = lubridate::date(x = openers_all$start)
   table_dat = merge(x = openers_all, y = table_dat, by = "date", sort = FALSE, all.x = FALSE, all.y = TRUE)
   
   # format the variables
@@ -1339,7 +1339,7 @@ pred_kable = function(period_keep, year_keep) {
   # create the data set
   table_dat = fit_data
   data("openers_all", package = "KuskoHarvData")
-  openers_all$date = date(x = openers_all$start)
+  openers_all$date = lubridate::date(x = openers_all$start)
   table_dat = merge(x = openers_all, y = table_dat, by = "date", sort = FALSE, all.x = FALSE, all.y = TRUE)
   
   # keep only the relevant records
