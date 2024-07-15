@@ -75,7 +75,10 @@ smooth_btf = function(stat, days = seq(min(fit_data$day), max(fit_data$day)), pl
   btf_summary$value[btf_summary$value == 0] = 0.01
 
   # fit the qgam for all elements in qu_seq
-  fits = suppressMessages(qgam::mqgam(f(value) ~ s(day), qu = qu_seq, data = btf_summary))
+  junk = capture.output({
+    fits = suppressMessages({
+      qgam::mqgam(f(value) ~ s(day), qu = qu_seq, data = btf_summary)})
+  })
 
   # create a prediction data set
   pred_data = data.frame(day = with(btf_summary, seq(min(day), max(day))))
