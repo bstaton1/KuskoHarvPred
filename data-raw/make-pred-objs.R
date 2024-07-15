@@ -39,13 +39,13 @@ misc_bank = list(
 smooth_btf = function(stat, days = seq(min(fit_data$day), max(fit_data$day)), plus_minus = 1, plot = interactive()) {
 
   # load the BTF data set
-  data(btf_master, package = "KuskoHarvData")
+  data("btf_data_all", package = "KuskoHarvData")
 
   # name the btf stat: this is the name for output
   btf_stat = stringr::str_replace(stat, "_", "_btf_")
 
   # get the years to include
-  yr_range = range(lubridate::year(btf_master$date))
+  yr_range = range(lubridate::year(btf_data_all$date))
   years = yr_range[1]:yr_range[2]
 
   btf_summary = lapply(years, function(y) {
