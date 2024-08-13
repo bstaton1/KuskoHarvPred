@@ -10,13 +10,12 @@ resource_files:
 ---
 
 :::{.subtext style="margin-top: 2px"}
-`r hr()`
 
 **Lower Kuskokwim River Subsistence Fishery**
 :::
 
 :::{.subtext style="font-size: 18px;"}
-`r paste0('Daily Drift Gillnet Harvest Based on ', min(KuskoHarvPred:::fit_data$year), '-', max(KuskoHarvPred:::fit_data$year), ' In-Season Monitoring')`
+`r htmltools::tagList(htmltools::p(paste0('Daily Drift Gillnet Harvest Based on ', min(KuskoHarvPred:::fit_data$year), '-', max(KuskoHarvPred:::fit_data$year), ' In-Season Monitoring')), htmltools::img(src="resources/KuskoHarvPred-logo.png", align = "right", height = "140px", style = "margin-top: -120px"))`
 :::
 
 :::{.subtext style="margin-top: 8px; margin-bottom: 2px; font-size: 14px;"}
@@ -40,6 +39,8 @@ knitr::opts_chunk$set(echo = FALSE, fig.align = "center")
 /* Really only applies to the title */
 h1 {
 padding: 0px;
+padding-top: 3px;
+padding-bottom: 3px;
 font-size: 2.5em;
 font-variant: small-caps;
 font-weight: 700;
