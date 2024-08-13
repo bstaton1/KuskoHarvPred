@@ -2316,7 +2316,7 @@ print_bibs = function(keys) {
 
 `r hr()`
 
-:::{.indent style="text-align: left;"}
+:::{.indent style="text-align: left; margin-left: 0px;"}
 `r print_bibs(c("staton-etal-KuskoHarvEst-ms", "staton-etal-KuskoHarvPred-ms"))`
 :::
 
@@ -2329,8 +2329,8 @@ print_bibs = function(keys) {
 
 `r hr()`
 
-:::{.indent style="text-align: left;"}
-`r print_bibs(c("staton-coggins-2016", "staton-coggins-2017", "staton-2018", "decossas-2019", "decossas-2020a", "russell-etal-2021", "bechtol-schomogyi-2022", "bechtol-etal-2024"))`
+:::{.indent style="text-align: left; margin-left: 0px;"}
+`r print_bibs(c("staton-coggins-2016", "staton-coggins-2017", "staton-2018", "decossas-2019b", "decossas-2020", "russell-etal-2021", "bechtol-schomogyi-2022", "bechtol-etal-2024"))`
 :::
 
 </details>
@@ -2342,8 +2342,8 @@ print_bibs = function(keys) {
 
 `r hr()`
 
-:::{.indent style="text-align: left;"}
-`r print_bibs(c("decossas-2020b", "staton-2021"))`
+:::{.indent style="text-align: left; margin-left: 0px;"}
+`r print_bibs(c("decossas-2019a", "staton-2021"))`
 :::
 
 </details>
