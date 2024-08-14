@@ -2352,7 +2352,7 @@ print_bibs = function(keys) {
 ### `r bs_icon("code")` Code
 
 This project was conducted entirely in [program R](https://www.r-project.org/) using a set of custom R packages.
-All code and data can be found on `r bs_icon("github")` GitHub at the links below:
+All code and data can be found on `r bs_icon("github")` GitHub at the links below: `r htmltools::img(src="resources/all-logo-grouped.png", align = "right", height = "250px", style="padding: 7px;")`
 
 * [KuskoHarvUtils](https://www.github.com/bstaton1/KuskoHarvUtils) -- stores **critical infrastructure** used in the other 3 packages.
 * [KuskoHarvEst](https://www.github.com/bstaton1/KuskoHarvEst) -- **estimates harvest and effort** in-season and creates reports via user-friendly tools.
