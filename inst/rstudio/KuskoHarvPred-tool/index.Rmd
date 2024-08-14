@@ -853,7 +853,7 @@ preds_kable = function(input, rvals) {
     kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) |>
     column_spec(1, bold = FALSE, italic = TRUE) |>
     pack_rows("Fishery Outcome Variables", 1, 5, background = "#F7F7F7") |>
-    pack_rows("Harvest", 6, 9, hline_before = TRUE, background = "#F7F7F7") |>
+    pack_rows("Harvest", 6, 9, hline_before = FALSE, background = "#F7F7F7") |>
     add_header_above(header, background = "#F7F7F7", escape = FALSE) |> 
     row_spec(0:nrow(preds), background = "#F7F7F7")
 }
