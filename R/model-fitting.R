@@ -1,7 +1,7 @@
 #' @title Fit All Subsets for Multiple Response Variables
-#' @param global_formulae A named [`list`][base::list] object with elements for `effort`, `total_cpt`, `chinook_comp`, `chum_comp`, and `sockeye_comp` to be passed to the
+#' @param global_formulae Named [`list`][base::list] of with elements for `effort`, `total_cpt`, `chinook_comp`, `chum_comp`, and `sockeye_comp` to be passed to the
 #'   `formula` argument of [fit_global_model_one()] separately.
-#' @param fit_data A [`data.frame`][base::data.frame] object storing the variables for regression fitting.
+#' @param fit_data [`data.frame`][base::data.frame] storing the variables for regression fitting.
 #' @param ... Optional arguments passed to [fit_all_subsets_one()]
 #' @export
 
@@ -14,10 +14,12 @@ fit_all_subsets = function(global_formulae, fit_data, ...) {
   transform = ifelse(responses %in% c("effort", "total_cpt"), "log",
                      ifelse(responses %in% c("chinook_comp", "chum_comp", "sockeye_comp"), "logit", NA))
 
+  # return error if invalid variable names provided
   if (any(is.na(transform))) {
     stop ("the names of global formulae must be some of 'effort', 'total_cpt', 'chinook_comp', 'chum_comp', or 'sockeye_comp'")
   }
 
+  # paste the transformation name on the variable name
   transformed_responses = paste(transform, responses, sep = "_")
 
   # count the responses
@@ -37,13 +39,15 @@ fit_all_subsets = function(global_formulae, fit_data, ...) {
 }
 
 #' @title Fit a Global Model for a Given Response Variable
+#' @inheritParams fit_all_subsets
 #' @param response One of `"log_effort"` (drift trips per day),
 #'   `"log_total_cpt"` (total salmon catch per drift trip),
-#'   or `"logit_chinook_comp"` (Chinook salmon proportion composition in drift harvest trips).
-#' @param formula Character string containing the right-hand-side of the global model.
-#' @param fit_data A [`data.frame`][base::data.frame] object storing the variables for regression fitting.
+#'   `"logit_chinook_comp"` (Chinook salmon proportion composition in drift harvest),
+#'   `"logit_chum_comp"` (chum salmon proportion composition in drift harvest), or
+#'   `"logit_chum_comp"` (sockeye salmon proportion composition in drift harvest).
+#' @param formula Character string containing the right-hand-side of the global model, without a tilde (`"~"`).
+#'   For example, if the global model is to be `lm(y ~ x1 + x2)`, pass `formula = "x1+x2"`.
 #' @return A fitted model object with class [`lm`][stats::lm].
-#' @note FIXME change to allow_collinearity?
 
 fit_global_model_one = function(response, formula, fit_data) {
 
@@ -58,8 +62,8 @@ fit_global_model_one = function(response, formula, fit_data) {
 }
 
 #' @title Fit All Subsets of a Global Model
+#' @inheritParams fit_all_subsets
 #' @param global_model A fitted model object with class [`lm`][stats::lm].
-#' @param fit_data A [`data.frame`][base::data.frame] object storing the variables for regression fitting.
 #' @param parallel Logical: should model fitting be performed with parallel processing?
 #'   Defaults to `FALSE`.
 #' @param reduce_colinearity Logical: Should variables that are known to be colinear be
@@ -67,7 +71,7 @@ fit_global_model_one = function(response, formula, fit_data) {
 #'   Defaults to `FALSE` (i.e., allows colinear variables).
 #' @param cwt_retain Numeric value between 0 and 1: what cumulative model weight
 #'   should be used to trim the set of models?
-#'   Defaults to 0.75 (i.e., keep models that when sorted in decreasing weight make it in the top 75% by model weight).
+#'   Defaults to 1 (i.e., keep models all models).
 #' @note If `parallel = TRUE`, models will be fitted using [MuMIn::pdredge()]
 #'   with the number of parallel cores used set to `max(parallel::detectCores() - 1, 1)`.
 #'   Otherwise, the models will be fitted using [MuMIn::dredge()].
@@ -75,9 +79,9 @@ fit_global_model_one = function(response, formula, fit_data) {
 #'   Additionally, regardless of the value of `cwt_retain`, if 5 or fewer models
 #'   are in the all allowed subsets of the global model, no trimming will be conducted.
 #'   Additionally, if the trimmed model set has fewer than 2 models, no trimming will be conducted.
-#' @return List of fitted model objects (each with class [`lm`][stats::lm]).
+#' @return A [`list`][base::list] of fitted model objects (each with class [`lm`][stats::lm]).
 
-fit_all_subsets_one = function(global_model, fit_data, parallel = FALSE, reduce_colinearity = FALSE, cwt_retain = 0.75) {
+fit_all_subsets_one = function(global_model, fit_data, parallel = FALSE, reduce_colinearity = FALSE, cwt_retain = 1) {
 
   # create the subset matrix
   vars = colnames(model.matrix(global_model))[-1]
@@ -178,8 +182,8 @@ fit_all_subsets_one = function(global_model, fit_data, parallel = FALSE, reduce_
 
 #' @title Obtain Model-Averaged Predicted Value
 #'
-#' @param fit_list List of fitted model objects of class [`lm`][stats::lm].
-#' @param newdata Data frame storing the variable values at which to obtain model-averaged predictions.
+#' @param fit_list [`list`][base::list] of fitted model objects of class [`lm`][stats::lm], generally the output of [fit_all_subsets_one()].
+#' @param newdata [`data.frame`][base::data.frame] storing the variable values at which to obtain model-averaged predictions.
 #' @return Numeric vector of length equal to `nrow(newdata)`.
 #' @export
 
