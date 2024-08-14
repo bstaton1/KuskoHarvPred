@@ -2,7 +2,6 @@
 
 export(fit_all_subsets)
 export(loo_pred_model_avg)
-export(pred_vs_obs)
 export(predict_model_avg)
 export(relationship_plot)
 export(run_predictive_tool)

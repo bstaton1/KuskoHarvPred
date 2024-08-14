@@ -9,13 +9,13 @@ fit_all_subsets_one(
   fit_data,
   parallel = FALSE,
   reduce_colinearity = FALSE,
-  cwt_retain = 0.75
+  cwt_retain = 1
 )
 }
 \arguments{
 \item{global_model}{A fitted model object with class \code{\link[stats:lm]{lm}}.}
 
-\item{fit_data}{A \code{\link[base:data.frame]{data.frame}} object storing the variables for regression fitting.}
+\item{fit_data}{\code{\link[base:data.frame]{data.frame}} storing the variables for regression fitting.}
 
 \item{parallel}{Logical: should model fitting be performed with parallel processing?
 Defaults to \code{FALSE}.}
@@ -26,10 +26,10 @@ Defaults to \code{FALSE} (i.e., allows colinear variables).}
 
 \item{cwt_retain}{Numeric value between 0 and 1: what cumulative model weight
 should be used to trim the set of models?
-Defaults to 0.75 (i.e., keep models that when sorted in decreasing weight make it in the top 75\% by model weight).}
+Defaults to 1 (i.e., keep models all models).}
 }
 \value{
-List of fitted model objects (each with class \code{\link[stats:lm]{lm}}).
+A \code{\link[base:list]{list}} of fitted model objects (each with class \code{\link[stats:lm]{lm}}).
 }
 \description{
 Fit All Subsets of a Global Model

@@ -9,3 +9,7 @@ run_predictive_tool()
 \description{
 Start a Shiny Server for the Prediction Tool and Render It
 }
+\note{
+The tool can be accessed via \href{https://bstaton.shinyapps.io/KuskoHarvPred-tool/}{URL},
+however, please use \code{run_predictive_tool()}if you plan to use it often.
+}

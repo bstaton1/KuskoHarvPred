@@ -2,7 +2,7 @@
 #'
 #' @param fit A fitted model object of class [`lm`][stats::lm].
 #' @return A [`matrix`][base::matrix] object with columns storing values for each record and rows storing the predicted value for
-#'   the left out observation and the AICc value of the model fitted after leaving the data point out.
+#'   the left out observation and the AICc value (given by [MuMIn::AICc()]) of the model fitted after leaving the data point out.
 
 loo_pred = function(fit) {
 
@@ -30,7 +30,7 @@ loo_pred = function(fit) {
 
 #' @title Obtain Model-Averaged Leave-one-Out Predictions
 #'
-#' @param fit_list List of fitted model objects of class [`lm`][stats::lm].
+#' @inheritParams predict_model_avg
 #' @return Numeric vector of model-averaged leave-one-out predictions.
 #' @note Leave-one-out predictions are made for each model and each record
 #'   using [loo_pred()] and model weights are recalculated for each left out record
@@ -58,68 +58,10 @@ loo_pred_model_avg = function(fit_list) {
   return(loo_pred_model_avg)
 }
 
-#' @title Plot Predicted vs. Observed Points
-#'
-#' @param yhat Numeric vector of predicted values.
-#' @param yobs Numeric vector of observed values.
-#' @param period Optional numeric vector with the period identifier
-#'   for each record. Must be one of 1, 2, or 3. If not supplied (default),
-#'   all points will be grey. If provided, the points will be color-coded by period.
-#' @param xlab Character string for x-axis label.
-#' @param ylab Character string for y-axis label.
-#' @param main Character string for main plot title.
-#' @param include_summaries Logical: should error summaries (obtained via [KuskoHarvUtils::get_errors()]) be displayed on the plot?
-#' @param period_legend Logical: if points are colored by period, should the legend be displayed?
-#'   Defaults to `TRUE` if `period` is not `NULL`; ignored if `period` is `NULL`.
-#' @export
-#'
-pred_vs_obs = function(yhat, yobs, period = NULL, xlab = "Observed", ylab = "Predicted", main = NULL, include_summaries = TRUE, period_legend = !is.null(period)) {
-
-  # obtain the axis limits
-  xlim = ylim = range(0, yhat, yobs) * 1.05
-
-  # blank plot with correct dimensions and labels
-  plot(x = yobs, y = yhat, xlab = xlab, ylab = ylab, xlim = xlim, ylim = ylim, main = main, type = "n")
-
-  # draw 1:1 equality line
-  abline(0,1, lty = 2)
-
-  # decide colors
-  if (is.null(period)) {
-    base_col = "grey20"
-    alpha = c(bg = 0.25, col = 0.5)
-  } else {
-    base_col = ifelse(period == 1, "skyblue", ifelse(period == 2, "orange", ifelse(period == 3, "salmon", "grey20")))
-    alpha = c(bg = 0.5, col = 0.75)
-  }
-
-  # draw the points
-  points(x = yobs, y = yhat, pch = 21, cex = 1.75, bg = scales::alpha(base_col, alpha["bg"]), col = scales::alpha(base_col, alpha["col"]))
-
-  # obtain error summaries and add to plot if requested
-  if (include_summaries) {
-    vals = KuskoHarvUtils::get_errors(yhat = yhat, yobs = yobs)$summary
-    names = paste0(names(vals), ": ")
-    vals = round(vals, 2)
-    vals[c("MPE", "MAPE")] = paste0(vals[c("MPE", "MAPE")] * 100, "%")
-    legend("topleft", inset = c(-0.05,-0.025), legend = paste0(names, vals), text.font = 3, bty = "n")
-  }
-
-  if (!is.null(period) & period_legend) {
-    legend("bottomright", title = "Period", legend = c("6/12-6/19", "6/20-6/30", ">= 7/1"), pch = 21,
-           col = scales::alpha(c("skyblue", "orange", "salmon"), alpha["col"]),
-           pt.bg = scales::alpha(c("skyblue", "orange", "salmon"), alpha["bg"]),
-           pt.cex = 2,
-           bty = "n"
-           )
-  }
-}
-
 #' @title Conduct the Entire Leave-one-Out Analysis
 #' @description A wrapper around model-fitting, model-averaging, leave-one-out calculations, and error summaries
-#'   for effort, catch rate, and species composition; also returns error summaries for Chinook and chum+sockeye harvest.
-#' @param global_formulae A [`list`][base::list] object with elements for `effort`, `totalcpt`, `chinook_comp`, `chum_comp`, and `sockeye_comp` to be passed to the
-#'   `formula` argument of [fit_global_model_one()] separately.
+#'   for effort, catch rate, and species composition; also returns predictions and error summaries of harvest implied by the values of the other variables.
+#' @inheritParams fit_all_subsets
 #' @param var_desc Optional character string describing the variables used in fitting.
 #'   If supplied, will become the first column in the `error_summary` element of the output list.
 #' @param error_types A character vector specifying which types of error summaries (obtained by [KuskoHarvUtils::get_errors()]) to return.
@@ -130,13 +72,11 @@ pred_vs_obs = function(yhat, yobs, period = NULL, xlab = "Observed", ylab = "Pre
 #'   2. Fits all subsets of these global models using [fit_all_subsets()].
 #'   3. Obtains model-averaged leave-one-out predictions for each record using [loo_pred_model_avg()].
 #'   4. Summarizes the errors made in step 3 by response variable type and period (see [KuskoHarvUtils::get_errors()] and [KuskoHarvUtils::get_period()]).
-#' @return A [`list`][base::list] object with elements:
-#'   * `error_summary`: a [`list`][base::list] object with elements storing [`data.frame`][base::data.frame] objects, where each data frame stores
-#'      info about the settings of the run (the values of `reduce_colinearity`, `cwt_retain`, and `var_desc`) and the period- and response variable-specific error summaries.
-#'   * `elapsed`: a [`data.frame`][base::data.frame] object similar to the `error_summary` element, except with a column for minutes elapsed.
-#'   * `loo_preds`: a [`data.frame`][base::data.frame] object with the model-averaged leave-one-out predictions by record and response variable.
-#'   * `models`: a [`list`][base::list] object with three elements, one each for `effort`, `cpt`, and `comp`. Each element is the [`list`][base::list]
-#'     of fitted [`lm`][stats::lm] model objects returned by [fit_all_subsets()].
+#' @return [`list`][base::list] with elements:
+#'   * `error_summary`: [`list`][base::list] with elements storing [`data.frame`][base::data.frame] objects, where each data frame stores info about the settings of the run (the values of `reduce_colinearity`, `cwt_retain`, and `var_desc`) and the period- and response variable-specific error summaries. Different list elements store the different error summary statistics supplied to `error_types`.
+#'   * `elapsed`: [`data.frame`][base::data.frame] similar to the `error_summary` element, except with a column for minutes elapsed.
+#'   * `loo_preds`: [`data.frame`][base::data.frame] with the model-averaged leave-one-out predictions by record and response variable.
+#'   * `models`: a [`list`][base::list] with 5 elements, one each for `effort`, `total_cpt`, and `chinook_comp`, `chum_comp`, and `sockeye_comp`. Each element is the [`list`][base::list] of fitted [`lm`][stats::lm] model objects returned by [fit_all_subsets()].
 #' @export
 
 whole_loo_analysis = function(global_formulae, fit_data, var_desc = NULL, error_types = c("RHO", "ME", "MAE", "MPE", "MAPE"),  ...) {

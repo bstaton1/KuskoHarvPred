@@ -7,14 +7,14 @@
 AIC_table(fit_list, digits = 3)
 }
 \arguments{
-\item{fit_list}{List of fitted model objects of class \code{\link[stats:lm]{lm}}}
+\item{fit_list}{\code{\link[base:list]{list}} of fitted model objects of class \code{\link[stats:lm]{lm}}, generally the output of \code{\link[=fit_all_subsets_one]{fit_all_subsets_one()}}.}
 
 \item{digits}{Numeric value controlling the number of decimal places to round to.
 Passed to \code{\link[base:Round]{base::round()}} for \code{"delta"} and \code{\link[KuskoHarvUtils:smart_round]{KuskoHarvUtils::smart_round()}} for model weights.
 Defaults to 3.}
 }
 \value{
-Data frame with columns:
+\code{\link[base:data.frame]{data.frame}} with columns:
 \itemize{
 \item \code{terms}: the right-hand-side of each fitted model formula; from \code{\link[=get_formula]{get_formula()}}.
 \item \code{K}: the number of parameters in each fitted model; from \code{\link[=count_params]{count_params()}}.

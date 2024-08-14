@@ -1,8 +1,9 @@
-#' Subset Pre-Processed Model Predictions
-#'
+#' @title Subset Pre-Processed Model Predictions
+#' @description Processing predictions takes a while, this function allows querying
+#'   pre-calculated predictions so the user need not re-calculate everytime.#'
 #' @param response Character; one of `"effort"`, `"total_cpt"`, `"chinook_comp"`, `"chum_comp"`, or `"sockeye_comp"`
-#' @param settings List specifying which covariate settings to subset the predicted values for. See details.
-#' @details The `settings` argument must be a list, and if it is empty (the default), the acceptable elements will be populated with preset values.
+#' @param settings [`list`][base::list] specifying which covariate settings to subset the predicted values for. See details.
+#' @details The `settings` argument must be a [`list`][base::list], and if it is empty (the default), the acceptable elements will be populated with preset values.
 #'   The following elements are acceptable:
 #'     * `settings$day`: numeric; defaults to `12:46`
 #'     * `settings$hours_open`: numeric; must contain any combination of 6, 12, 18, 24, defaults to 12
@@ -13,9 +14,9 @@
 #'     * `settings$CAT_chinook_btf_comp`: same as `settings$CAT_total_btf_cpue`
 #'     * `settings$CAT_chum_btf_comp`: same as `settings$CAT_total_btf_cpue`
 #'     * `settings$CAT_sockeye_btf_comp`: same as `settings$CAT_total_btf_cpue`
-#'     * `settings$CAT_mean_Nwind`: character, must contain any combination of `"strong_northerly"`, `"none"`, `"strong_southerly"`; defaults to `"none"`
-#'     * `settings$CAT_mean_Ewind`: character, must contain any combination of `"strong_easterly"`, `"none"`, `"strong_westerly"`; defaults to `"none"`
-#'  @note Because not every predictor variable is used for all responses, it is possible to change the `settings` argument and receive the same output.
+#' @note Because not every predictor variable is used for all responses, it is possible to change the `settings` argument and receive the same output.
+#'   The object containing all pre-processed predictions for all responses can be found in `KuskoHarvPred:::pred_data`.
+#' @return [`data.frame`][base::data.frame] with the pre-processed predictions (column `pred_response`) at each combination of queried predictor variables.
 #'
 
 subset_pred_data = function(response, settings = list()) {
@@ -55,15 +56,16 @@ subset_pred_data = function(response, settings = list()) {
   return(out)
 }
 
-#' Plot the Relationship of a Variable with Day of the Season
+#' @title Plot the Relationship of a Variable with Day of the Season
 #'
 #' @param response Character; one of `"effort"`, `"total_cpt"`, `"chinook_comp"`, `"chum_comp"`, or `"sockeye_comp"`
-#' @param settings List specifying which covariate settings to subset the predicted values for. Passed to [subset_pred_data()].
-#' @param dat Data frame; the input regression data set, defaults to `KuskoHarvPred:::fit_data`, which is equivalent to [KuskoHarvData::prepare_regression_data()].
+#' @param settings [`list`][base::list] specifying which values of predictor variables to subset the predicted values for.
+#'   Passed to [subset_pred_data()], see the Details section of that help file for how to use this argument.
+#' @param dat [`data.frame`][base::data.frame]; the input regression data set, defaults to `KuskoHarvPred:::fit_data`, which is equivalent to [KuskoHarvData::prepare_regression_data()] but takes no time to process.
 #' @param separate_day_types Logical; if the variable passed to `response` used the predictor variable `fished_yesterday`, should two relationships be drawn?
-#' @param pred_day Numeric; the day corresponding to a hypothetical prediction (`pred_response`). Defaults to `NULL` in which case this is not drawn.
-#' @param pred_response Numeric; the predicted response corresponding to a hypothetical day (`pred_day`). Defaults to `NULL` in which case this is not drawn.
-#' @param draw_make_range Logical; should a shaded region around model prediction that shows +/- 1MAPE be shown?
+#' @param pred_day Numeric; the day (1 = June 1; see [KuskoHarvUtils::to_days_past_may31()]) corresponding to a hypothetical prediction (`pred_response`). Defaults to `NULL` in which case this is not drawn.
+#' @param pred_response Numeric; the predicted response corresponding to `pred_day`. Defaults to `NULL` in which case this is not drawn.
+#' @param draw_mape_range Logical; should a shaded region around model prediction that shows +/- 1MAPE from LOO analyses be shown?
 #' @export
 
 relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::fit_data, separate_day_types = TRUE, pred_day = NULL, pred_response = NULL, draw_mape_range = FALSE) {
@@ -207,25 +209,24 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::
   if (stringr::str_detect(response, "comp")) {
     KuskoHarvUtils::draw_percent_axis(side = 2)
   } else {
-    axis(side = 2, col = "white", col.ticks = par("col.axis"))
-    KuskoHarvUtils::draw_axis_line(side = 2)
+    KuskoHarvUtils::draw_regular_axis(side = 2)
   }
 }
 
 #' Create a Scatterplot of Two Variables
 #'
 #' For investigating basic relationships not available
-#' from [relationship_plot()], which only allows day on the _x_-axis.
+#' from [relationship_plot()], which only allows `day` on the _x_-axis.
 #'
-#' @param x Numeric vector; variable to show on the x-axis
-#' @param y Numeric vector; variable to show on the y-axis
+#' @param x Numeric vector; variable to show on the _x_-axis
+#' @param y Numeric vector; variable to show on the _x_-axis
 #' @param x_axis_type Character vector of length 1, output of [KuskoHarvUtils::choose_axis_type()] applicable to `x`.
 #' @param y_axis_type Character vector of length 1, output of [KuskoHarvUtils::choose_axis_type()] applicable to `y`.
-#' @param period Optional numeric vector (values 1, 2, or 3) indicating the period each element of `x` and `y` belong to.
-#'   See [KuskoHarvUtils::get_period()]. Defaults to `NULL`, in which case points are grey; otherwise points are color-coded.
-#' @param year Optional numeric vector (values 1, 2, or 3) indicating the year each element of `x` and `y` belong to.
+#' @param period Optional numeric vector (values 1, 2, or 3) indicating the period (see [KuskoHarvUtils::get_period()]) each element of `x` and `y` belongs to.
+#'   Defaults to `NULL`, in which case points are grey; otherwise points are color-coded.
+#' @param year Optional vector (character or numeric) indicating the year each element of `x` and `y` belongs to.
 #'   Defaults to `NULL`, in which case points are not labeled; otherwise, points are labeled with the last two digits of the year.
-#' @param legend Optional character vector of length 1 indicating where to place the legend if `!is.null(period)`.
+#' @param legend Optional character vector of length 1 indicating where to place the period legend if `!is.null(period)`.
 #'   Defaults to `NULL`, in which case no legend is drawn; otherwise supply a value such as `"top"` or `"bottomright"`.
 #' @param xlab,ylab,xlim,ylim Supplied to [graphics::plot()].
 #' @export

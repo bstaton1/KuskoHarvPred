@@ -5,8 +5,10 @@
 #'   * `"effort"` (number of drift trips),
 #'   * `"total_cpt"` (total salmon catch per trip), or
 #'   * `"chinook_comp"` (Chinook salmon proportion composition)
+#'   * `"chum_comp"` (Chinook salmon proportion composition)
+#'   * `"sockeye_comp"` (Chinook salmon proportion composition)
 #' @note Although the models are fitted to response variables
-#'   on a transformed scale (`"log_effort"`, `"log_total_cpt"`, `"logit_chinook_comp"`),
+#'   on a transformed scale (`"log_effort"`, `"log_total_cpt"`, `"logit_chinook_comp"`, `"logit_chum_comp"`, `"logit_sockeye_comp"`),
 #'   the name of the non-transformed variable is returned.
 
 get_response = function(fit) {
@@ -30,10 +32,10 @@ get_response = function(fit) {
 
 #' @title Obtain the Right-Hand-Side of a Given Model
 #'
-#' @param fit A fitted model object with class [`lm`][stats::lm].
+#' @inheritParams loo_pred
 #' @return A character string with the right-hand-side of the
 #'   model formula. If the model has the intercept only,
-#'   `"Intercept-only"` will be returned rather than `"1"`.
+#'   `"Intercept only"` will be returned rather than `"1"`.
 
 get_formula = function(fit) {
 
@@ -55,11 +57,11 @@ get_formula = function(fit) {
 
 #' @title Obtain Function to Return the Inverse of the Scale of the Response Variable
 #'
-#' @param fit A fitted model object with class [`lm`][stats::lm]
+#' @inheritParams loo_pred
 #' @return A function representing the correct inverse function
 #'   to back-transform the response variable. E.g., if the response
 #'   is either `"effort"` or `"total_cpt`", will return [base::exp()] and
-#'   if the response is `"chinook_comp"`, will return [stats::plogis()].
+#'   if the response is `"chinook_comp"`, `"chum_comp"`, or `"sockeye_comp"`, will return [stats::plogis()].
 
 inverse_transform = function(fit) {
 
@@ -76,7 +78,7 @@ inverse_transform = function(fit) {
 
 #' @title Obtain Model Weights given a vector of AIC(c) Values
 #' @param AIC Numeric vector of AIC(c) values from multiple models.
-#' @return A numeric vector model weights.
+#' @return A numeric vector of model weights.
 
 get_wt = function(AIC) {
   delta = AIC - min(AIC)
@@ -84,7 +86,7 @@ get_wt = function(AIC) {
 }
 
 #' @title Count the Number of Parameters in a Model
-#' @param fit A fitted model object with class [`lm`][stats::lm].
+#' @inheritParams loo_pred
 #' @return The number of coefficients in the fitted model plus 1 for the residual standard error.
 
 count_params = function(fit) {
@@ -92,11 +94,11 @@ count_params = function(fit) {
 }
 
 #' @title Produce a Concise AICc Table
-#' @param fit_list List of fitted model objects of class [`lm`][stats::lm]
+#' @inheritParams predict_model_avg
 #' @param digits Numeric value controlling the number of decimal places to round to.
 #'   Passed to [base::round()] for `"delta"` and [KuskoHarvUtils::smart_round()] for model weights.
 #'   Defaults to 3.
-#' @return Data frame with columns:
+#' @return [`data.frame`][base::data.frame] with columns:
 #'   * `terms`: the right-hand-side of each fitted model formula; from [get_formula()].
 #'   * `K`: the number of parameters in each fitted model; from [count_params()].
 #'   * `delta`: the difference in AICc scores between each model and the lowest AICc model.
@@ -127,8 +129,8 @@ AIC_table = function(fit_list, digits = 3) {
 
 #' Find Predictor Variable Names in a Set of Fitted Models
 #'
-#' @param fit_list List of fitted model objects of class [`lm`][stats::lm]
-#'
+#' @inheritParams predict_model_avg
+#' @return Character vector with the names of unique predictor variables included in any of the models in `fit_list`.
 
 find_variables = function(fit_list) {
   vars = unique(unlist(lapply(fit_list, function(m) unlist(strsplit(KuskoHarvPred:::get_formula(m), fixed = TRUE, split = " + ")))))
@@ -138,6 +140,8 @@ find_variables = function(fit_list) {
 
 #' Start a Shiny Server for the Prediction Tool and Render It
 #'
+#' @note The tool can be accessed via [URL](https://bstaton.shinyapps.io/KuskoHarvPred-tool/),
+#'   however, please use `run_predictive_tool()`if you plan to use it often.
 #' @export
 
 run_predictive_tool = function() {
@@ -149,9 +153,10 @@ run_predictive_tool = function() {
 #' Extract a Period- and Variable-specific MAPE value
 #'
 #' @param response Character; one of `"effort"`, `"total_cpt"`, `"chinook_comp"`, `"chum_comp"`, `"sockeye_comp"`, `"chinook_harv"`, `"chum_harv"`, or `"sockeye_harv"`
-#' @param period Numeric; one of `1`, `2`, or `3`.
+#' @param period One of `1`, `2`, `3`, or `"all"`. Numbers may be supplied as either numeric or character classes.
 #' @note Queries the `KuskoHarvPred:::loo_output$error_summary` table
 #'   for the correct value. The value is on the proportional error scale.
+#'   That object is created by [whole_loo_analysis()].
 
 get_mape = function(response, period) {
 

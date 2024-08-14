@@ -7,7 +7,7 @@
 loo_pred_model_avg(fit_list)
 }
 \arguments{
-\item{fit_list}{List of fitted model objects of class \code{\link[stats:lm]{lm}}.}
+\item{fit_list}{\code{\link[base:list]{list}} of fitted model objects of class \code{\link[stats:lm]{lm}}, generally the output of \code{\link[=fit_all_subsets_one]{fit_all_subsets_one()}}.}
 }
 \value{
 Numeric vector of model-averaged leave-one-out predictions.

@@ -7,9 +7,9 @@
 predict_model_avg(fit_list, newdata)
 }
 \arguments{
-\item{fit_list}{List of fitted model objects of class \code{\link[stats:lm]{lm}}.}
+\item{fit_list}{\code{\link[base:list]{list}} of fitted model objects of class \code{\link[stats:lm]{lm}}, generally the output of \code{\link[=fit_all_subsets_one]{fit_all_subsets_one()}}.}
 
-\item{newdata}{Data frame storing the variable values at which to obtain model-averaged predictions.}
+\item{newdata}{\code{\link[base:data.frame]{data.frame}} storing the variable values at which to obtain model-averaged predictions.}
 }
 \value{
 Numeric vector of length equal to \code{nrow(newdata)}.

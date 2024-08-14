@@ -7,7 +7,10 @@
 find_variables(fit_list)
 }
 \arguments{
-\item{fit_list}{List of fitted model objects of class \code{\link[stats:lm]{lm}}}
+\item{fit_list}{\code{\link[base:list]{list}} of fitted model objects of class \code{\link[stats:lm]{lm}}, generally the output of \code{\link[=fit_all_subsets_one]{fit_all_subsets_one()}}.}
+}
+\value{
+Character vector with the names of unique predictor variables included in any of the models in \code{fit_list}.
 }
 \description{
 Find Predictor Variable Names in a Set of Fitted Models

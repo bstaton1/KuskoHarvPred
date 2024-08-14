@@ -7,13 +7,13 @@
 inverse_transform(fit)
 }
 \arguments{
-\item{fit}{A fitted model object with class \code{\link[stats:lm]{lm}}}
+\item{fit}{A fitted model object of class \code{\link[stats:lm]{lm}}.}
 }
 \value{
 A function representing the correct inverse function
 to back-transform the response variable. E.g., if the response
 is either \code{"effort"} or \verb{"total_cpt}", will return \code{\link[base:Log]{base::exp()}} and
-if the response is \code{"chinook_comp"}, will return \code{\link[stats:Logistic]{stats::plogis()}}.
+if the response is \code{"chinook_comp"}, \code{"chum_comp"}, or \code{"sockeye_comp"}, will return \code{\link[stats:Logistic]{stats::plogis()}}.
 }
 \description{
 Obtain Function to Return the Inverse of the Scale of the Response Variable
