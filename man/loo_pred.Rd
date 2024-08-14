@@ -11,7 +11,7 @@ loo_pred(fit)
 }
 \value{
 A \code{\link[base:matrix]{matrix}} object with columns storing values for each record and rows storing the predicted value for
-the left out observation and the AICc value of the model fitted after leaving the data point out.
+the left out observation and the AICc value (given by \code{\link[MuMIn:AICc]{MuMIn::AICc()}}) of the model fitted after leaving the data point out.
 }
 \description{
 Obtain Leave-one-Out Predictions from a Single Model

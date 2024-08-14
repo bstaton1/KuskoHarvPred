@@ -9,7 +9,7 @@ get_mape(response, period)
 \arguments{
 \item{response}{Character; one of \code{"effort"}, \code{"total_cpt"}, \code{"chinook_comp"}, \code{"chum_comp"}, \code{"sockeye_comp"}, \code{"chinook_harv"}, \code{"chum_harv"}, or \code{"sockeye_harv"}}
 
-\item{period}{Numeric; one of \code{1}, \code{2}, or \code{3}.}
+\item{period}{One of \code{1}, \code{2}, \code{3}, or \code{"all"}. Numbers may be supplied as either numeric or character classes.}
 }
 \description{
 Extract a Period- and Variable-specific MAPE value
@@ -17,4 +17,5 @@ Extract a Period- and Variable-specific MAPE value
 \note{
 Queries the \code{KuskoHarvPred:::loo_output$error_summary} table
 for the correct value. The value is on the proportional error scale.
+That object is created by \code{\link[=whole_loo_analysis]{whole_loo_analysis()}}.
 }

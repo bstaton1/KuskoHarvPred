@@ -9,18 +9,18 @@ fit_global_model_one(response, formula, fit_data)
 \arguments{
 \item{response}{One of \code{"log_effort"} (drift trips per day),
 \code{"log_total_cpt"} (total salmon catch per drift trip),
-or \code{"logit_chinook_comp"} (Chinook salmon proportion composition in drift harvest trips).}
+\code{"logit_chinook_comp"} (Chinook salmon proportion composition in drift harvest),
+\code{"logit_chum_comp"} (chum salmon proportion composition in drift harvest), or
+\code{"logit_chum_comp"} (sockeye salmon proportion composition in drift harvest).}
 
-\item{formula}{Character string containing the right-hand-side of the global model.}
+\item{formula}{Character string containing the right-hand-side of the global model, without a tilde (\code{"~"}).
+For example, if the global model is to be \code{lm(y ~ x1 + x2)}, pass \code{formula = "x1+x2"}.}
 
-\item{fit_data}{A \code{\link[base:data.frame]{data.frame}} object storing the variables for regression fitting.}
+\item{fit_data}{\code{\link[base:data.frame]{data.frame}} storing the variables for regression fitting.}
 }
 \value{
 A fitted model object with class \code{\link[stats:lm]{lm}}.
 }
 \description{
 Fit a Global Model for a Given Response Variable
-}
-\note{
-FIXME change to allow_collinearity?
 }

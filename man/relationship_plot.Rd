@@ -17,17 +17,18 @@ relationship_plot(
 \arguments{
 \item{response}{Character; one of \code{"effort"}, \code{"total_cpt"}, \code{"chinook_comp"}, \code{"chum_comp"}, or \code{"sockeye_comp"}}
 
-\item{settings}{List specifying which covariate settings to subset the predicted values for. Passed to \code{\link[=subset_pred_data]{subset_pred_data()}}.}
+\item{settings}{\code{\link[base:list]{list}} specifying which values of predictor variables to subset the predicted values for.
+Passed to \code{\link[=subset_pred_data]{subset_pred_data()}}, see the Details section of that help file for how to use this argument.}
 
-\item{dat}{Data frame; the input regression data set, defaults to \code{KuskoHarvPred:::fit_data}, which is equivalent to \code{\link[KuskoHarvData:prepare_regression_data]{KuskoHarvData::prepare_regression_data()}}.}
+\item{dat}{\code{\link[base:data.frame]{data.frame}}; the input regression data set, defaults to \code{KuskoHarvPred:::fit_data}, which is equivalent to \code{\link[KuskoHarvData:prepare_regression_data]{KuskoHarvData::prepare_regression_data()}} but takes no time to process.}
 
 \item{separate_day_types}{Logical; if the variable passed to \code{response} used the predictor variable \code{fished_yesterday}, should two relationships be drawn?}
 
-\item{pred_day}{Numeric; the day corresponding to a hypothetical prediction (\code{pred_response}). Defaults to \code{NULL} in which case this is not drawn.}
+\item{pred_day}{Numeric; the day (1 = June 1; see \code{\link[KuskoHarvUtils:to_days_past_may31]{KuskoHarvUtils::to_days_past_may31()}}) corresponding to a hypothetical prediction (\code{pred_response}). Defaults to \code{NULL} in which case this is not drawn.}
 
-\item{pred_response}{Numeric; the predicted response corresponding to a hypothetical day (\code{pred_day}). Defaults to \code{NULL} in which case this is not drawn.}
+\item{pred_response}{Numeric; the predicted response corresponding to \code{pred_day}. Defaults to \code{NULL} in which case this is not drawn.}
 
-\item{draw_make_range}{Logical; should a shaded region around model prediction that shows +/- 1MAPE be shown?}
+\item{draw_mape_range}{Logical; should a shaded region around model prediction that shows +/- 1MAPE from LOO analyses be shown?}
 }
 \description{
 Plot the Relationship of a Variable with Day of the Season

@@ -19,26 +19,26 @@ vars_biplot(
 )
 }
 \arguments{
-\item{x}{Numeric vector; variable to show on the x-axis}
+\item{x}{Numeric vector; variable to show on the \emph{x}-axis}
 
-\item{y}{Numeric vector; variable to show on the y-axis}
+\item{y}{Numeric vector; variable to show on the \emph{x}-axis}
 
 \item{x_axis_type}{Character vector of length 1, output of \code{\link[KuskoHarvUtils:choose_axis_type]{KuskoHarvUtils::choose_axis_type()}} applicable to \code{x}.}
 
 \item{y_axis_type}{Character vector of length 1, output of \code{\link[KuskoHarvUtils:choose_axis_type]{KuskoHarvUtils::choose_axis_type()}} applicable to \code{y}.}
 
-\item{period}{Optional numeric vector (values 1, 2, or 3) indicating the period each element of \code{x} and \code{y} belong to.
-See \code{\link[KuskoHarvUtils:get_period]{KuskoHarvUtils::get_period()}}. Defaults to \code{NULL}, in which case points are grey; otherwise points are color-coded.}
+\item{period}{Optional numeric vector (values 1, 2, or 3) indicating the period (see \code{\link[KuskoHarvUtils:get_period]{KuskoHarvUtils::get_period()}}) each element of \code{x} and \code{y} belongs to.
+Defaults to \code{NULL}, in which case points are grey; otherwise points are color-coded.}
 
-\item{year}{Optional numeric vector (values 1, 2, or 3) indicating the year each element of \code{x} and \code{y} belong to.
+\item{year}{Optional vector (character or numeric) indicating the year each element of \code{x} and \code{y} belongs to.
 Defaults to \code{NULL}, in which case points are not labeled; otherwise, points are labeled with the last two digits of the year.}
 
-\item{legend}{Optional character vector of length 1 indicating where to place the legend if \code{!is.null(period)}.
+\item{legend}{Optional character vector of length 1 indicating where to place the period legend if \code{!is.null(period)}.
 Defaults to \code{NULL}, in which case no legend is drawn; otherwise supply a value such as \code{"top"} or \code{"bottomright"}.}
 
 \item{xlab, ylab, xlim, ylim}{Supplied to \code{\link[graphics:plot.default]{graphics::plot()}}.}
 }
 \description{
 For investigating basic relationships not available
-from \code{\link[=relationship_plot]{relationship_plot()}}, which only allows day on the \emph{x}-axis.
+from \code{\link[=relationship_plot]{relationship_plot()}}, which only allows \code{day} on the \emph{x}-axis.
 }

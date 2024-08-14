@@ -9,13 +9,17 @@ subset_pred_data(response, settings = list())
 \arguments{
 \item{response}{Character; one of \code{"effort"}, \code{"total_cpt"}, \code{"chinook_comp"}, \code{"chum_comp"}, or \code{"sockeye_comp"}}
 
-\item{settings}{List specifying which covariate settings to subset the predicted values for. See details.}
+\item{settings}{\code{\link[base:list]{list}} specifying which covariate settings to subset the predicted values for. See details.}
+}
+\value{
+\code{\link[base:data.frame]{data.frame}} with the pre-processed predictions (column \code{pred_response}) at each combination of queried predictor variables.
 }
 \description{
-Subset Pre-Processed Model Predictions
+Processing predictions takes a while, this function allows querying
+pre-calculated predictions so the user need not re-calculate everytime.#'
 }
 \details{
-The \code{settings} argument must be a list, and if it is empty (the default), the acceptable elements will be populated with preset values.
+The \code{settings} argument must be a \code{\link[base:list]{list}}, and if it is empty (the default), the acceptable elements will be populated with preset values.
 The following elements are acceptable:
 * \code{settings$day}: numeric; defaults to \code{12:46}
 * \code{settings$hours_open}: numeric; must contain any combination of 6, 12, 18, 24, defaults to 12
@@ -26,7 +30,8 @@ The following elements are acceptable:
 * \code{settings$CAT_chinook_btf_comp}: same as \code{settings$CAT_total_btf_cpue}
 * \code{settings$CAT_chum_btf_comp}: same as \code{settings$CAT_total_btf_cpue}
 * \code{settings$CAT_sockeye_btf_comp}: same as \code{settings$CAT_total_btf_cpue}
-* \code{settings$CAT_mean_Nwind}: character, must contain any combination of \code{"strong_northerly"}, \code{"none"}, \code{"strong_southerly"}; defaults to \code{"none"}
-* \code{settings$CAT_mean_Ewind}: character, must contain any combination of \code{"strong_easterly"}, \code{"none"}, \code{"strong_westerly"}; defaults to \code{"none"}
-@note Because not every predictor variable is used for all responses, it is possible to change the \code{settings} argument and receive the same output.
+}
+\note{
+Because not every predictor variable is used for all responses, it is possible to change the \code{settings} argument and receive the same output.
+The object containing all pre-processed predictions for all responses can be found in \code{KuskoHarvPred:::pred_data}.
 }

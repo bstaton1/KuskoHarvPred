@@ -7,7 +7,7 @@
 count_params(fit)
 }
 \arguments{
-\item{fit}{A fitted model object with class \code{\link[stats:lm]{lm}}.}
+\item{fit}{A fitted model object of class \code{\link[stats:lm]{lm}}.}
 }
 \value{
 The number of coefficients in the fitted model plus 1 for the residual standard error.

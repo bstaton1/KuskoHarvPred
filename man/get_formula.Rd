@@ -7,12 +7,12 @@
 get_formula(fit)
 }
 \arguments{
-\item{fit}{A fitted model object with class \code{\link[stats:lm]{lm}}.}
+\item{fit}{A fitted model object of class \code{\link[stats:lm]{lm}}.}
 }
 \value{
 A character string with the right-hand-side of the
 model formula. If the model has the intercept only,
-\code{"Intercept-only"} will be returned rather than \code{"1"}.
+\code{"Intercept only"} will be returned rather than \code{"1"}.
 }
 \description{
 Obtain the Right-Hand-Side of a Given Model

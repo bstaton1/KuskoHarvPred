@@ -10,7 +10,7 @@ get_wt(AIC)
 \item{AIC}{Numeric vector of AIC(c) values from multiple models.}
 }
 \value{
-A numeric vector model weights.
+A numeric vector of model weights.
 }
 \description{
 Obtain Model Weights given a vector of AIC(c) Values

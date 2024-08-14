@@ -15,6 +15,8 @@ One of:
 \item \code{"effort"} (number of drift trips),
 \item \code{"total_cpt"} (total salmon catch per trip), or
 \item \code{"chinook_comp"} (Chinook salmon proportion composition)
+\item \code{"chum_comp"} (Chinook salmon proportion composition)
+\item \code{"sockeye_comp"} (Chinook salmon proportion composition)
 }
 }
 \description{
@@ -22,6 +24,6 @@ Obtain the Name of the Response Variable for a Given Model
 }
 \note{
 Although the models are fitted to response variables
-on a transformed scale (\code{"log_effort"}, \code{"log_total_cpt"}, \code{"logit_chinook_comp"}),
+on a transformed scale (\code{"log_effort"}, \code{"log_total_cpt"}, \code{"logit_chinook_comp"}, \code{"logit_chum_comp"}, \code{"logit_sockeye_comp"}),
 the name of the non-transformed variable is returned.
 }

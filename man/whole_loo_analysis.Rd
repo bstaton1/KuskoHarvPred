@@ -13,8 +13,10 @@ whole_loo_analysis(
 )
 }
 \arguments{
-\item{global_formulae}{A \code{\link[base:list]{list}} object with elements for \code{effort}, \code{totalcpt}, \code{chinook_comp}, \code{chum_comp}, and \code{sockeye_comp} to be passed to the
+\item{global_formulae}{Named \code{\link[base:list]{list}} of with elements for \code{effort}, \code{total_cpt}, \code{chinook_comp}, \code{chum_comp}, and \code{sockeye_comp} to be passed to the
 \code{formula} argument of \code{\link[=fit_global_model_one]{fit_global_model_one()}} separately.}
+
+\item{fit_data}{\code{\link[base:data.frame]{data.frame}} storing the variables for regression fitting.}
 
 \item{var_desc}{Optional character string describing the variables used in fitting.
 If supplied, will become the first column in the \code{error_summary} element of the output list.}
@@ -25,19 +27,17 @@ Options are any combination of \code{"RHO"}, \code{"RMSE"}, \code{"ME"}, \code{"
 \item{...}{Optional arguments passed to \code{\link[=fit_all_subsets]{fit_all_subsets()}}}
 }
 \value{
-A \code{\link[base:list]{list}} object with elements:
+\code{\link[base:list]{list}} with elements:
 \itemize{
-\item \code{error_summary}: a \code{\link[base:list]{list}} object with elements storing \code{\link[base:data.frame]{data.frame}} objects, where each data frame stores
-info about the settings of the run (the values of \code{reduce_colinearity}, \code{cwt_retain}, and \code{var_desc}) and the period- and response variable-specific error summaries.
-\item \code{elapsed}: a \code{\link[base:data.frame]{data.frame}} object similar to the \code{error_summary} element, except with a column for minutes elapsed.
-\item \code{loo_preds}: a \code{\link[base:data.frame]{data.frame}} object with the model-averaged leave-one-out predictions by record and response variable.
-\item \code{models}: a \code{\link[base:list]{list}} object with three elements, one each for \code{effort}, \code{cpt}, and \code{comp}. Each element is the \code{\link[base:list]{list}}
-of fitted \code{\link[stats:lm]{lm}} model objects returned by \code{\link[=fit_all_subsets]{fit_all_subsets()}}.
+\item \code{error_summary}: \code{\link[base:list]{list}} with elements storing \code{\link[base:data.frame]{data.frame}} objects, where each data frame stores info about the settings of the run (the values of \code{reduce_colinearity}, \code{cwt_retain}, and \code{var_desc}) and the period- and response variable-specific error summaries. Different list elements store the different error summary statistics supplied to \code{error_types}.
+\item \code{elapsed}: \code{\link[base:data.frame]{data.frame}} similar to the \code{error_summary} element, except with a column for minutes elapsed.
+\item \code{loo_preds}: \code{\link[base:data.frame]{data.frame}} with the model-averaged leave-one-out predictions by record and response variable.
+\item \code{models}: a \code{\link[base:list]{list}} with 5 elements, one each for \code{effort}, \code{total_cpt}, and \code{chinook_comp}, \code{chum_comp}, and \code{sockeye_comp}. Each element is the \code{\link[base:list]{list}} of fitted \code{\link[stats:lm]{lm}} model objects returned by \code{\link[=fit_all_subsets]{fit_all_subsets()}}.
 }
 }
 \description{
 A wrapper around model-fitting, model-averaging, leave-one-out calculations, and error summaries
-for effort, catch rate, and species composition; also returns error summaries for Chinook and chum+sockeye harvest.
+for effort, catch rate, and species composition; also returns predictions and error summaries of harvest implied by the values of the other variables.
 }
 \details{
 This function conducts several steps in a self-contained wrapper:
