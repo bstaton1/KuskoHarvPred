@@ -29,6 +29,7 @@ However, users are encouraged to explore the wealth of additional information av
 </p>
 
 Or visualize how similar predictions are to the actual values (found in **Statistical Info.** > **Cross-Validation** > **Observed vs. Predicted Plots**): 
+
 <p align="center">
   <img src="man/figures/readme-SS/loo-example.png" width="500"/>
 </p>
