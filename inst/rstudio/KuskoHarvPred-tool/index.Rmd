@@ -1,12 +1,14 @@
 ---
-title: In-Season Daily Harvest Prediction Tool
+title: "In-Season Daily Harvest Prediction Tool"
 output:
   html_document:
     theme: !expr bslib::bs_theme()
 runtime: shiny
 resource_files:
-- resources/scatter-1.png
-- resources/scatter-2.png
+- "resources/scatter-1.png"
+- "resources/scatter-2.png"
+- "resources/KuskoHarvPred-logo.png"
+- "resources/all-logo-grouped.png"
 ---
 
 :::{.subtext style="margin-top: 2px"}
