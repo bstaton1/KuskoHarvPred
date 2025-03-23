@@ -11,6 +11,7 @@ fit_data = KuskoHarvData::prepare_regression_data()
 fit_data = fit_data[lubridate::month(fit_data$date) %in% c(6,7),]
 
 # perform LOO analysis
+starttime = Sys.time()
 loo_output = KuskoHarvPred:::whole_loo_analysis(
   global_formulae = list(
     effort = "day + I(day^2) + hours_open + fished_yesterday + weekend + p_before_noon + total_btf_cpue + chinook_btf_comp",
@@ -20,8 +21,10 @@ loo_output = KuskoHarvPred:::whole_loo_analysis(
     sockeye_comp = "day + I(day^2) + sockeye_btf_comp + I(sockeye_btf_comp^2)"
   ),
   fit_data = fit_data,
+  lag = 5,
   cwt_retain = 1
 )
+Sys.time() - starttime
 
 # store all component regression models in a separate object
 fit_lists = loo_output$models
