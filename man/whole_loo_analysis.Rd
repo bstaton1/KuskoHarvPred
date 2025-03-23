@@ -9,6 +9,7 @@ whole_loo_analysis(
   fit_data,
   var_desc = NULL,
   error_types = c("RHO", "ME", "MAE", "MPE", "MAPE"),
+  lag,
   ...
 )
 }
@@ -23,6 +24,8 @@ If supplied, will become the first column in the \code{error_summary} element of
 
 \item{error_types}{A character vector specifying which types of error summaries (obtained by \code{\link[KuskoHarvUtils:get_errors]{KuskoHarvUtils::get_errors()}}) to return.
 Options are any combination of \code{"RHO"}, \code{"RMSE"}, \code{"ME"}, \code{"MAE"}, \code{"MPE"}, or \code{"MAPE"}.}
+
+\item{lag}{number of days before the proposed opener the prediction is to be made. See \code{\link[=predict_btf]{predict_btf()}}.}
 
 \item{...}{Optional arguments passed to \code{\link[=fit_all_subsets]{fit_all_subsets()}}}
 }

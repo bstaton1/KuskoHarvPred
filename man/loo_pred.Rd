@@ -4,10 +4,13 @@
 \alias{loo_pred}
 \title{Obtain Leave-one-Out Predictions from a Single Model}
 \usage{
-loo_pred(fit)
+loo_pred(fit, lag)
 }
 \arguments{
 \item{fit}{A fitted model object of class \code{\link[stats:lm]{lm}}.}
+
+\item{lag}{number of days before the proposed opener the prediction is to be made. See \code{\link[=predict_btf]{predict_btf()}}.
+Ignored if model does not contain a BTF variable.}
 }
 \value{
 A \code{\link[base:matrix]{matrix}} object with columns storing values for each record and rows storing the predicted value for
