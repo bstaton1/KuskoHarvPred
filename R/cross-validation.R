@@ -1,10 +1,102 @@
-#' @title Obtain Leave-one-Out Predictions from a Single Model
+#' @title Predict BTF Statistics based on Percentiles
+#' @description A method for anticipating BTF total CPUE and species composition
+#'   variables to use in harvest prediction.
+#' @param date datetime object storing the date of the opener to be predicted.
+#' @param lag number of days before the proposed opener the prediction is to be made.
+#' @details This prediction method works by assuming the percentile of the BTF statistic on the day of the opener
+#'   relative to all historical years (since 2016) will be the same as it is on the day of prediction.
+#'   E.g., for a proposed June 12 opener with a 5 day lag: if on June 7 it is determined that 25% of all historical BTF stats fell below
+#'   this year's stat, then the prediction for June 12 is obtained as the value that 25% of all historical BTF stats
+#'   fell below on June 12.
 #'
+#'   This approach was developed in response to peer review feedback, given a concern that our original LOO analysis under-represented
+#'   errors in prediction because we evaluated them at the actual BTF statistics (which would be unavailable to users of the model).
+#'   By using this approach instead, the intention is to use a realistic version of what will actually be available to users of the
+#'   tool for evaluation of predictive performance.
+#' @note This function may only be used if `date` is contained within the data set `btf_data_all` in the `KuskoHarvData` package.
+#' @return A [`data.frame`][base::data.frame] object with a single row, and columns for
+#'   `date`, `total_btf_cpue`, `chinook_btf_comp`, `chum_btf_comp`, and `sockeye_btf_comp`, the latter 4 contain the predicted values.
+
+predict_btf = function(date, lag) {
+
+  # convert the input date to datetime if not already there
+  date = lubridate::as_date(date)
+  year = lubridate::year(date)
+
+  # get the date the prediction is made (date of proposed fishery minus lag)
+  pred_date = date - lag
+
+  # load BTF data, and store the years that will be used to build the historical percentiles
+  data(btf_data_all, package = "KuskoHarvData")
+  hist_yrs = unique(lubridate::year(btf_data_all$date))
+  hist_yrs = hist_yrs[-which(hist_yrs == year)]
+
+  # get the dates from which the historical predictive percentiles will be based
+  hist_dates = rep(pred_date, length(hist_yrs))
+  lubridate::year(hist_dates) = hist_yrs
+
+  # get the dates from which the historical percentiles on the day of the opener will be based
+  dates = rep(date, length(hist_yrs))
+  lubridate::year(dates) = hist_yrs
+
+  # function to obtain BTF stats for a given date
+  summarize_btf2 = function(d) {
+    out = data.frame(
+      date = d,
+      chinook = KuskoHarvData:::summarize_btf(d, "chinook_cpue", plus_minus = 1),
+      chum = KuskoHarvData:::summarize_btf(d, "chum_cpue", plus_minus = 1),
+      sockeye = KuskoHarvData:::summarize_btf(d, "sockeye_cpue", plus_minus = 1)
+    )
+    out$total = out$chinook + out$chum + out$sockeye
+    out$p_chinook = out$chinook/out$total
+    out$p_chum = out$chum/out$total
+    out$p_sockeye = out$sockeye/out$total
+    return(out)
+  }
+
+  # get BTF stats for all historical years on the date of the prediction
+  hist_cpue = do.call(rbind, lapply(hist_dates, summarize_btf2))
+
+  # get BTF stats for this year on the date of the prediction
+  obs_cpue = summarize_btf2(pred_date)
+
+  # using the empirical CDF, obtain the percentile of historical values that this year's value falls at
+  # perform separately for each stat
+  obs_perc_total = ecdf(hist_cpue$total)(obs_cpue$total)
+  obs_perc_p_chinook = ecdf(hist_cpue$p_chinook)(obs_cpue$p_chinook)
+  obs_perc_p_chum = ecdf(hist_cpue$p_chum)(obs_cpue$p_chum)
+  obs_perc_p_sockeye = ecdf(hist_cpue$p_sockeye)(obs_cpue$p_sockeye)
+
+  # get BTF stats for all historical years on the date of the proposed fishery
+  cpue = do.call(rbind, lapply(dates, summarize_btf2))
+
+  # obtain value associated with the same percentile observed thus far in season, but for the date of the proposed fishery
+  pred_cpue_total = unname(quantile(cpue$total, obs_perc_total))
+  pred_p_chinook = unname(quantile(cpue$p_chinook, obs_perc_p_chinook))
+  pred_p_chum = unname(quantile(cpue$p_chum, obs_perc_p_chum))
+  pred_p_sockeye = unname(quantile(cpue$p_sockeye, obs_perc_p_sockeye))
+
+  # sum the species compositions, for normalizing to sum to 1
+  pred_p_sum = pred_p_chinook + pred_p_chum + pred_p_sockeye
+
+  # build the output
+  data.frame(date = date,
+             total_btf_cpue = pred_cpue_total,
+             chinook_btf_comp = pred_p_chinook/pred_p_sum,
+             chum_btf_comp = pred_p_chum/pred_p_sum,
+             sockeye_btf_comp = pred_p_sockeye/pred_p_sum
+
+  )
+}
+
+#' @title Obtain Leave-one-Out Predictions from a Single Model
 #' @param fit A fitted model object of class [`lm`][stats::lm].
+#' @param lag number of days before the proposed opener the prediction is to be made. See [predict_btf()].
+#'   Ignored if model does not contain a BTF variable.
 #' @return A [`matrix`][base::matrix] object with columns storing values for each record and rows storing the predicted value for
 #'   the left out observation and the AICc value (given by [MuMIn::AICc()]) of the model fitted after leaving the data point out.
 
-loo_pred = function(fit) {
+loo_pred = function(fit, lag) {
 
   # loop through observations leaving one out at a time
   # fit model to training data, predict value of test data
@@ -14,6 +106,22 @@ loo_pred = function(fit) {
 
     # build the test data set (with only the left out observation)
     test_dat = as.data.frame(fit$model[i,]); colnames(test_dat) = colnames(fit$model)
+
+    # if any BTF stats are included in data set for this model
+    # predict them at specified lag (i.e., days before fishery)
+    # and replace actual BTF stat value with predicted value
+    # more realistic than using actual BTF stat, because this is unknown at time of prediction
+    # FIXME: work out a way to avoid using KuskoHarvPred:::fit_data here
+    if (any(stringr::str_detect(colnames(test_dat), "btf"))) {
+      btf_preds = predict_btf(date = KuskoHarvPred:::fit_data$date[i], lag = lag)
+      if ("total_btf_cpue" %in% colnames(test_dat)) test_dat[,"total_btf_cpue"] = btf_preds["total_btf_cpue"]
+      if ("chinook_btf_comp" %in% colnames(test_dat)) test_dat[,"chinook_btf_comp"] = btf_preds["chinook_btf_comp"]
+      if ("I(chinook_btf_comp^2)" %in% colnames(test_dat)) test_dat[,"I(chinook_btf_comp^2)"] = btf_preds["chinook_btf_comp"]^2
+      if ("chum_btf_comp" %in% colnames(test_dat)) test_dat[,"chum_btf_comp"] = btf_preds["chum_btf_comp"]
+      if ("I(chum_btf_comp^2)" %in% colnames(test_dat)) test_dat[,"I(chum_btf_comp^2)"] = btf_preds["chum_btf_comp"]^2
+      if ("sockeye_btf_comp" %in% colnames(test_dat)) test_dat[,"sockeye_btf_comp"] = btf_preds["sockeye_btf_comp"]
+      if ("I(sockeye_btf_comp^2)" %in% colnames(test_dat)) test_dat[,"I(sockeye_btf_comp^2)"] = btf_preds["sockeye_btf_comp"]^2
+    }
 
     # fit the model to training data set
     loo_fit = lm(formula(fit), data = train_dat)
@@ -29,18 +137,18 @@ loo_pred = function(fit) {
 }
 
 #' @title Obtain Model-Averaged Leave-one-Out Predictions
-#'
 #' @inheritParams predict_model_avg
+#' @param lag number of days before the proposed opener the prediction is to be made. See [predict_btf()].
 #' @return Numeric vector of model-averaged leave-one-out predictions.
 #' @note Leave-one-out predictions are made for each model and each record
 #'   using [loo_pred()] and model weights are recalculated for each left out record
 #'   prior to averaging the predictions from each model.
 #' @export
 
-loo_pred_model_avg = function(fit_list) {
+loo_pred_model_avg = function(fit_list, lag) {
 
   # make loo predictions and calculate AICc for each loo for each model
-  loo = lapply(fit_list, loo_pred)
+  loo = lapply(fit_list, loo_pred, lag = lag)
 
   # extract/format the loo predictions
   loo_preds = do.call(cbind, lapply(loo, function(x) x["loo_pred",]))
@@ -66,6 +174,7 @@ loo_pred_model_avg = function(fit_list) {
 #'   If supplied, will become the first column in the `error_summary` element of the output list.
 #' @param error_types A character vector specifying which types of error summaries (obtained by [KuskoHarvUtils::get_errors()]) to return.
 #'   Options are any combination of `"RHO"`, `"RMSE"`, `"ME"`, `"MAE"`, `"MPE"`, or `"MAPE"`.
+#' @param lag number of days before the proposed opener the prediction is to be made. See [predict_btf()].
 #' @param ... Optional arguments passed to [fit_all_subsets()]
 #' @details This function conducts several steps in a self-contained wrapper:
 #'   1. Fits the global models to each response variable using [fit_global_model_one()].
@@ -79,7 +188,7 @@ loo_pred_model_avg = function(fit_list) {
 #'   * `models`: a [`list`][base::list] with 5 elements, one each for `effort`, `total_cpt`, and `chinook_comp`, `chum_comp`, and `sockeye_comp`. Each element is the [`list`][base::list] of fitted [`lm`][stats::lm] model objects returned by [fit_all_subsets()].
 #' @export
 
-whole_loo_analysis = function(global_formulae, fit_data, var_desc = NULL, error_types = c("RHO", "ME", "MAE", "MPE", "MAPE"),  ...) {
+whole_loo_analysis = function(global_formulae, fit_data, var_desc = NULL, error_types = c("RHO", "ME", "MAE", "MPE", "MAPE"), lag, ...) {
 
   # start a timer
   start = lubridate::now()
@@ -88,7 +197,7 @@ whole_loo_analysis = function(global_formulae, fit_data, var_desc = NULL, error_
   model_lists = fit_all_subsets(global_formulae = global_formulae, fit_data = fit_data, ...)
 
   # STEP 2: obtain model-averaged leave-one-out predictions for each response variable
-  loo_preds = lapply(model_lists, loo_pred_model_avg)
+  loo_preds = lapply(model_lists, loo_pred_model_avg, lag = lag)
 
   # STEP 3: rescale composition variables so they sum to 1
   chinook_comp_new = with(loo_preds, chinook_comp/(chinook_comp + chum_comp + sockeye_comp))

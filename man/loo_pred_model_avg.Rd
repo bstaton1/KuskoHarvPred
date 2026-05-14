@@ -4,10 +4,12 @@
 \alias{loo_pred_model_avg}
 \title{Obtain Model-Averaged Leave-one-Out Predictions}
 \usage{
-loo_pred_model_avg(fit_list)
+loo_pred_model_avg(fit_list, lag)
 }
 \arguments{
 \item{fit_list}{\code{\link[base:list]{list}} of fitted model objects of class \code{\link[stats:lm]{lm}}, generally the output of \code{\link[=fit_all_subsets_one]{fit_all_subsets_one()}}.}
+
+\item{lag}{number of days before the proposed opener the prediction is to be made. See \code{\link[=predict_btf]{predict_btf()}}.}
 }
 \value{
 Numeric vector of model-averaged leave-one-out predictions.

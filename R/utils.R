@@ -15,7 +15,7 @@ get_response = function(fit) {
 
   # extract the name of the response variable if fitted model is of class "lm"
   if (class(fit) == "lm") {
-    response = as.character(formula(fit$call))[2]
+    response = as.character(formula(fit))[2]
   }
 
   # extract the name of the response variable if fitted model is of class "averaging"
