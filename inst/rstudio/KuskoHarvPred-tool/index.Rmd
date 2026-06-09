@@ -858,10 +858,10 @@ reactive({
   # calculate the number of hours before noon
   rvals$hours_before_noon = as.numeric(as.duration(interval(rvals$start_time, as_datetime(paste0(input$date, " 12:00:00"), tz = "US/Alaska"))), units = "hours")
   
-  # select the correct CPUE based on the inputs
-  rvals$chinook_btf_cpue = set_cpue(input, "chinook")
-  rvals$chum_btf_cpue = set_cpue(input, "chum")
-  rvals$sockeye_btf_cpue = set_cpue(input, "sockeye")
+  # select the correct sonar counts based on the inputs
+  rvals$chinook_sonar_count = set_sonar_count(input, "chinook")
+  rvals$chum_sonar_count = set_sonar_count(input, "chum")
+  rvals$sockeye_sonar_count = set_sonar_count(input, "sockeye")
 })
 
 # create the complete predictive data set based on widget inputs
@@ -869,13 +869,13 @@ reactive({
   rvals$df = data.frame(
     day = KuskoHarvUtils::to_days_past_may31(dates = input$date),
     weekend = wday(input$date, label = TRUE) %in% c("Sat", "Sun"),
-    fished_yesterday = input$fished_yesterday,
+    # fished_yesterday = input$fished_yesterday,
     hours_open = rvals$hours_open,
     p_before_noon = ifelse(rvals$hours_before_noon < 0, 0, rvals$hours_before_noon/rvals$hours_open),
-    total_btf_cpue = rvals$chinook_btf_cpue + rvals$chum_btf_cpue + rvals$sockeye_btf_cpue,
-    chinook_btf_comp = rvals$chinook_btf_cpue/(rvals$chinook_btf_cpue + rvals$chum_btf_cpue + rvals$sockeye_btf_cpue),
-    chum_btf_comp = rvals$chum_btf_cpue/(rvals$chinook_btf_cpue + rvals$chum_btf_cpue + rvals$sockeye_btf_cpue),
-    sockeye_btf_comp = rvals$sockeye_btf_cpue/(rvals$chinook_btf_cpue + rvals$chum_btf_cpue + rvals$sockeye_btf_cpue)
+    total_sonar_count = rvals$chinook_sonar_count + rvals$chum_sonar_count + rvals$sockeye_sonar_count,
+    chinook_sonar_comp = rvals$chinook_sonar_count/(rvals$chinook_sonar_count + rvals$chum_sonar_count + rvals$sockeye_sonar_count),
+    chum_sonar_comp = rvals$chum_sonar_count/(rvals$chinook_sonar_count + rvals$chum_sonar_count + rvals$sockeye_sonar_count),
+    sockeye_sonar_comp = rvals$sockeye_sonar_count/(rvals$chinook_sonar_count + rvals$chum_sonar_count + rvals$sockeye_sonar_count)
   )
 })
 
@@ -883,12 +883,13 @@ reactive({
 reactive({
   # obtain predicted response variables
   rvals$preds = as.data.frame(lapply(fit_lists, function(fit_list) predict_model_avg(fit_list, rvals$df)))
-  
+
   # restandardize composition variables
   rvals$comp_preds = c(chinook = rvals$preds$chinook_comp,  chum = rvals$preds$chum_comp, sockeye = rvals$preds$sockeye_comp)
   rvals$comp_preds_adj = smart_round(rvals$comp_preds/sum(rvals$comp_preds), 2)
 })
 ```
+
 
 ```{r user-adjustment-ui}
 # allow user to tweak predictions
@@ -1095,7 +1096,7 @@ preds_kable = function(input, rvals) {
   # create the kable
   kbl(preds, "html", col.names = col_names, align = align) |>
     kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) |>
-    column_spec(1, bold = FALSE, italic = TRUE) |>
+    column_spec(1, bold = TRUE, italic = TRUE) |>
     pack_rows("Fishery Outcome Variables", 1, 5, background = "#F7F7F7") |>
     pack_rows("Harvest", 6, 9, hline_before = FALSE, background = "#F7F7F7") |>
     add_header_above(header, background = "#F7F7F7", escape = FALSE) |> 
