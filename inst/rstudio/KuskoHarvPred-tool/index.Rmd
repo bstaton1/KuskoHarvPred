@@ -2,7 +2,7 @@
 title: "In-Season Daily Harvest Prediction Tool"
 output:
   html_document:
-    theme: bslib::bs_theme()
+    theme: !expr bslib::bs_theme()
 runtime: shiny
 resource_files:
 - "resources/scatter-1.png"
@@ -46,6 +46,9 @@ _v`r packageVersion("KuskoHarvPred")`_
 # USING devtools::install_github()
 # AND **NOT** devtools::build()
 # OTHERWISE RSCONNECT WILL NOT KNOW WHERE TO FIND THESE PACKAGES
+
+# allows !expr to be used in yaml header
+options(yaml.eval.expr = TRUE)
 
 knitr::opts_chunk$set(echo = FALSE, fig.align = "center")
 ```
