@@ -1473,8 +1473,9 @@ resp_kable = function(period_keep, year_keep, effort_range, total_cpt_range, chi
           align = "cclccccccccc", format.args = list(big.mark = ","),
           caption = "<b>Values of the outcome variables for each opener used to build models.</b> Click the link above to select a subset of openers to view at once.", escape = FALSE) |>
       kable_styling(full_width = TRUE, bootstrap_options = c("condensed"), fixed_thead = TRUE, font_size = 14) |>
-      collapse_rows(1:2) |>
-      add_header_above(c(" " = 5, "Species % Composition" = 3, "Harvest" = "4"))
+      collapse_rows(1:2, ) |>
+      add_header_above(c(" " = 5, "Species % Composition" = 3, "Harvest" = "4")) |> 
+      row_spec(1:nrow(table_dat), extra_css = "border-bottom: 1px solid lightgray;")
     
   } else {
     # message to print if no records are returned after filter selection
@@ -1594,12 +1595,16 @@ pred_kable = function(period_keep, year_keep) {
   # find the variables used in any model
   ordered_pred_vars = c(
     "start", "end", "hours_open", "p_before_noon", 
-    "weekend", "fished_yesterday", "total_btf_cpue",
-    "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp"
+    "weekend",#  "fished_yesterday",
+    "total_sonar_count",
+    "chinook_sonar_comp", "chum_sonar_comp", "sockeye_sonar_comp"
   )
   
   # keep only variables to display
   table_dat = table_dat[,c("year", "period", "date", ordered_pred_vars)]
+  
+  # format the year as a character, so it doesn't get a comma separator
+  table_dat$year = as.character(table_dat$year)
   
   # start/end times (24-hr clock)
   datetime_to_24hr = function(datetime) {paste0(hour(datetime), ":", str_pad(minute(datetime), width = 2, side = "left", pad = "0"))}
@@ -1608,16 +1613,16 @@ pred_kable = function(period_keep, year_keep) {
   
   # convert proportion variables to percentages
   table_dat$p_before_noon = percentize(table_dat$p_before_noon)
-  table_dat$chinook_btf_comp = percentize(table_dat$chinook_btf_comp)
-  table_dat$chum_btf_comp = percentize(table_dat$chum_btf_comp)
-  table_dat$sockeye_btf_comp = percentize(table_dat$sockeye_btf_comp)
+  table_dat$chinook_sonar_comp = percentize(table_dat$chinook_sonar_comp)
+  table_dat$chum_sonar_comp = percentize(table_dat$chum_sonar_comp)
+  table_dat$sockeye_sonar_comp = percentize(table_dat$sockeye_sonar_comp)
   
   # convert logical variables to yes/no
   table_dat$weekend = ifelse(table_dat$weekend, "Yes", "No")
-  table_dat$fished_yesterday = ifelse(table_dat$fished_yesterday, "Yes", "No")
+  # table_dat$fished_yesterday = ifelse(table_dat$fished_yesterday, "Yes", "No")
   
   # round numeric variables
-  table_dat$total_btf_cpue = round(table_dat$total_btf_cpue)
+  table_dat$total_sonar_count = round(table_dat$total_sonar_count)
   
   # format the date
   table_dat$date = paste(month(table_dat$date, label = TRUE, abbr = TRUE), day(table_dat$date))
@@ -1627,16 +1632,16 @@ pred_kable = function(period_keep, year_keep) {
     out = table_dat |>
       kbl("html", row.names = FALSE,
           col.names = c("Year", "Period", "Date", "Start Time", "End Time",
-                        "Hours Open", "% Before Noon", "Weekend?", "Fished Yesterday?",
-                        "Total CPUE", "% Chinook", "% Chum", "% Sockeye"
+                        "Hours Open", "% Before Noon", "Weekend?", #"Fished Yesterday?",
+                        "Total Count", "% Chinook", "% Chum", "% Sockeye"
           ),
-          align = "cclllcccccccc",
+          align = "cclllccccccc", format.args = list(big.mark = ","), 
           caption = "<b>Values of the condition variables for each opener used to build models.</b> Click the link above to select a subset of openers to view at once.", escape = FALSE) |>
       kable_styling(full_width = TRUE, bootstrap_options = c("condensed"), fixed_thead = TRUE, font_size = 14) |>
       collapse_rows(1:2) |>
       column_spec(3, width = "65px") |>
-      add_header_above(c(" " = 9, "Bethel Test Fishery" = 4
-      ))
+      add_header_above(c(" " = 8, "Kuskokwim Sonar" = 4)) |> 
+      row_spec(1:nrow(table_dat), extra_css = "border-bottom: 1px solid lightgray;")
     
   } else {
     # message to print if no records are returned after filter selection
@@ -1671,7 +1676,8 @@ observeEvent(rvals$pred_kable, {
 resp_vars = names(fit_lists)
 
 # set the names of the predictor variables
-pred_vars = c("day", "hours_open", "p_before_noon", "weekend", "fished_yesterday", "total_btf_cpue", "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp")
+pred_vars = c("day", "hours_open", "p_before_noon", "weekend", #"fished_yesterday",
+              "total_sonar_count", "chinook_sonar_comp", "chum_sonar_comp", "sockeye_sonar_comp")
 
 # set the names of the harvest variables
 harv_vars = c("chinook_harv", "chum_harv", "sockeye_harv")
@@ -1690,7 +1696,7 @@ fillRow(
     selectInput(
       inputId = "scatterplot_xvar", label = strong(em("X"), "-Axis Variable"),
       choices = list("Outcome Variables" = resp_vars, "Condition Variables" = pred_vars, "Harvest" = harv_vars),
-      selected = "total_btf_cpue", width = "100%"
+      selected = "total_sonar_count", width = "100%"
     ),
     
     # input widgets for whether to color code periods and label years
