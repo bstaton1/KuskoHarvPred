@@ -615,7 +615,7 @@ Revised version of Table A2 from Staton et al. (2025) based on re-analysis with 
 `r hr()`
 
 :::{.describe}
-Enter the conditions of the proposed opener, including when it would occur and what the Bethel Test Fishery CPUE has been like this year.
+Enter the conditions of the proposed opener, including when it would occur and what the Kuskokwim River sonar counts have been like this year.
 :::
 
 :::{.indent}
@@ -624,14 +624,16 @@ The values entered here will be "plugged in" to historical relationships to pred
 **Opener Timing**
 
 Start by entering the date and the start/end times.
-Be sure to check the box labeled "Fished Previous Day?" if fishing was/will be allowed the day before the date you pick.
+<!-- Be sure to check the box labeled "Fished Previous Day?" if fishing was/will be allowed the day before the date you pick. -->
 
-**Bethel Test Fishery CPUE**
+**Expected Sonar Counts**
 
-Next, select the expected Bethel Test Fishery daily catch-per-unit-effort (CPUE) for the proposed fishing day.
-For each species, pick either one of the 10^th^, 25^th^, 50^th^ (median), 75^th^, or 90^th^ percentiles, or choose to enter your own CPUE value.
-A **CPUE percentile** (for example, 25^th^) is the CPUE value that 25% of years (since 2016) fell below for the selected date.
-Selecting the 50^th^ percentile means that CPUE has been approximately average this year, whereas selecting the 90^th^ percentile means CPUE has been much higher than average.
+Next, select the expected daily Kuskokwim River sonar counts for the proposed fishing day.
+For each species, pick either one of the 10^th^, 25^th^, 50^th^ (median), 75^th^, or 90^th^ percentiles, or choose to enter your own count value.
+A **count percentile** (for example, 25^th^) is the count value that 25% of years (since 2018) fell below for the selected date.
+Selecting the 50^th^ percentile means that counts have been approximately average this year, whereas selecting the 90^th^ percentile means counts have been much higher than average.
+
+_Because the sonar count for the day of the opener you are making predictions for has not happened yet, insert your best expectation for what the sonar count will be._
 :::
 
 </details>
@@ -642,7 +644,7 @@ Selecting the 50^th^ percentile means that CPUE has been approximately average t
 year = year(today())
 default_date = max(as_date(paste0(year, "-06-12")), today() + 3)
 min_date = as_date(paste0(year, "-06-12"))
-max_date = as_date(paste0(year, "-07-31"))
+max_date = KuskoHarvUtils::from_days_past_may31(day = max(fit_data$day)); year(max_date) = year
 if (default_date > max_date) default_date = max_date
 if (default_date < min_date) default_date = min_date
 
@@ -652,8 +654,8 @@ end_time_bank = c("12:00AM (Start of Day)", paste0(1:11, ":00AM"), paste0(c(12, 
 ```
 
 ```{r input-widgets}
-# set the tooltip text for all manual entry CPUE boxes
-enter_CPUE_ttip_text = "The model uses Bethel Test Fishery CPUE values averaged over 3 days, so try not to enter extreme high or low values — just what you expect CPUE to be for the selected day."
+# set the tooltip text for all manual entry sonar count boxes
+enter_count_ttip_text = "The model uses sonar count values as an index of in-river abundance and species composition, so try not to enter extreme high or low values — just what you expect the sonar count to be for the selected day."
 
 fillRow(
   height = "80%", flex = c(40,1,40),
@@ -680,19 +682,19 @@ fillRow(
       # input widgets for start/stop time of opener
       selectInput(
         inputId = "start_time", label = strong(bs_icon("clock"), "Start Time"),
-        choices = start_time_bank, selected = "10:00AM"
+        choices = start_time_bank, selected = "7:00AM"
       ),
       selectInput(
         inputId = "end_time", label = strong(bs_icon("clock"), "End Time"),
-        choices = end_time_bank, selected = "10:00PM"
-      ),
-      
-      # input widget for whether fishing occurred the previous day,
-      # with tooltip for why this is important
-      checkboxInput(
-        inputId = "fished_yesterday", value = FALSE,
-        label = ttip("Fished Previous Day?", p("The number of trips and catch/trip is much lower when the fishery was open the previous day. See the ", bs_icon("graph-up-arrow"), strong("Predictive Relationships"), "tab for details.", tags$u(strong("Be sure to check this box if this applies."))))
+        choices = end_time_bank, selected = "7:00PM"
       )
+      
+      # # input widget for whether fishing occurred the previous day,
+      # # with tooltip for why this is important
+      # checkboxInput(
+      #   inputId = "fished_yesterday", value = FALSE,
+      #   label = ttip("Fished Previous Day?", p("The number of trips and catch/trip is much lower when the fishery was open the previous day. See the ", bs_icon("graph-up-arrow"), strong("Predictive Relationships"), "tab for details.", tags$u(strong("Be sure to check this box if this applies."))))
+      # )
     )
   ),
   
@@ -702,77 +704,77 @@ fillRow(
     width = 1
   ),
   
-  # input widgets for BTF info
+  # input widgets for sonar count info
   column(
     width = 12,
-    h4(strong("Bethel Test Fishery CPUE")),
+    h4(strong("Expected Sonar Counts")),
     wellPanel(
       
       # describe why user needs to enter this and what percentiles are
       helpText(
-        ttip("Why is this Important", "Fishery catch/trip and species composition are related to BTF total CPUE and species breakdown — the model uses these to predict outcomes.", icon_use = bs_icon("question-circle")),
-        ttip("Percentiles", markdown("A 25<sup>th</sup> CPUE percentile is the CPUE value that 25% of years (since 2016) fell below for the selected date. The 50<sup>th</sup> percentile is also called the median."), icon_use = bs_icon("question-circle"))
+        ttip("Why is this Important", "Fishery catch/trip and species composition are related to the total sonar count and species breakdown — the model uses these to predict outcomes.", icon_use = bs_icon("question-circle")),
+        ttip("Percentiles", markdown("A 25<sup>th</sup> count percentile is the sonar count value that 25% of years (since 2018) fell below for the selected date. The 50<sup>th</sup> percentile is also called the median."), icon_use = bs_icon("question-circle"))
       ),
       
       hr(),
       
-      # input widget for Chinook BTF CPUE selections (based on pre-calculated percentiles)
+      # input widget for Chinook sonar count selections (based on pre-calculated percentiles)
       selectInput(
-        inputId = "chinook_btf_cpue_input_cat", label = strong(icon("fish-fins"), "Chinook Salmon CPUE"),
-        choices = get_btf_percentiles(date = default_date, species = "chinook"), selected = 3
+        inputId = "chinook_sonar_count_input_cat", label = strong(icon("fish-fins"), "Chinook Salmon Count"),
+        choices = get_sonar_percentiles(date = default_date, species = "chinook"), selected = 3
       ),
       
-      # input widget for  Chinook BTF CPUE manual entry
+      # input widget for Chinook sonar count manual entry
       hidden(
         div(
-          id = "enter_chinook_btf_cpue",
+          id = "enter_chinook_sonar_count",
           numberInput(
-            inputId = "entered_chinook_btf_cpue", 
-            label = ttip(strong("Enter Chinook Salmon CPUE"), enter_CPUE_ttip_text),
-            value = NULL, min = 0, placeholder = "Enter a CPUE value"
+            inputId = "entered_chinook_sonar_count", 
+            label = ttip(strong("Enter Chinook Salmon Count"), enter_count_ttip_text),
+            value = NULL, min = 0, placeholder = "Enter a count value"
           )
         )
       ),
       
-      # input widget for chum BTF CPUE selections (based on pre-calculated percentiles)
+      # input widget for chum sonar count selections (based on pre-calculated percentiles)
       selectInput(
-        inputId = "chum_btf_cpue_input_cat", label = strong(icon("fish-fins"), "Chum Salmon CPUE"),
-        choices = get_btf_percentiles(date = default_date, species = "chum"), selected = 3
+        inputId = "chum_sonar_count_input_cat", label = strong(icon("fish-fins"), "Chum Salmon Count"),
+        choices = get_sonar_percentiles(date = default_date, species = "chum"), selected = 3
       ),
       
-      # input widget for chum BTF CPUE manual entry
+      # input widget for chum sonar count manual entry
       hidden(
         div(
-          id = "enter_chum_btf_cpue",
+          id = "enter_chum_sonar_count",
           numberInput(
-            inputId = "entered_chum_btf_cpue",
-            label = ttip(strong("Enter Chum Salmon CPUE"), enter_CPUE_ttip_text),
-            value = NULL, min = 0, placeholder = "Enter a CPUE value"
+            inputId = "entered_chum_sonar_count",
+            label = ttip(strong("Enter Chum Salmon Count"), enter_count_ttip_text),
+            value = NULL, min = 0, placeholder = "Enter a count value"
           )
         )
       ),
       
-      # input widget for sockeye BTF CPUE selections (based on pre-calculated percentiles)
+      # input widget for sockeye sonar count selections (based on pre-calculated percentiles)
       selectInput(
-        inputId = "sockeye_btf_cpue_input_cat", label = strong(icon("fish-fins"), "Sockeye Salmon CPUE"),
-        choices = get_btf_percentiles(date = default_date, species = "sockeye"), selected = 3
+        inputId = "sockeye_sonar_count_input_cat", label = strong(icon("fish-fins"), "Sockeye Salmon Count"),
+        choices = get_sonar_percentiles(date = default_date, species = "sockeye"), selected = 3
       ),
       
-      # input widget for sockeye BTF CPUE manual entry
+      # input widget for sockeye sonar count manual entry
       hidden(
         div(
-          id = "enter_sockeye_btf_cpue",
+          id = "enter_sockeye_sonar_count",
           numberInput(
-            inputId = "entered_sockeye_btf_cpue", 
-            label = ttip(strong("Enter Sockeye Salmon CPUE"), enter_CPUE_ttip_text), 
-            value = NULL, min = 0, placeholder = "Enter a CPUE value"
+            inputId = "entered_sockeye_sonar_count", 
+            label = ttip(strong("Enter Sockeye Salmon Count"), enter_count_ttip_text), 
+            value = NULL, min = 0, placeholder = "Enter a count value"
           )
         )
       ),
       
-      # where to find this year's BTF data
+      # where to find this year's sonar data
       helpText(
-        a(bs_icon("table"), "View BTF Data Webpage", href = "https://www.adfg.alaska.gov/index.cfm?adfg=commercialbyareakuskokwim.btf")
+        a(bs_icon("table"), "View Sonar Count Data Webpage", href = "https://www.adfg.alaska.gov/index.cfm?adfg=commercialbyareakuskokwim.emihd")
       )
     )
   )
@@ -782,24 +784,24 @@ fillRow(
 # re-calculates percentiles and re-poulates dropdown menus when input$date is changed
 observeEvent(input$date, {
   updateSelectInput(
-    inputId = "chinook_btf_cpue_input_cat", selected = input$chinook_btf_cpue_input_cat,
-    choices = get_btf_percentiles(date = input$date, species = "chinook")
+    inputId = "chinook_sonar_count_input_cat", selected = input$chinook_sonar_count_input_cat,
+    choices = get_sonar_percentiles(date = input$date, species = "chinook")
   )
   updateSelectInput(
-    inputId = "chum_btf_cpue_input_cat", selected = input$chum_btf_cpue_input_cat,
-    choices = get_btf_percentiles(date = input$date, species = "chum")
+    inputId = "chum_sonar_count_input_cat", selected = input$chum_sonar_count_input_cat,
+    choices = get_sonar_percentiles(date = input$date, species = "chum")
   )
   updateSelectInput(
-    inputId = "sockeye_btf_cpue_input_cat", selected = input$sockeye_btf_cpue_input_cat,
-    choices = get_btf_percentiles(date = input$date, species = "sockeye")
+    inputId = "sockeye_sonar_count_input_cat", selected = input$sockeye_sonar_count_input_cat,
+    choices = get_sonar_percentiles(date = input$date, species = "sockeye")
   )
 })
 
 # if selected "Enter...", show box to enter
 observe({
-  toggle(id = "enter_chinook_btf_cpue", condition = input$chinook_btf_cpue_input_cat == 6, anim = TRUE, time = 0.3)
-  toggle(id = "enter_chum_btf_cpue", condition = input$chum_btf_cpue_input_cat == 6, anim = TRUE, time = 0.3)
-  toggle(id = "enter_sockeye_btf_cpue", condition = input$sockeye_btf_cpue_input_cat == 6, anim = TRUE, time = 0.3)
+  toggle(id = "enter_chinook_sonar_count", condition = input$chinook_sonar_count_input_cat == 6, anim = TRUE, time = 0.3)
+  toggle(id = "enter_chum_sonar_count", condition = input$chum_sonar_count_input_cat == 6, anim = TRUE, time = 0.3)
+  toggle(id = "enter_sockeye_sonar_count", condition = input$sockeye_sonar_count_input_cat == 6, anim = TRUE, time = 0.3)
 })
 
 # ensure only end times after the selected start time are available to be selected
