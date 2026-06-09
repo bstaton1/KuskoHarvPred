@@ -1138,8 +1138,8 @@ This is why "Hours Open" disappears when viewing the species composition relatio
 
 ```{r plot-ui}
 
-# drop down menu options for BTF categories
-CAT_btf_choices = c(
+# drop down menu options for sonar categories
+CAT_sonar_choices = c(
   "10th Percentile (Near Lowest)" = "q10",
   "25th Percentile" = "q25",
   "50th Percentile (Median)" = "q50",
@@ -1172,24 +1172,24 @@ fillRow(
   column(
     width = 12,
     
-    # input widget for the total BTF cpue category to show (hidden by default, shown if in global model for response variable)
+    # input widget for the total sonar count category to show (hidden by default, shown if in global model for response variable)
     hidden(
-      selectInput(inputId = "plot_CAT_total_btf_cpue", label = strong("Total BTF CPUE"), choices = CAT_btf_choices, selected = "q50")
+      selectInput(inputId = "plot_CAT_total_sonar_count", label = strong("Total Sonar Count"), choices = CAT_sonar_choices, selected = "q50")
     ),
     
-    # input widget for the BTF % Chinook category to show (hidden by default, shown if in global model for response variable)
+    # input widget for the sonar % Chinook category to show (hidden by default, shown if in global model for response variable)
     hidden(
-      selectInput(inputId = "plot_CAT_chinook_btf_comp", label = strong("BTF % Chinook"), choices = CAT_btf_choices, selected = "q50")
+      selectInput(inputId = "plot_CAT_chinook_sonar_comp", label = strong("Sonar % Chinook"), choices = CAT_sonar_choices, selected = "q50")
     ),
     
-    # input widget for the BTF % chum category to show (hidden by default, shown if in global model for response variable)
+    # input widget for the sonar % chum category to show (hidden by default, shown if in global model for response variable)
     hidden(
-      selectInput(inputId = "plot_CAT_chum_btf_comp", label = strong("BTF % Chum"), choices = CAT_btf_choices, selected = "q50")
+      selectInput(inputId = "plot_CAT_chum_sonar_comp", label = strong("Sonar % Chum"), choices = CAT_sonar_choices, selected = "q50")
     ),
     
-    # input widget for the BTF % sockeye category to show (hidden by default, shown if in global model for response variable)
+    # input widget for the sonar % sockeye category to show (hidden by default, shown if in global model for response variable)
     hidden(
-      selectInput(inputId = "plot_CAT_sockeye_btf_comp", label = strong("BTF % Sockeye"), choices = CAT_btf_choices, selected = "q50")
+      selectInput(inputId = "plot_CAT_sockeye_sonar_comp", label = strong("Sonar % Sockeye"), choices = CAT_sonar_choices, selected = "q50")
     )
   ),
   
@@ -1220,10 +1220,10 @@ reactive({
 observe({
   toggle(id = "plot_hours_open", condition = "hours_open" %in% rvals$vars)
   toggle(id = "plot_p_before_noon", condition = "p_before_noon" %in% rvals$vars)
-  toggle(id = "plot_CAT_total_btf_cpue", condition = "total_btf_cpue" %in% rvals$vars)
-  toggle(id = "plot_CAT_chinook_btf_comp", condition = "chinook_btf_comp" %in% rvals$vars)
-  toggle(id = "plot_CAT_chum_btf_comp", condition = "chum_btf_comp" %in% rvals$vars)
-  toggle(id = "plot_CAT_sockeye_btf_comp", condition = "sockeye_btf_comp" %in% rvals$vars)
+  toggle(id = "plot_CAT_total_sonar_count", condition = "total_sonar_count" %in% rvals$vars)
+  toggle(id = "plot_CAT_chinook_sonar_comp", condition = "chinook_sonar_comp" %in% rvals$vars)
+  toggle(id = "plot_CAT_chum_sonar_comp", condition = "chum_sonar_comp" %in% rvals$vars)
+  toggle(id = "plot_CAT_sockeye_sonar_comp", condition = "sockeye_sonar_comp" %in% rvals$vars)
 })
 
 # Construct the settings for subsetting pre-processed predictions for plotting
@@ -1231,10 +1231,10 @@ reactive({
   rvals$plot_settings = list(
     hours_open = as.numeric(input$plot_hours_open),
     p_before_noon = as.numeric(input$plot_p_before_noon),
-    CAT_total_btf_cpue = input$plot_CAT_total_btf_cpue,
-    CAT_chinook_btf_comp = input$plot_CAT_chinook_btf_comp,
-    CAT_chum_btf_comp = input$plot_CAT_chum_btf_comp,
-    CAT_sockeye_btf_comp = input$plot_CAT_sockeye_btf_comp
+    CAT_total_sonar_count = input$plot_CAT_total_sonar_count,
+    CAT_chinook_sonar_comp = input$plot_CAT_chinook_sonar_comp,
+    CAT_chum_sonar_comp = input$plot_CAT_chum_sonar_comp,
+    CAT_sockeye_sonar_comp = input$plot_CAT_sockeye_sonar_comp
   )
 })
 ```
@@ -1259,7 +1259,7 @@ Select from the other drop-down menus to see how changing the condition variable
 ```{r plot-output}
 # plot the relationship between the response variable and day of the season
 # settings argument is a list that says which prediction covariates to keep and display
-# e.g., default is to plot with mean BTF values, but could supply "min" or "max" to see how this changes predicted curve
+# e.g., default is to plot with mean sonar values, but could supply specific percentiles to see how this changes predicted curve
 
 div(
   style = "margin: auto; width: 60%",
