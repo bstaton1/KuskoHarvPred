@@ -1877,16 +1877,16 @@ tab = c(
   "Day",                 "Number of days past May 31st",                                  "YES", "YES", "YES", "YES", "YES",
   "Day^2",               "Quadratic form; allows non-linear time trends",                 "YES", "YES", "NO" , "NO" , "NO" ,
   "Hours Open",          "Number of hours fishing was allowed that day",                  "YES", "NO" , "NO" , "NO" , "NO" ,
-  "Fished Yesterday",    "Yes/No; whether fishing was allowed the previous day",          "YES", "YES", "NO" , "NO" , "NO" ,
+  # "Fished Yesterday",    "Yes/No; whether fishing was allowed the previous day",          "YES", "YES", "NO" , "NO" , "NO" ,
   "Weekend",             "Yes/No; whether the day was Saturday or Sunday",                "YES", "NO" , "NO" , "NO" , "NO" ,
   "% Before Noon",       "Proportion of fishing hours that occured before noon that day", "YES", "NO" , "NO" , "NO" , "NO" ,
-  "Total BTF CPUE",      "Total daily Bethel Test Fishery CPUE (Chinook+chum+sockeye)",   "YES", "YES", "NO" , "NO" , "NO" ,
-  "BTF % Chinook",       "Daily proportion that Chinook CPUE made up of the total",       "YES", "NO" , "YES", "NO" , "NO" ,
-  "BTF % Chinook^2",     "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "YES", "NO" , "NO" ,
-  "BTF % Chum",          "Daily proportion that chum CPUE made up of the total",          "NO" , "NO" , "NO" , "YES", "NO" ,
-  "BTF % Chum^2",        "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "NO" , "YES", "NO" ,
-  "BTF % Sockeye",       "Daily proportion that sockeye CPUE made up of the total",       "NO" , "NO" , "NO" , "NO" , "YES",
-  "BTF % Sockeye^2",     "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "NO" , "NO" , "YES",
+  "Total Sonar Count",   "Total daily sonar count (Chinook+chum+sockeye)",                "YES", "YES", "NO" , "NO" , "NO" ,
+  "Sonar % Chinook",     "Daily proportion that Chinook salmon made up of the total",     "YES", "NO" , "YES", "NO" , "NO" ,
+  "Sonar % Chinook^2",   "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "YES", "NO" , "NO" ,
+  "Sonar % Chum",        "Daily proportion that chum salmon made up of the total",        "NO" , "NO" , "NO" , "YES", "NO" ,
+  "Sonar % Chum^2",      "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "NO" , "YES", "NO" ,
+  "Sonar % Sockeye",     "Daily proportion that sockeye salmon made up of the total",     "NO" , "NO" , "NO" , "NO" , "YES",
+  "Sonar % Sockeye^2",   "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "NO" , "NO" , "YES",
   "Air Temperature",     "Daily average air temperature",                                 "TRY", "NO" , "NO" , "NO" , "NO" ,
   "Relative Humidity",   "Daily average percent relative humidity",                       "TRY", "NO" , "NO" , "NO" , "NO" ,
   "Precipitation",       "Daily total precipitation",                                     "TRY", "NO" , "NO" , "NO" , "NO" ,
@@ -1900,7 +1900,7 @@ tab = c(
 
 # replace the placeholders with the HTML symbols
 tab[tab == "YES"] = "&#9745;"
-tab[tab == "NO"] = "&#9744;"
+tab[tab == "NO"]  = "&#9744;"
 tab[tab == "TRY"] = "&#9746;"
 
 # set the font size in these symbol cells to be larger
@@ -1911,7 +1911,8 @@ tab[,1] = stringr::str_replace(tab[,1], "\\^2", "<sup>2</sup>")
 
 # add type ID column: for grouping rows
 tab = cbind(
-  type = c(rep("Timing", 6), rep("Bethel Test Fishery", 7), rep("Weather<sup>a<\\sup>", 7), rep("Water<sup>b<\\sup>", 2)),
+  type = c(rep("Timing", 5), rep("Sonar", 7), rep("Weather<sup>a</sup>", 7), rep("Water<sup>b</sup>", 2)),
+  # type = c(rep("Timing", 5), rep("Sonar", 7), rep("Weather", 7), rep("Water", 2)),
   tab
 )
 
@@ -1919,7 +1920,7 @@ tab = cbind(
 vars_table_caption = 'All condition variables assessed as part of the predictive analyses for each outcome variable. The symbol meanings are: <span style="font-size: medium;">&#9744;</span> (not assessed), <span style="font-size: medium;">&#9746;</span> (assessed but not part of final analysis), and <span style="font-size: medium;">&#9745;</span> (in final analysis).'
 
 # create the table
-kbl(tab, escape = FALSE, align = "lllccccc", caption = vars_table_caption,
+kbl(tab, format = "html", escape = FALSE, align = "lllccccc", caption = vars_table_caption,
     col.names = c(" ", "Condition Variable", "Description", "Trips/Day", "Catch/Trip", "Chinook", "Chum", "Sockeye")) |>
   kable_styling(full_width = TRUE, bootstrap_options = c("condensed"), fixed_thead = TRUE) |>
   add_header_above(c('<span class="nospace"> </span>' = 5, "% Composition" = 3), bold = TRUE, background = "#e6f0ff", escape = FALSE) |>
@@ -1928,13 +1929,13 @@ kbl(tab, escape = FALSE, align = "lllccccc", caption = vars_table_caption,
   column_spec(1, width = "80px") |>
   column_spec(2, width = "120px") |>
   column_spec(3, width = "180px") |>
-  collapse_rows(1) |>
   footnote(alphabet = c(
-    "Weather variables measured at Bethel Airport.", 
+    "Weather variables measured at Bethel Airport.",
     "Water variables measured during daily Bethel Test Fishery sampling."
   ), alphabet_title = "Notes") |>
-  column_spec(3:7, width = "65px") |> 
-  row_spec(0:nrow(tab), background = "#e6f0ff")
+  column_spec(3:7, width = "65px") |>
+  row_spec(0:nrow(tab), background = "#e6f0ff") |> 
+  collapse_rows(1)
 ```
 
 <!-- </details> -->
@@ -1955,7 +1956,7 @@ We do not want to include variables that have little predictive utility, but we 
 Thus, the analysis uses many models that range in complexity and assesses the predictive ability of each.
 
 Rather than selecting one single best model for prediction (which would ignore the uncertainty about which model is best), we perform **model-averaging**.
-This is where we average the predictions from each model so that those that are expected to produce better predictions carry more weight in the average.
+This involves averaging the predictions from each model so that those that are expected to produce better predictions carry more weight in the average.
 We use an index of predictive ability called the **Akaike Information Criterion** (AIC; AIC~c~ is for small sample sizes; [Wikipedia](https://en.wikipedia.org/wiki/Akaike_information_criterion)) to score each regression model for determining how much weight to assign to its predictions when taking the average.
 :::
 
@@ -2103,9 +2104,9 @@ eff_size_plot = function(fit_list) {
     out = switch(
       x,
       "Day^2" = expression(Day^2),
-      "BTF % Chinook^2" = expression(BTF~"%"~Chinook^2),
-      "BTF % Chum^2" = expression(BTF~"%"~Chum^2),
-      "BTF % Sockeye^2" = expression(BTF~"%"~Sockeye^2),
+      "Sonar % Chinook^2" = expression(Sonar~"%"~Chinook^2),
+      "Sonar % Chum^2" = expression(Sonar~"%"~Chum^2),
+      "Sonar % Sockeye^2" = expression(Sonar~"%"~Sockeye^2),
       x
     )
     
@@ -2200,7 +2201,7 @@ Using medians rather than means minimizes the influence of large but rare errors
 **Time Periods**
 
 In summarizing the errors, we categorize them into these three time periods of the season.
-This allows us to quantify how the reliability of predictions changes throughout the season.
+This allows quantifying how the reliability of predictions changes throughout the season.
 
 ```{r period-table}
 # how many openers in each period?
@@ -2404,7 +2405,7 @@ assign_color = function(p, allow_negatives) {
   # set breaks depending on whether negatives are allowed
   if (allow_negatives) {
     pal = colorRampPalette(c("salmon", "white", "#007BC2"))
-    breaks = c(-0.50,-0.30,-0.20,-0.15,-0.10,0.10,0.15,0.20,0.30,0.50)
+    breaks = c(-1,-0.40,-0.30,-0.20,-0.10,0.10,0.20,0.30,0.40,1)
   } else {
     pal = colorRampPalette(c("white", "forestgreen"))
     breaks = c(0, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 1, 2)
