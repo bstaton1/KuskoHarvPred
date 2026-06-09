@@ -9,7 +9,7 @@
 
 ## The Predictive Tool
 
-Upon accessing the tool, users will arrive at this page, where they will enter characteristics of the opener they wish to predict fishery outcomes and harvest for: timing and Bethel Test Fishery (a daily fishery-independent index of in-river salmon abundance and species composition).
+Upon accessing the tool, users will arrive at this page, where they will enter characteristics of the opener they wish to predict fishery outcomes and harvest for: timing and expected sonar counts (a daily fishery-independent index of in-river salmon abundance and species composition useful for predicting the catch rate and species composition of fishery harvests).
 
 <p align="center">
   <img src="man/figures/readme-SS/input-tab.png" width="500"/>
@@ -72,11 +72,11 @@ vignette("updating-predictions", package = "KuskoHarvPred")
 
 The approach for predicting outcomes of future openers based on past data contained in 'KuskoHarvPred' can be found in the manuscript:
 
->_In-season predictions of daily harvest for lower Kuskokwim River subsistence salmon fisheries_ by B. A. Staton, W. R. Bechtol, L. G. Coggins Jr., and G. Decossas, submitted to the _North American Journal of Fisheries Management_ (analysis repository: [bstaton1/KuskoHarvPred-ms-analysis](https://www.github.com/bstaton1/KuskoHarvPred-ms-analysis); archived under DOI [10.5281/zenodo.13293677](https://doi.org/10.5281/zenodo.13293677)). 
+>_In-season predictions of daily harvest for lower Kuskokwim River subsistence salmon fisheries_ by B. A. Staton, W. R. Bechtol, L. G. Coggins Jr., and G. Decossas, published in the _North American Journal of Fisheries Management_ (Article DOI: [10.1093/najfmt/vqaf055](https://doi.org/10.1093/najfmt/vqaf055); analysis repository: [bstaton1/KuskoHarvPred-ms-analysis](https://www.github.com/bstaton1/KuskoHarvPred-ms-analysis); archived under DOI [10.5281/zenodo.13293677](https://doi.org/10.5281/zenodo.13293677)). 
 
 A description of the sampling methodology and estimation framework can be found in the manuscript:
 
->_In-season monitoring of harvest and effort from a large-scale subsistence salmon fishery in western Alaska_ by B. A. Staton, W. R. Bechtol, L. G. Coggins Jr., G. Decossas, and J. Esquible, submitted to the _Canadian Journal of Fisheries and Aquatic Sciences_ (analysis repository: [bstaton1/KuskoHarvEst-ms-analysis](https://github.com/bstaton1/KuskoHarvEst-ms-analysis); archived under DOI [10.5281/zenodo.10369148](https://doi.org/10.5281/zenodo.10369148)).
+>_In-season monitoring of harvest and effort from a large-scale subsistence salmon fishery in western Alaska_ by B. A. Staton, W. R. Bechtol, L. G. Coggins Jr., G. Decossas, and J. Esquible, published in the _Canadian Journal of Fisheries and Aquatic Sciences_ (Article DOI: [10.1139/cjfas-2023-0369](https://doi.org/10.1139/cjfas-2023-0369); analysis repository: [bstaton1/KuskoHarvEst-ms-analysis](https://github.com/bstaton1/KuskoHarvEst-ms-analysis); archived under DOI [10.5281/zenodo.10369148](https://doi.org/10.5281/zenodo.10369148)).
 
 ## Contact
 
