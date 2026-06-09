@@ -2582,7 +2582,7 @@ print_bibs = function(keys) {
 `r hr()`
 
 :::{.indent style="text-align: left; margin-left: 0px;"}
-`r print_bibs(c("staton-coggins-2016", "staton-coggins-2017", "staton-2018", "decossas-2019b", "decossas-2020", "russell-etal-2021", "bechtol-schomogyi-2022", "bechtol-etal-2024"))`
+`r print_bibs(c("staton-coggins-2016", "staton-coggins-2017", "staton-2018", "decossas-2019b", "decossas-2020", "russell-etal-2021", "bechtol-schomogyi-2022", "bechtol-etal-2024", "bechtol-etal-2025", "bechtol-etal-2026"))`
 :::
 
 </details>
