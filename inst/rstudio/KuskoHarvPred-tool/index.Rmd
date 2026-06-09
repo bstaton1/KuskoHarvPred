@@ -325,7 +325,7 @@ Fishery conditions might include features like:
 
 *  The time of the season
 *  The time of day or length of fishing period
-*  Bethel Test Fishery CPUE indices of abundance and species composition
+*  In-river abundance and species composition as indexed by the Kuskokwim River sonar project
 
 The `r bs_icon("graph-up-arrow")` **Predictive Relationships** tab displays how each outcome has historically varied throughout past seasons and how the predicted value changes depending on other fishery conditions.
 The `r bs_icon("info-circle")` **Statistical Info.** tab (`r bs_icon("card-list")` **Methods Overview** section) includes many more details on how the tool works.
@@ -340,7 +340,7 @@ Learn more about how good the predictions are likely to be by exploring the `r b
 :::
 
 :::{.indent}
-1.  Enter the expected conditions of the proposed fishery opener (day, start/end times, Bethel Test Fishery CPUE values) on the `r bs_icon("sliders")` **Inputs** tab
+1.  Enter the expected conditions of the proposed fishery opener (day, start/end times, sonar counts) on the `r bs_icon("sliders")` **Inputs** tab
 2.  Navigate to the `r bs_icon("table")` **Outputs** tab to find the predictions of each outcome and species-specific harvest they imply based on the input selections.
 3.  (_Optional_) Click the `r icon("gears") `**Adjust Predictions** check box to assess the uncertainty in the predictions and compare results to personal expectations.
 :::
@@ -350,12 +350,14 @@ Learn more about how good the predictions are likely to be by exploring the `r b
 :::
 
 :::{.indent}
-Historical fishery outcomes are informed by data collected collaboratively by several projects/agencies: Orutsararmiut Native Council, the [Community-Based Harvest Monitoring Program](https://static1.squarespace.com/static/5afdc3d5e74940913f78773d/t/622fc731ca40712f2235eda1/1647298414521/CBHM+2021+Report_final.pdf) (Kuskokwim River Inter-Tribal Fisheries Commission), and the U.S. Fish and Wildlife Service. 
+Historical fishery outcomes are informed by data collected collaboratively by several projects/agencies: Orutsararmiut Native Council, the [Community-Based Harvest Monitoring Program](https://static1.squarespace.com/static/5afdc3d5e74940913f78773d/t/622fc731ca40712f2235eda1/1647298414521/CBHM+2021+Report_final.pdf) (Kuskokwim River Inter-Tribal Fisheries Commission), and the U.S. Fish and Wildlife Service.
+The sonar project is operated by the Alaska Department of Fish and Game.
 The exact data set can be found in the `r bs_icon("search")` **Data Explorer** tab.
 More information about data collection can be found in the `r bs_icon("chevron-right")` **More Info** > `r bs_icon("newspaper")` **Relevant Literature** tab.
 Because of the scope of the monitoring data, predictions made by this tool apply only to:
 
 *  Drift nets (no other gears are included)
+*  Chinook, chum, and sockeye salmon (no other species are included)
 *  Mainstem Kuskokwim River (no tributaries are included)
 *  The area between the villages of Tuntutuliak and Akiak
 
