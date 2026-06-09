@@ -241,25 +241,25 @@ process_datetime = function(date, time) {
   as_datetime(new_datetime, tz = "US/Alaska")
 }
 
-# function to build the BTF Percentile dropdown menus
-get_btf_percentiles = function(date, species) {
+# function to build the sonar percentile dropdown menus
+get_sonar_percentiles = function(date, species) {
   
   # replace all past years in the date
-  # for summarizing BTF stats on this date for all past years
+  # for summarizing sonar stats on this date for all past years
   yrs = unique(fit_data$year)
   dates = rep(date, length(yrs))
   year(dates) = yrs
   
-  # summarize the BTF CPUE for this species on this date for all past years
-  cpue = sapply(dates, function(d) {
-    KuskoHarvData:::summarize_btf(date = d, stat = paste0(tolower(species), "_cpue"), plus_minus = 1)
+  # summarize the sonar counts for this species on this date for all past years
+  counts = sapply(dates, function(d) {
+    KuskoHarvData:::summarize_sonar(date = d, stat = paste0(tolower(species), "_count"), plus_minus = 0)
   })
   
-  # calculate the CPUE percentiles
-  cpue_percentiles = round(quantile(cpue, c(0.1, 0.25, 0.5, 0.75, 0.9)))
+  # calculate the sonar count percentiles
+  count_percentiles = round(quantile(counts, c(0.1, 0.25, 0.5, 0.75, 0.9)))
   
   # create names for the percentiles
-  x = paste0(cpue_percentiles, " (", stringr::str_replace(names(cpue_percentiles), "\\%", "th Percentile"), ")")
+  x = paste0(prettyNum(count_percentiles, big.mark = ","), " (", stringr::str_replace(names(count_percentiles), "\\%", "th Percentile"), ")")
   
   # assign names and add an "Enter..." option
   out = 1:6; names(out) = c(x, "Enter...")
@@ -275,20 +275,21 @@ ttip = function(label_text, tip_text, icon_use = bs_icon("info-circle"), placeme
 }
 
 # based on the input selections, set the CPUE to use for prediction
-set_cpue = function(input, species) {
+set_sonar_count = function(input, species) {
   
   # set the category name for this species
-  cat_name = paste0(species, "_btf_cpue_input_cat")
+  cat_name = paste0(species, "_sonar_count_input_cat")
   
   # if this is for a pre-calculated percentile (not manually entered)
   # extract that CPUE value from the percentile text
   # otherwise return the value that was manually entered
   if (input[[cat_name]] != "6") {
-    out = names(get_btf_percentiles(input$date, species))[as.numeric(input[[cat_name]])] |> 
+    out = names(get_sonar_percentiles(input$date, species))[as.numeric(input[[cat_name]])] |> 
+      stringr::str_remove(",") |> 
       stringr::str_extract("^[:digit:]+") |> 
       as.numeric()
   } else {
-    out = input[[paste0("entered_", species, "_btf_cpue")]]
+    out = input[[paste0("entered_", species, "_sonar_count")]]
   }
   return(out)
 }
