@@ -10,10 +10,10 @@
 #'     * `settings$p_before_noon`: numeric; must contain any combination of 0.25, 0.5, 0.75, 1; defaults to 0.5
 #'     * `settings$fished_yesterday`: logical; defaults to `FALSE`
 #'     * `settings$weekend`: logical; defaults to `FALSE`
-#'     * `settings$CAT_total_btf_cpue`: character, must contain any combination of `"q10"`, `"q25"`, `"q50"`, `"q75"`, `"q90"`; defaults to `"q50"`
-#'     * `settings$CAT_chinook_btf_comp`: same as `settings$CAT_total_btf_cpue`
-#'     * `settings$CAT_chum_btf_comp`: same as `settings$CAT_total_btf_cpue`
-#'     * `settings$CAT_sockeye_btf_comp`: same as `settings$CAT_total_btf_cpue`
+#'     * `settings$CAT_total_sonar_count`: character, must contain any combination of `"q10"`, `"q25"`, `"q50"`, `"q75"`, `"q90"`; defaults to `"q50"`
+#'     * `settings$CAT_chinook_sonar_comp`: same as `settings$CAT_total_sonar_count`
+#'     * `settings$CAT_chum_sonar_comp`: same as `settings$CAT_total_sonar_count`
+#'     * `settings$CAT_sockeye_sonar_comp`: same as `settings$CAT_total_sonar_count`
 #' @note Because not every predictor variable is used for all responses, it is possible to change the `settings` argument and receive the same output.
 #'   The object containing all pre-processed predictions for all responses can be found in `KuskoHarvPred:::pred_data`.
 #' @return [`data.frame`][base::data.frame] with the pre-processed predictions (column `pred_response`) at each combination of queried predictor variables.
@@ -22,15 +22,15 @@
 subset_pred_data = function(response, settings = list()) {
 
   # set default settings if not supplied
-  if (is.null(settings$day)) settings$day = 12:46
+  if (is.null(settings$day)) settings$day = 12:49
   if (is.null(settings$hours_open)) settings$hours_open = 12
   if (is.null(settings$p_before_noon)) settings$p_before_noon = 0.5
   if (is.null(settings$fished_yesterday)) settings$fished_yesterday = FALSE
   if (is.null(settings$weekend)) settings$weekend = FALSE
-  if (is.null(settings$CAT_total_btf_cpue)) settings$CAT_total_btf_cpue = "q50"
-  if (is.null(settings$CAT_chinook_btf_comp)) settings$CAT_chinook_btf_comp = "q50"
-  if (is.null(settings$CAT_chum_btf_comp)) settings$CAT_chum_btf_comp = "q50"
-  if (is.null(settings$CAT_sockeye_btf_comp)) settings$CAT_sockeye_btf_comp = "q50"
+  if (is.null(settings$CAT_total_sonar_count)) settings$CAT_total_sonar_count = "q50"
+  if (is.null(settings$CAT_chinook_sonar_comp)) settings$CAT_chinook_sonar_comp = "q50"
+  if (is.null(settings$CAT_chum_sonar_comp)) settings$CAT_chum_sonar_comp = "q50"
+  if (is.null(settings$CAT_sockeye_sonar_comp)) settings$CAT_sockeye_sonar_comp = "q50"
   if (is.null(settings$CAT_mean_Nwind)) settings$CAT_mean_Nwind = "none"
   if (is.null(settings$CAT_mean_Ewind)) settings$CAT_mean_Ewind = "none"
 
@@ -155,9 +155,6 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::
       ylim = c(0,1)
     } else {
       if (draw_mape_range) {
-
-        ylim = c(0, max(sub_pred_data$pred_response, dat[,response]))
-      } else {
         x = sub_pred_data
         period = KuskoHarvUtils::get_period(x$day)
         mape = sapply(period, function(p) get_mape(response, p))
@@ -165,8 +162,11 @@ relationship_plot = function(response, settings = list(), dat = KuskoHarvPred:::
         upr = x$pred_response + x$pred_response * mape
         lwr = ifelse(lwr < 0, 0, lwr)
         ylim = c(0, max(sub_pred_data$pred_response, dat[,response], upr))
-      }
+        ylim = c(0, max(sub_pred_data$pred_response, dat[,response], upr)) * 1.05
 
+      } else {
+        ylim = c(0, max(sub_pred_data$pred_response, dat[,response]))
+      }
     }
 
     # scatter plot with correct dimensions, labels, etc.
