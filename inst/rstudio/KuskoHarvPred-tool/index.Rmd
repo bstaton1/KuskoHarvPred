@@ -367,6 +367,243 @@ The data informing this tool were collected in June and July in the years `r min
 </details>
 ::::::
 
+::::::{.blue}
+<details>
+<summary>`r bs_icon("exclamation-triangle")` Information for Readers of the NAJFM Article</summary>
+
+`r hr()`
+
+::::{.indent}
+Some users of the tool have been directed to this webpage because it is linked in the publication:
+
+:::{.indent style="padding-left: 10px; padding-right: 50px; text-indent: -20px"}
+Staton, B. A.,  W. R. Bechtol, L. G. Coggins Jr., and G. Decossas. 2025. In-season predictions of daily harvest for Kuskokwim River subsistence salmon fisheries. _North American Journal of Fisheries Management._ 45(5): 779-794. doi: [10.1093/najfmt/vqaf055](https:/doi.org/10.1093/najfmt/vqaf055).
+
+:::
+
+There have been some changes to the model since publication -- notably several predictor variables and years -- that are documented in this section. 
+
+::::
+
+:::{.describe}
+`r bs_icon("question-circle")` _What years have changed?_
+:::
+
+:::{.indent}
+
+The analysis documented in the publication included data from **2016-2023** and spanned **40** individual days of fishing (i.e., "openers").
+
+The revised analysis included in this tool includes data from **`r paste0(min(KuskoHarvPred:::fit_data$year), '-', max(KuskoHarvPred:::fit_data$year))`** and spans **`r nrow(KuskoHarvPred:::fit_data)`** openers.
+
+
+The additional years of data collection have occurred since publication, whereas the removal of 2016 and 2017 is described in the next section.
+
+:::
+
+:::{.describe}
+`r bs_icon("question-circle")` _What variables have changed, and why?_
+:::
+
+:::{.indent}
+The most important change to the model stems from the discontinuation of the Bethel Test Fishery (BTF) following the 2024 season, upon which several predictor variables were based:
+
+*  **Total BTF CPUE** -- a daily index of total in-river salmon abundance passing Bethel
+*  **% BTF Chinook salmon** -- the daily proportion that Chinook salmon made up of BTF CPUE
+*  **% BTF chum salmon** -- the daily proportion that chum salmon made up of BTF CPUE
+*  **% BTF sockeye salmon** -- the daily proportion that sockeye salmon made up of BTF CPUE
+*  **Quadratic versions** of these variables
+
+These variables were influential in the predictive ability of the model, and since it is unlikely the BTF will resume operations in the future, a replacement was needed.
+The replacement data set chosen was the Kuskokwim River sonar project, operated by the Alaska Department of Fish and Game. 
+The sonar project was discussed in the Staton et al. (2025) article (pages 781; 792), where it was described that it was not used initially because data were not available for 2016 and 2017.
+However, with the discontinuation of BTF operations, its usage became mandatory.
+
+Thus, new variables based on the sonar were added as replacements of the BTF variables:
+
+*  **Total sonar count** -- a daily count (estimate) of total in-river salmon abundance passing the sonar site (located several miles upstream of Bethel)
+*  **% sonar Chinook salmon** -- the daily proportion that Chinook salmon made up of sonar counts
+*  **% sonar chum salmon** -- the daily proportion that chum salmon made up of sonar counts
+*  **% sonar sockeye salmon** -- the daily proportion that sockeye salmon made up of sonar counts
+*  **Quadratic versions** of these variables
+
+All places where the published analysis used a BTF variable, the corresponding sonar variable is now used as a replacement (e.g., total sonar count replaced total BTF CPUE).
+The previous BTF variables were "smoothed" by taking the average of 3 consecutive days, centered on the day in question.
+Because the sonar is expected to have lower day-to-day variability in catchability, the sonar variables were not smoothed in this fashion.
+
+Inclusion of the sonar data set required that 2016 and 2017 be excluded from the analysis.
+As a result the "fished yesterday" variable -- which indicated whether fishing occurred the previous day and described meaningful variability in the trips per day and catch per trip response variables -- was no longer needed (only applied to openers in 2016) and was been dropped from the analysis. 
+
+:::
+
+:::{.describe}
+`r bs_icon("question-circle")` _Are there major differences in the results reported?_
+:::
+
+::::{.indent}
+
+**Model Selection**
+
+_Response Variable: Trips/Day_
+
+:::{.indent}
+
+Day and day^2^ remained important predictors of the trips/day response variable.
+The removal of the "fished yesterday" variable is a notable difference between the published and revised analysis -- it previously explained much of the variability in trips/day in 2016, but with the removal of that year from the re-analysis, it is no longer used in the trips/day model.
+The number of hours the fishery was open each day -- and the portion of that time that occurred before noon -- were also previously important predictors present in the top 5 models in the published analysis, but no longer came out as important in the revised analysis; this is potentially due to the lack of contrast, particularly 2016 where longer 24 hour openers were more prevalent than in the 2018-2025 years.
+The index of total in-river abundance (BTF total CPUE in published analysis, total sonar count in revised analysis) was similarly unimportant across analyses, however, the index of % Chinook composition was present in the top model of the revised analysis and had a positive effect on effort, whereas in the published analysis it had a negligable effect.
+
+:::
+
+_Response Variable: Catch/Trip_
+
+:::{.indent}
+
+Similar to trips/day, the "fished yesterday" variable was an important predictor of catch/trip in the published analysis and is no longer present.
+Beyond that, day and day^2^ remained approximately as important, as did the index of total in-river abundance.
+
+:::
+
+_Response Variables: Species Composition_
+
+:::{.indent}
+
+The models for chum and sockeye salmon remained largely unchanged: the day, day^2^, and sonar composition variables served similar roles and had similar effect sizes in the revised analysis as in the published analysis.
+For the Chinook salmon composition model, however, the composition of Chinook salmon in the sonar was a not as good a predictor of the composition in the fishery as was the BTF, illustrated by smaller effect sizes and absence from the top model in the revised analysis.
+
+:::
+
+**Predictive Performance**
+
+:::{.indent}
+
+Care should be taken in drawing strong inferences from the comparison of the leave-one-out predictive performance of the revised models against the published models, as there are differences in the years/openers included in each.
+A perfect comparison would be to limit both analyses to only include 2018-2024 when both the BTF data and sonar data were available, however, such a perfect comparison is not needed since there is no choice but to abandon the BTF and move to the sonar data.
+
+That said, the correlations in leave-one-out (LOO) predictions vs. actual outcomes were similar, especially when aggregated across all periods in the season (Table 3).
+Further, the magnitude of bias (MPE) and precision (MAPE) scores were similar when aggregated across all periods to those presented in the published analysis (Table 4).
+
+:::
+
+## {.tabset .tabset-pills}
+
+**Revised Figures/Tables**
+
+:::{.indent}
+
+The following figures/tables show the same content as displayed in the published article, but revised to include the re-analysis with sonar data in place of BTF data for the years 2018-2025.
+
+:::
+
+### Figures {.tabset}
+
+#### Fig. 1
+
+<figure align="center">
+<img src="resources/revised-fig1.png" height="35%" width = "35%"/>
+<figcaption>
+Revised version of Fig. 1 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation.
+</figcaption>
+</figure>
+
+#### Fig. 2
+
+<figure align="center">
+<img src="resources/revised-fig2.png" height="35%" width = "35%"/>
+<figcaption>
+Revised version of Fig. 2 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation. Panels (a) and (b) exclude the "fished yesterday" dimension, since this variable was discarded from the re-analysis. Further, the three lines in panel (a) now display quantiles of the sonar % Chinook composition variable.
+</figcaption>
+</figure>
+
+#### Fig. 3
+
+<figure align="center">
+<img src="resources/revised-fig3.png" height="80%" width = "80%"/>
+<figcaption>
+Revised version of Fig. 3 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation.
+</figcaption>
+</figure>
+
+#### Fig. 4
+
+<figure align="center">
+<img src="resources/revised-fig4.png" height="80%" width = "80%"/>
+<figcaption>
+Revised version of Fig. 4 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation.
+</figcaption>
+</figure>
+
+### Tables {.tabset}
+
+#### Table 1
+
+<figure align="center">
+<img src="resources/revised-table1.png" height="100%" width = "100%"/>
+<figcaption>
+Revised version of Table 1 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation.
+</figcaption>
+</figure>
+
+#### Table 2
+
+<figure align="center">
+<img src="resources/revised-table2.png" height="80%" width = "80%"/>
+<figcaption>
+Revised version of Table 2 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation.
+</figcaption>
+</figure>
+
+#### Table 3
+
+<figure align="center">
+<img src="resources/revised-table3.png" height="50%" width = "50%"/>
+<figcaption>
+Revised version of Table 3 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation.
+</figcaption>
+</figure>
+
+#### Table 4
+
+<figure align="center">
+<img src="resources/revised-table4.png" height="80%" width = "80%"/>
+<figcaption>
+Revised version of Table 4 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation.
+</figcaption>
+</figure>
+
+#### Table 5
+
+<figure align="center">
+<img src="resources/revised-table5.png" height="60%" width = "60%"/>
+<figcaption>
+Revised version of Table 5 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation.
+</figcaption>
+</figure>
+
+### Supplemental Tables {.tabset}
+
+#### Table A1
+
+<figure align="center">
+<img src="resources/revised-tableA1.png" height="80%" width = "80%"/>
+<figcaption>
+Revised version of Table A1 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article supplemental material for details on interpretation.
+</figcaption>
+</figure>
+
+#### Table A2
+
+<figure align="center">
+<img src="resources/revised-tableA2.png" height="70%" width = "70%"/>
+<figcaption>
+Revised version of Table A2 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article supplemental material for details on interpretation.
+</figcaption>
+</figure>
+
+::::
+
+</details>
+::::::
+
 # {.tabset .tabset-pills}
 
 ## `r bs_icon("sliders")` Inputs
