@@ -26,10 +26,10 @@ The following elements are acceptable:
 * \code{settings$p_before_noon}: numeric; must contain any combination of 0.25, 0.5, 0.75, 1; defaults to 0.5
 * \code{settings$fished_yesterday}: logical; defaults to \code{FALSE}
 * \code{settings$weekend}: logical; defaults to \code{FALSE}
-* \code{settings$CAT_total_btf_cpue}: character, must contain any combination of \code{"q10"}, \code{"q25"}, \code{"q50"}, \code{"q75"}, \code{"q90"}; defaults to \code{"q50"}
-* \code{settings$CAT_chinook_btf_comp}: same as \code{settings$CAT_total_btf_cpue}
-* \code{settings$CAT_chum_btf_comp}: same as \code{settings$CAT_total_btf_cpue}
-* \code{settings$CAT_sockeye_btf_comp}: same as \code{settings$CAT_total_btf_cpue}
+* \code{settings$CAT_total_sonar_count}: character, must contain any combination of \code{"q10"}, \code{"q25"}, \code{"q50"}, \code{"q75"}, \code{"q90"}; defaults to \code{"q50"}
+* \code{settings$CAT_chinook_sonar_comp}: same as \code{settings$CAT_total_sonar_count}
+* \code{settings$CAT_chum_sonar_comp}: same as \code{settings$CAT_total_sonar_count}
+* \code{settings$CAT_sockeye_sonar_comp}: same as \code{settings$CAT_total_sonar_count}
 }
 \note{
 Because not every predictor variable is used for all responses, it is possible to change the \code{settings} argument and receive the same output.

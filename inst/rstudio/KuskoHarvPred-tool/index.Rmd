@@ -241,25 +241,25 @@ process_datetime = function(date, time) {
   as_datetime(new_datetime, tz = "US/Alaska")
 }
 
-# function to build the BTF Percentile dropdown menus
-get_btf_percentiles = function(date, species) {
+# function to build the sonar percentile dropdown menus
+get_sonar_percentiles = function(date, species) {
   
   # replace all past years in the date
-  # for summarizing BTF stats on this date for all past years
+  # for summarizing sonar stats on this date for all past years
   yrs = unique(fit_data$year)
   dates = rep(date, length(yrs))
   year(dates) = yrs
   
-  # summarize the BTF CPUE for this species on this date for all past years
-  cpue = sapply(dates, function(d) {
-    KuskoHarvData:::summarize_btf(date = d, stat = paste0(tolower(species), "_cpue"), plus_minus = 1)
+  # summarize the sonar counts for this species on this date for all past years
+  counts = sapply(dates, function(d) {
+    KuskoHarvData:::summarize_sonar(date = d, stat = paste0(tolower(species), "_count"), plus_minus = 0)
   })
   
-  # calculate the CPUE percentiles
-  cpue_percentiles = round(quantile(cpue, c(0.1, 0.25, 0.5, 0.75, 0.9)))
+  # calculate the sonar count percentiles
+  count_percentiles = round(quantile(counts, c(0.1, 0.25, 0.5, 0.75, 0.9)))
   
   # create names for the percentiles
-  x = paste0(cpue_percentiles, " (", stringr::str_replace(names(cpue_percentiles), "\\%", "th Percentile"), ")")
+  x = paste0(prettyNum(count_percentiles, big.mark = ","), " (", stringr::str_replace(names(count_percentiles), "\\%", "th Percentile"), ")")
   
   # assign names and add an "Enter..." option
   out = 1:6; names(out) = c(x, "Enter...")
@@ -275,20 +275,21 @@ ttip = function(label_text, tip_text, icon_use = bs_icon("info-circle"), placeme
 }
 
 # based on the input selections, set the CPUE to use for prediction
-set_cpue = function(input, species) {
+set_sonar_count = function(input, species) {
   
   # set the category name for this species
-  cat_name = paste0(species, "_btf_cpue_input_cat")
+  cat_name = paste0(species, "_sonar_count_input_cat")
   
   # if this is for a pre-calculated percentile (not manually entered)
   # extract that CPUE value from the percentile text
   # otherwise return the value that was manually entered
   if (input[[cat_name]] != "6") {
-    out = names(get_btf_percentiles(input$date, species))[as.numeric(input[[cat_name]])] |> 
+    out = names(get_sonar_percentiles(input$date, species))[as.numeric(input[[cat_name]])] |> 
+      stringr::str_remove(",") |> 
       stringr::str_extract("^[:digit:]+") |> 
       as.numeric()
   } else {
-    out = input[[paste0("entered_", species, "_btf_cpue")]]
+    out = input[[paste0("entered_", species, "_sonar_count")]]
   }
   return(out)
 }
@@ -324,7 +325,7 @@ Fishery conditions might include features like:
 
 *  The time of the season
 *  The time of day or length of fishing period
-*  Bethel Test Fishery CPUE indices of abundance and species composition
+*  In-river abundance and species composition as indexed by the Kuskokwim River sonar project
 
 The `r bs_icon("graph-up-arrow")` **Predictive Relationships** tab displays how each outcome has historically varied throughout past seasons and how the predicted value changes depending on other fishery conditions.
 The `r bs_icon("info-circle")` **Statistical Info.** tab (`r bs_icon("card-list")` **Methods Overview** section) includes many more details on how the tool works.
@@ -339,7 +340,7 @@ Learn more about how good the predictions are likely to be by exploring the `r b
 :::
 
 :::{.indent}
-1.  Enter the expected conditions of the proposed fishery opener (day, start/end times, Bethel Test Fishery CPUE values) on the `r bs_icon("sliders")` **Inputs** tab
+1.  Enter the expected conditions of the proposed fishery opener (day, start/end times, sonar counts) on the `r bs_icon("sliders")` **Inputs** tab
 2.  Navigate to the `r bs_icon("table")` **Outputs** tab to find the predictions of each outcome and species-specific harvest they imply based on the input selections.
 3.  (_Optional_) Click the `r icon("gears") `**Adjust Predictions** check box to assess the uncertainty in the predictions and compare results to personal expectations.
 :::
@@ -349,17 +350,256 @@ Learn more about how good the predictions are likely to be by exploring the `r b
 :::
 
 :::{.indent}
-Historical fishery outcomes are informed by data collected collaboratively by several projects/agencies: Orutsararmiut Native Council, the [Community-Based Harvest Monitoring Program](https://static1.squarespace.com/static/5afdc3d5e74940913f78773d/t/622fc731ca40712f2235eda1/1647298414521/CBHM+2021+Report_final.pdf) (Kuskokwim River Inter-Tribal Fisheries Commission), and the U.S. Fish and Wildlife Service. 
+Historical fishery outcomes are informed by data collected collaboratively by several projects/agencies: Orutsararmiut Native Council, the [Community-Based Harvest Monitoring Program](https://static1.squarespace.com/static/5afdc3d5e74940913f78773d/t/622fc731ca40712f2235eda1/1647298414521/CBHM+2021+Report_final.pdf) (Kuskokwim River Inter-Tribal Fisheries Commission), and the U.S. Fish and Wildlife Service.
+The sonar project is operated by the Alaska Department of Fish and Game.
 The exact data set can be found in the `r bs_icon("search")` **Data Explorer** tab.
 More information about data collection can be found in the `r bs_icon("chevron-right")` **More Info** > `r bs_icon("newspaper")` **Relevant Literature** tab.
 Because of the scope of the monitoring data, predictions made by this tool apply only to:
 
 *  Drift nets (no other gears are included)
+*  Chinook, chum, and sockeye salmon (no other species are included)
 *  Mainstem Kuskokwim River (no tributaries are included)
 *  The area between the villages of Tuntutuliak and Akiak
 
 The data informing this tool were collected in June and July in the years `r min(yrs)`-`r max(yrs)` and are made up of `r nrow(fit_data)` individual days of monitored drift fishing.
 :::
+
+</details>
+::::::
+
+::::::{.blue}
+<details>
+<summary>`r bs_icon("exclamation-triangle")` Information for Readers of the NAJFM Article</summary>
+
+`r hr()`
+
+::::{.indent}
+Some users of the tool have been directed to this webpage because it is linked in the publication:
+
+:::{.indent style="padding-left: 10px; padding-right: 50px; text-indent: -20px"}
+Staton, B. A.,  W. R. Bechtol, L. G. Coggins Jr., and G. Decossas. 2025. In-season predictions of daily harvest for Kuskokwim River subsistence salmon fisheries. _North American Journal of Fisheries Management._ 45(5): 779-794. doi: [10.1093/najfmt/vqaf055](https:/doi.org/10.1093/najfmt/vqaf055).
+
+:::
+
+There have been some changes to the model since publication -- notably several predictor variables and years -- that are documented in this section. 
+
+::::
+
+:::{.describe}
+`r bs_icon("question-circle")` _What years have changed?_
+:::
+
+:::{.indent}
+
+The analysis documented in the publication included data from **2016-2023** and spanned **40** individual days of fishing (i.e., "openers").
+
+The revised analysis included in this tool includes data from **`r paste0(min(KuskoHarvPred:::fit_data$year), '-', max(KuskoHarvPred:::fit_data$year))`** and spans **`r nrow(KuskoHarvPred:::fit_data)`** openers.
+
+
+The additional years of data collection have occurred since publication, whereas the removal of 2016 and 2017 is described in the next section.
+
+:::
+
+:::{.describe}
+`r bs_icon("question-circle")` _What variables have changed, and why?_
+:::
+
+:::{.indent}
+The most important change to the model stems from the discontinuation of the Bethel Test Fishery (BTF) following the 2024 season, upon which several predictor variables were based:
+
+*  **Total BTF CPUE** -- a daily index of total in-river salmon abundance passing Bethel
+*  **% BTF Chinook salmon** -- the daily proportion that Chinook salmon made up of BTF CPUE
+*  **% BTF chum salmon** -- the daily proportion that chum salmon made up of BTF CPUE
+*  **% BTF sockeye salmon** -- the daily proportion that sockeye salmon made up of BTF CPUE
+*  **Quadratic versions** of these variables
+
+These variables were influential in the predictive ability of the model, and since it is unlikely the BTF will resume operations in the future, a replacement was needed.
+The replacement data set chosen was the Kuskokwim River sonar project, operated by the Alaska Department of Fish and Game. 
+The sonar project was discussed in the Staton et al. (2025) article (pages 781; 792), where it was described that it was not used initially because data were not available for 2016 and 2017.
+However, with the discontinuation of BTF operations, its usage became mandatory.
+
+Thus, new variables based on the sonar were added as replacements of the BTF variables:
+
+*  **Total sonar count** -- a daily count (estimate) of total in-river salmon abundance passing the sonar site (located several miles upstream of Bethel)
+*  **% sonar Chinook salmon** -- the daily proportion that Chinook salmon made up of sonar counts
+*  **% sonar chum salmon** -- the daily proportion that chum salmon made up of sonar counts
+*  **% sonar sockeye salmon** -- the daily proportion that sockeye salmon made up of sonar counts
+*  **Quadratic versions** of these variables
+
+All places where the published analysis used a BTF variable, the corresponding sonar variable is now used as a replacement (e.g., total sonar count replaced total BTF CPUE).
+The previous BTF variables were "smoothed" by taking the average of 3 consecutive days, centered on the day in question.
+Because the sonar is expected to have lower day-to-day variability in catchability, the sonar variables were not smoothed in this fashion.
+
+Inclusion of the sonar data set required that 2016 and 2017 be excluded from the analysis.
+As a result the "fished yesterday" variable -- which indicated whether fishing occurred the previous day and described meaningful variability in the trips per day and catch per trip response variables -- was no longer needed (only applied to openers in 2016) and was been dropped from the analysis. 
+
+:::
+
+:::{.describe}
+`r bs_icon("question-circle")` _Are there major differences in the results reported?_
+:::
+
+::::{.indent}
+
+**Model Selection**
+
+_Response Variable: Trips/Day_
+
+:::{.indent}
+
+Day and day^2^ remained important predictors of the trips/day response variable.
+The removal of the "fished yesterday" variable is a notable difference between the published and revised analysis -- it previously explained much of the variability in trips/day in 2016, but with the removal of that year from the re-analysis, it is no longer used in the trips/day model.
+The number of hours the fishery was open each day -- and the portion of that time that occurred before noon -- were also previously important predictors present in the top 5 models in the published analysis, but no longer came out as important in the revised analysis; this is potentially due to the lack of contrast, particularly 2016 where longer 24 hour openers were more prevalent than in the 2018-2025 years.
+The index of total in-river abundance (BTF total CPUE in published analysis, total sonar count in revised analysis) was similarly unimportant across analyses, however, the index of % Chinook composition was present in the top model of the revised analysis and had a positive effect on effort, whereas in the published analysis it had a negligable effect.
+
+:::
+
+_Response Variable: Catch/Trip_
+
+:::{.indent}
+
+Similar to trips/day, the "fished yesterday" variable was an important predictor of catch/trip in the published analysis and is no longer present.
+Beyond that, day and day^2^ remained approximately as important, as did the index of total in-river abundance.
+
+:::
+
+_Response Variables: Species Composition_
+
+:::{.indent}
+
+The models for chum and sockeye salmon remained largely unchanged: the day, day^2^, and sonar composition variables served similar roles and had similar effect sizes in the revised analysis as in the published analysis.
+For the Chinook salmon composition model, however, the composition of Chinook salmon in the sonar was a not as good a predictor of the composition in the fishery as was the BTF, illustrated by smaller effect sizes and absence from the top model in the revised analysis.
+
+:::
+
+**Predictive Performance**
+
+:::{.indent}
+
+Care should be taken in drawing strong inferences from the comparison of the leave-one-out predictive performance of the revised models against the published models, as there are differences in the years/openers included in each.
+A perfect comparison would be to limit both analyses to only include 2018-2024 when both the BTF data and sonar data were available, however, such a perfect comparison is not needed since there is no choice but to abandon the BTF and move to the sonar data.
+
+That said, the correlations in leave-one-out (LOO) predictions vs. actual outcomes were similar, especially when aggregated across all periods in the season (Table 3).
+Further, the magnitude of bias (MPE) and precision (MAPE) scores were similar when aggregated across all periods to those presented in the published analysis (Table 4).
+
+:::
+
+## {.tabset .tabset-pills}
+
+**Revised Figures/Tables**
+
+:::{.indent}
+
+The following figures/tables show the same content as displayed in the published article, but revised to include the re-analysis with sonar data in place of BTF data for the years 2018-2025.
+
+:::
+
+### Figures {.tabset}
+
+#### Fig. 1
+
+<figure align="center">
+<img src="resources/revised-fig1.png" height="35%" width = "35%"/>
+<figcaption>
+Revised version of Fig. 1 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation.
+</figcaption>
+</figure>
+
+#### Fig. 2
+
+<figure align="center">
+<img src="resources/revised-fig2.png" height="35%" width = "35%"/>
+<figcaption>
+Revised version of Fig. 2 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation. Panels (a) and (b) exclude the "fished yesterday" dimension, since this variable was discarded from the re-analysis. Further, the three lines in panel (a) now display quantiles of the sonar % Chinook composition variable.
+</figcaption>
+</figure>
+
+#### Fig. 3
+
+<figure align="center">
+<img src="resources/revised-fig3.png" height="80%" width = "80%"/>
+<figcaption>
+Revised version of Fig. 3 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation.
+</figcaption>
+</figure>
+
+#### Fig. 4
+
+<figure align="center">
+<img src="resources/revised-fig4.png" height="80%" width = "80%"/>
+<figcaption>
+Revised version of Fig. 4 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation.
+</figcaption>
+</figure>
+
+### Tables {.tabset}
+
+#### Table 1
+
+<figure align="center">
+<img src="resources/revised-table1.png" height="100%" width = "100%"/>
+<figcaption>
+Revised version of Table 1 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation.
+</figcaption>
+</figure>
+
+#### Table 2
+
+<figure align="center">
+<img src="resources/revised-table2.png" height="80%" width = "80%"/>
+<figcaption>
+Revised version of Table 2 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation.
+</figcaption>
+</figure>
+
+#### Table 3
+
+<figure align="center">
+<img src="resources/revised-table3.png" height="50%" width = "50%"/>
+<figcaption>
+Revised version of Table 3 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation.
+</figcaption>
+</figure>
+
+#### Table 4
+
+<figure align="center">
+<img src="resources/revised-table4.png" height="80%" width = "80%"/>
+<figcaption>
+Revised version of Table 4 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation.
+</figcaption>
+</figure>
+
+#### Table 5
+
+<figure align="center">
+<img src="resources/revised-table5.png" height="60%" width = "60%"/>
+<figcaption>
+Revised version of Table 5 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article for details on interpretation.
+</figcaption>
+</figure>
+
+### Supplemental Tables {.tabset}
+
+#### Table A1
+
+<figure align="center">
+<img src="resources/revised-tableA1.png" height="80%" width = "80%"/>
+<figcaption>
+Revised version of Table A1 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article supplemental material for details on interpretation.
+</figcaption>
+</figure>
+
+#### Table A2
+
+<figure align="center">
+<img src="resources/revised-tableA2.png" height="70%" width = "70%"/>
+<figcaption>
+Revised version of Table A2 from Staton et al. (2025) based on re-analysis with sonar data; see caption in article supplemental material for details on interpretation.
+</figcaption>
+</figure>
+
+::::
 
 </details>
 ::::::
@@ -375,7 +615,7 @@ The data informing this tool were collected in June and July in the years `r min
 `r hr()`
 
 :::{.describe}
-Enter the conditions of the proposed opener, including when it would occur and what the Bethel Test Fishery CPUE has been like this year.
+Enter the conditions of the proposed opener, including when it would occur and what the Kuskokwim River sonar counts have been like this year.
 :::
 
 :::{.indent}
@@ -384,14 +624,16 @@ The values entered here will be "plugged in" to historical relationships to pred
 **Opener Timing**
 
 Start by entering the date and the start/end times.
-Be sure to check the box labeled "Fished Previous Day?" if fishing was/will be allowed the day before the date you pick.
+<!-- Be sure to check the box labeled "Fished Previous Day?" if fishing was/will be allowed the day before the date you pick. -->
 
-**Bethel Test Fishery CPUE**
+**Expected Sonar Counts**
 
-Next, select the expected Bethel Test Fishery daily catch-per-unit-effort (CPUE) for the proposed fishing day.
-For each species, pick either one of the 10^th^, 25^th^, 50^th^ (median), 75^th^, or 90^th^ percentiles, or choose to enter your own CPUE value.
-A **CPUE percentile** (for example, 25^th^) is the CPUE value that 25% of years (since 2016) fell below for the selected date.
-Selecting the 50^th^ percentile means that CPUE has been approximately average this year, whereas selecting the 90^th^ percentile means CPUE has been much higher than average.
+Next, select the expected daily Kuskokwim River sonar counts for the proposed fishing day.
+For each species, pick either one of the 10^th^, 25^th^, 50^th^ (median), 75^th^, or 90^th^ percentiles, or choose to enter your own count value.
+A **count percentile** (for example, 25^th^) is the count value that 25% of years (since 2018) fell below for the selected date.
+Selecting the 50^th^ percentile means that counts have been approximately average this year, whereas selecting the 90^th^ percentile means counts have been much higher than average.
+
+_Because the sonar count for the day of the opener you are making predictions for has not happened yet, insert your best expectation for what the sonar count will be._
 :::
 
 </details>
@@ -402,7 +644,7 @@ Selecting the 50^th^ percentile means that CPUE has been approximately average t
 year = year(today())
 default_date = max(as_date(paste0(year, "-06-12")), today() + 3)
 min_date = as_date(paste0(year, "-06-12"))
-max_date = as_date(paste0(year, "-07-31"))
+max_date = KuskoHarvUtils::from_days_past_may31(day = max(fit_data$day)); year(max_date) = year
 if (default_date > max_date) default_date = max_date
 if (default_date < min_date) default_date = min_date
 
@@ -412,8 +654,8 @@ end_time_bank = c("12:00AM (Start of Day)", paste0(1:11, ":00AM"), paste0(c(12, 
 ```
 
 ```{r input-widgets}
-# set the tooltip text for all manual entry CPUE boxes
-enter_CPUE_ttip_text = "The model uses Bethel Test Fishery CPUE values averaged over 3 days, so try not to enter extreme high or low values — just what you expect CPUE to be for the selected day."
+# set the tooltip text for all manual entry sonar count boxes
+enter_count_ttip_text = "The model uses sonar count values as an index of in-river abundance and species composition, so try not to enter extreme high or low values — just what you expect the sonar count to be for the selected day."
 
 fillRow(
   height = "80%", flex = c(40,1,40),
@@ -440,19 +682,19 @@ fillRow(
       # input widgets for start/stop time of opener
       selectInput(
         inputId = "start_time", label = strong(bs_icon("clock"), "Start Time"),
-        choices = start_time_bank, selected = "10:00AM"
+        choices = start_time_bank, selected = "7:00AM"
       ),
       selectInput(
         inputId = "end_time", label = strong(bs_icon("clock"), "End Time"),
-        choices = end_time_bank, selected = "10:00PM"
-      ),
-      
-      # input widget for whether fishing occurred the previous day,
-      # with tooltip for why this is important
-      checkboxInput(
-        inputId = "fished_yesterday", value = FALSE,
-        label = ttip("Fished Previous Day?", p("The number of trips and catch/trip is much lower when the fishery was open the previous day. See the ", bs_icon("graph-up-arrow"), strong("Predictive Relationships"), "tab for details.", tags$u(strong("Be sure to check this box if this applies."))))
+        choices = end_time_bank, selected = "7:00PM"
       )
+      
+      # # input widget for whether fishing occurred the previous day,
+      # # with tooltip for why this is important
+      # checkboxInput(
+      #   inputId = "fished_yesterday", value = FALSE,
+      #   label = ttip("Fished Previous Day?", p("The number of trips and catch/trip is much lower when the fishery was open the previous day. See the ", bs_icon("graph-up-arrow"), strong("Predictive Relationships"), "tab for details.", tags$u(strong("Be sure to check this box if this applies."))))
+      # )
     )
   ),
   
@@ -462,77 +704,77 @@ fillRow(
     width = 1
   ),
   
-  # input widgets for BTF info
+  # input widgets for sonar count info
   column(
     width = 12,
-    h4(strong("Bethel Test Fishery CPUE")),
+    h4(strong("Expected Sonar Counts")),
     wellPanel(
       
       # describe why user needs to enter this and what percentiles are
       helpText(
-        ttip("Why is this Important", "Fishery catch/trip and species composition are related to BTF total CPUE and species breakdown — the model uses these to predict outcomes.", icon_use = bs_icon("question-circle")),
-        ttip("Percentiles", markdown("A 25<sup>th</sup> CPUE percentile is the CPUE value that 25% of years (since 2016) fell below for the selected date. The 50<sup>th</sup> percentile is also called the median."), icon_use = bs_icon("question-circle"))
+        ttip("Why is this Important", "Fishery catch/trip and species composition are related to the total sonar count and species breakdown — the model uses these to predict outcomes.", icon_use = bs_icon("question-circle")),
+        ttip("Percentiles", markdown("A 25<sup>th</sup> count percentile is the sonar count value that 25% of years (since 2018) fell below for the selected date. The 50<sup>th</sup> percentile is also called the median."), icon_use = bs_icon("question-circle"))
       ),
       
       hr(),
       
-      # input widget for Chinook BTF CPUE selections (based on pre-calculated percentiles)
+      # input widget for Chinook sonar count selections (based on pre-calculated percentiles)
       selectInput(
-        inputId = "chinook_btf_cpue_input_cat", label = strong(icon("fish-fins"), "Chinook Salmon CPUE"),
-        choices = get_btf_percentiles(date = default_date, species = "chinook"), selected = 3
+        inputId = "chinook_sonar_count_input_cat", label = strong(icon("fish-fins"), "Chinook Salmon Count"),
+        choices = get_sonar_percentiles(date = default_date, species = "chinook"), selected = 3
       ),
       
-      # input widget for  Chinook BTF CPUE manual entry
+      # input widget for Chinook sonar count manual entry
       hidden(
         div(
-          id = "enter_chinook_btf_cpue",
+          id = "enter_chinook_sonar_count",
           numberInput(
-            inputId = "entered_chinook_btf_cpue", 
-            label = ttip(strong("Enter Chinook Salmon CPUE"), enter_CPUE_ttip_text),
-            value = NULL, min = 0, placeholder = "Enter a CPUE value"
+            inputId = "entered_chinook_sonar_count", 
+            label = ttip(strong("Enter Chinook Salmon Count"), enter_count_ttip_text),
+            value = NULL, min = 0, placeholder = "Enter a count value"
           )
         )
       ),
       
-      # input widget for chum BTF CPUE selections (based on pre-calculated percentiles)
+      # input widget for chum sonar count selections (based on pre-calculated percentiles)
       selectInput(
-        inputId = "chum_btf_cpue_input_cat", label = strong(icon("fish-fins"), "Chum Salmon CPUE"),
-        choices = get_btf_percentiles(date = default_date, species = "chum"), selected = 3
+        inputId = "chum_sonar_count_input_cat", label = strong(icon("fish-fins"), "Chum Salmon Count"),
+        choices = get_sonar_percentiles(date = default_date, species = "chum"), selected = 3
       ),
       
-      # input widget for chum BTF CPUE manual entry
+      # input widget for chum sonar count manual entry
       hidden(
         div(
-          id = "enter_chum_btf_cpue",
+          id = "enter_chum_sonar_count",
           numberInput(
-            inputId = "entered_chum_btf_cpue",
-            label = ttip(strong("Enter Chum Salmon CPUE"), enter_CPUE_ttip_text),
-            value = NULL, min = 0, placeholder = "Enter a CPUE value"
+            inputId = "entered_chum_sonar_count",
+            label = ttip(strong("Enter Chum Salmon Count"), enter_count_ttip_text),
+            value = NULL, min = 0, placeholder = "Enter a count value"
           )
         )
       ),
       
-      # input widget for sockeye BTF CPUE selections (based on pre-calculated percentiles)
+      # input widget for sockeye sonar count selections (based on pre-calculated percentiles)
       selectInput(
-        inputId = "sockeye_btf_cpue_input_cat", label = strong(icon("fish-fins"), "Sockeye Salmon CPUE"),
-        choices = get_btf_percentiles(date = default_date, species = "sockeye"), selected = 3
+        inputId = "sockeye_sonar_count_input_cat", label = strong(icon("fish-fins"), "Sockeye Salmon Count"),
+        choices = get_sonar_percentiles(date = default_date, species = "sockeye"), selected = 3
       ),
       
-      # input widget for sockeye BTF CPUE manual entry
+      # input widget for sockeye sonar count manual entry
       hidden(
         div(
-          id = "enter_sockeye_btf_cpue",
+          id = "enter_sockeye_sonar_count",
           numberInput(
-            inputId = "entered_sockeye_btf_cpue", 
-            label = ttip(strong("Enter Sockeye Salmon CPUE"), enter_CPUE_ttip_text), 
-            value = NULL, min = 0, placeholder = "Enter a CPUE value"
+            inputId = "entered_sockeye_sonar_count", 
+            label = ttip(strong("Enter Sockeye Salmon Count"), enter_count_ttip_text), 
+            value = NULL, min = 0, placeholder = "Enter a count value"
           )
         )
       ),
       
-      # where to find this year's BTF data
+      # where to find this year's sonar data
       helpText(
-        a(bs_icon("table"), "View BTF Data Webpage", href = "https://www.adfg.alaska.gov/index.cfm?adfg=commercialbyareakuskokwim.btf")
+        a(bs_icon("table"), "View Sonar Count Data Webpage", href = "https://www.adfg.alaska.gov/index.cfm?adfg=commercialbyareakuskokwim.emihd")
       )
     )
   )
@@ -542,24 +784,24 @@ fillRow(
 # re-calculates percentiles and re-poulates dropdown menus when input$date is changed
 observeEvent(input$date, {
   updateSelectInput(
-    inputId = "chinook_btf_cpue_input_cat", selected = input$chinook_btf_cpue_input_cat,
-    choices = get_btf_percentiles(date = input$date, species = "chinook")
+    inputId = "chinook_sonar_count_input_cat", selected = input$chinook_sonar_count_input_cat,
+    choices = get_sonar_percentiles(date = input$date, species = "chinook")
   )
   updateSelectInput(
-    inputId = "chum_btf_cpue_input_cat", selected = input$chum_btf_cpue_input_cat,
-    choices = get_btf_percentiles(date = input$date, species = "chum")
+    inputId = "chum_sonar_count_input_cat", selected = input$chum_sonar_count_input_cat,
+    choices = get_sonar_percentiles(date = input$date, species = "chum")
   )
   updateSelectInput(
-    inputId = "sockeye_btf_cpue_input_cat", selected = input$sockeye_btf_cpue_input_cat,
-    choices = get_btf_percentiles(date = input$date, species = "sockeye")
+    inputId = "sockeye_sonar_count_input_cat", selected = input$sockeye_sonar_count_input_cat,
+    choices = get_sonar_percentiles(date = input$date, species = "sockeye")
   )
 })
 
 # if selected "Enter...", show box to enter
 observe({
-  toggle(id = "enter_chinook_btf_cpue", condition = input$chinook_btf_cpue_input_cat == 6, anim = TRUE, time = 0.3)
-  toggle(id = "enter_chum_btf_cpue", condition = input$chum_btf_cpue_input_cat == 6, anim = TRUE, time = 0.3)
-  toggle(id = "enter_sockeye_btf_cpue", condition = input$sockeye_btf_cpue_input_cat == 6, anim = TRUE, time = 0.3)
+  toggle(id = "enter_chinook_sonar_count", condition = input$chinook_sonar_count_input_cat == 6, anim = TRUE, time = 0.3)
+  toggle(id = "enter_chum_sonar_count", condition = input$chum_sonar_count_input_cat == 6, anim = TRUE, time = 0.3)
+  toggle(id = "enter_sockeye_sonar_count", condition = input$sockeye_sonar_count_input_cat == 6, anim = TRUE, time = 0.3)
 })
 
 # ensure only end times after the selected start time are available to be selected
@@ -616,10 +858,10 @@ reactive({
   # calculate the number of hours before noon
   rvals$hours_before_noon = as.numeric(as.duration(interval(rvals$start_time, as_datetime(paste0(input$date, " 12:00:00"), tz = "US/Alaska"))), units = "hours")
   
-  # select the correct CPUE based on the inputs
-  rvals$chinook_btf_cpue = set_cpue(input, "chinook")
-  rvals$chum_btf_cpue = set_cpue(input, "chum")
-  rvals$sockeye_btf_cpue = set_cpue(input, "sockeye")
+  # select the correct sonar counts based on the inputs
+  rvals$chinook_sonar_count = set_sonar_count(input, "chinook")
+  rvals$chum_sonar_count = set_sonar_count(input, "chum")
+  rvals$sockeye_sonar_count = set_sonar_count(input, "sockeye")
 })
 
 # create the complete predictive data set based on widget inputs
@@ -627,13 +869,13 @@ reactive({
   rvals$df = data.frame(
     day = KuskoHarvUtils::to_days_past_may31(dates = input$date),
     weekend = wday(input$date, label = TRUE) %in% c("Sat", "Sun"),
-    fished_yesterday = input$fished_yesterday,
+    # fished_yesterday = input$fished_yesterday,
     hours_open = rvals$hours_open,
     p_before_noon = ifelse(rvals$hours_before_noon < 0, 0, rvals$hours_before_noon/rvals$hours_open),
-    total_btf_cpue = rvals$chinook_btf_cpue + rvals$chum_btf_cpue + rvals$sockeye_btf_cpue,
-    chinook_btf_comp = rvals$chinook_btf_cpue/(rvals$chinook_btf_cpue + rvals$chum_btf_cpue + rvals$sockeye_btf_cpue),
-    chum_btf_comp = rvals$chum_btf_cpue/(rvals$chinook_btf_cpue + rvals$chum_btf_cpue + rvals$sockeye_btf_cpue),
-    sockeye_btf_comp = rvals$sockeye_btf_cpue/(rvals$chinook_btf_cpue + rvals$chum_btf_cpue + rvals$sockeye_btf_cpue)
+    total_sonar_count = rvals$chinook_sonar_count + rvals$chum_sonar_count + rvals$sockeye_sonar_count,
+    chinook_sonar_comp = rvals$chinook_sonar_count/(rvals$chinook_sonar_count + rvals$chum_sonar_count + rvals$sockeye_sonar_count),
+    chum_sonar_comp = rvals$chum_sonar_count/(rvals$chinook_sonar_count + rvals$chum_sonar_count + rvals$sockeye_sonar_count),
+    sockeye_sonar_comp = rvals$sockeye_sonar_count/(rvals$chinook_sonar_count + rvals$chum_sonar_count + rvals$sockeye_sonar_count)
   )
 })
 
@@ -641,12 +883,13 @@ reactive({
 reactive({
   # obtain predicted response variables
   rvals$preds = as.data.frame(lapply(fit_lists, function(fit_list) predict_model_avg(fit_list, rvals$df)))
-  
+
   # restandardize composition variables
   rvals$comp_preds = c(chinook = rvals$preds$chinook_comp,  chum = rvals$preds$chum_comp, sockeye = rvals$preds$sockeye_comp)
   rvals$comp_preds_adj = smart_round(rvals$comp_preds/sum(rvals$comp_preds), 2)
 })
 ```
+
 
 ```{r user-adjustment-ui}
 # allow user to tweak predictions
@@ -853,7 +1096,7 @@ preds_kable = function(input, rvals) {
   # create the kable
   kbl(preds, "html", col.names = col_names, align = align) |>
     kable_styling(full_width = FALSE, bootstrap_options = c("condensed")) |>
-    column_spec(1, bold = FALSE, italic = TRUE) |>
+    column_spec(1, bold = TRUE, italic = TRUE) |>
     pack_rows("Fishery Outcome Variables", 1, 5, background = "#F7F7F7") |>
     pack_rows("Harvest", 6, 9, hline_before = FALSE, background = "#F7F7F7") |>
     add_header_above(header, background = "#F7F7F7", escape = FALSE) |> 
@@ -895,8 +1138,8 @@ This is why "Hours Open" disappears when viewing the species composition relatio
 
 ```{r plot-ui}
 
-# drop down menu options for BTF categories
-CAT_btf_choices = c(
+# drop down menu options for sonar categories
+CAT_sonar_choices = c(
   "10th Percentile (Near Lowest)" = "q10",
   "25th Percentile" = "q25",
   "50th Percentile (Median)" = "q50",
@@ -929,24 +1172,24 @@ fillRow(
   column(
     width = 12,
     
-    # input widget for the total BTF cpue category to show (hidden by default, shown if in global model for response variable)
+    # input widget for the total sonar count category to show (hidden by default, shown if in global model for response variable)
     hidden(
-      selectInput(inputId = "plot_CAT_total_btf_cpue", label = strong("Total BTF CPUE"), choices = CAT_btf_choices, selected = "q50")
+      selectInput(inputId = "plot_CAT_total_sonar_count", label = strong("Total Sonar Count"), choices = CAT_sonar_choices, selected = "q50")
     ),
     
-    # input widget for the BTF % Chinook category to show (hidden by default, shown if in global model for response variable)
+    # input widget for the sonar % Chinook category to show (hidden by default, shown if in global model for response variable)
     hidden(
-      selectInput(inputId = "plot_CAT_chinook_btf_comp", label = strong("BTF % Chinook"), choices = CAT_btf_choices, selected = "q50")
+      selectInput(inputId = "plot_CAT_chinook_sonar_comp", label = strong("Sonar % Chinook"), choices = CAT_sonar_choices, selected = "q50")
     ),
     
-    # input widget for the BTF % chum category to show (hidden by default, shown if in global model for response variable)
+    # input widget for the sonar % chum category to show (hidden by default, shown if in global model for response variable)
     hidden(
-      selectInput(inputId = "plot_CAT_chum_btf_comp", label = strong("BTF % Chum"), choices = CAT_btf_choices, selected = "q50")
+      selectInput(inputId = "plot_CAT_chum_sonar_comp", label = strong("Sonar % Chum"), choices = CAT_sonar_choices, selected = "q50")
     ),
     
-    # input widget for the BTF % sockeye category to show (hidden by default, shown if in global model for response variable)
+    # input widget for the sonar % sockeye category to show (hidden by default, shown if in global model for response variable)
     hidden(
-      selectInput(inputId = "plot_CAT_sockeye_btf_comp", label = strong("BTF % Sockeye"), choices = CAT_btf_choices, selected = "q50")
+      selectInput(inputId = "plot_CAT_sockeye_sonar_comp", label = strong("Sonar % Sockeye"), choices = CAT_sonar_choices, selected = "q50")
     )
   ),
   
@@ -977,10 +1220,10 @@ reactive({
 observe({
   toggle(id = "plot_hours_open", condition = "hours_open" %in% rvals$vars)
   toggle(id = "plot_p_before_noon", condition = "p_before_noon" %in% rvals$vars)
-  toggle(id = "plot_CAT_total_btf_cpue", condition = "total_btf_cpue" %in% rvals$vars)
-  toggle(id = "plot_CAT_chinook_btf_comp", condition = "chinook_btf_comp" %in% rvals$vars)
-  toggle(id = "plot_CAT_chum_btf_comp", condition = "chum_btf_comp" %in% rvals$vars)
-  toggle(id = "plot_CAT_sockeye_btf_comp", condition = "sockeye_btf_comp" %in% rvals$vars)
+  toggle(id = "plot_CAT_total_sonar_count", condition = "total_sonar_count" %in% rvals$vars)
+  toggle(id = "plot_CAT_chinook_sonar_comp", condition = "chinook_sonar_comp" %in% rvals$vars)
+  toggle(id = "plot_CAT_chum_sonar_comp", condition = "chum_sonar_comp" %in% rvals$vars)
+  toggle(id = "plot_CAT_sockeye_sonar_comp", condition = "sockeye_sonar_comp" %in% rvals$vars)
 })
 
 # Construct the settings for subsetting pre-processed predictions for plotting
@@ -988,10 +1231,10 @@ reactive({
   rvals$plot_settings = list(
     hours_open = as.numeric(input$plot_hours_open),
     p_before_noon = as.numeric(input$plot_p_before_noon),
-    CAT_total_btf_cpue = input$plot_CAT_total_btf_cpue,
-    CAT_chinook_btf_comp = input$plot_CAT_chinook_btf_comp,
-    CAT_chum_btf_comp = input$plot_CAT_chum_btf_comp,
-    CAT_sockeye_btf_comp = input$plot_CAT_sockeye_btf_comp
+    CAT_total_sonar_count = input$plot_CAT_total_sonar_count,
+    CAT_chinook_sonar_comp = input$plot_CAT_chinook_sonar_comp,
+    CAT_chum_sonar_comp = input$plot_CAT_chum_sonar_comp,
+    CAT_sockeye_sonar_comp = input$plot_CAT_sockeye_sonar_comp
   )
 })
 ```
@@ -1016,7 +1259,7 @@ Select from the other drop-down menus to see how changing the condition variable
 ```{r plot-output}
 # plot the relationship between the response variable and day of the season
 # settings argument is a list that says which prediction covariates to keep and display
-# e.g., default is to plot with mean BTF values, but could supply "min" or "max" to see how this changes predicted curve
+# e.g., default is to plot with mean sonar values, but could supply specific percentiles to see how this changes predicted curve
 
 div(
   style = "margin: auto; width: 60%",
@@ -1230,8 +1473,9 @@ resp_kable = function(period_keep, year_keep, effort_range, total_cpt_range, chi
           align = "cclccccccccc", format.args = list(big.mark = ","),
           caption = "<b>Values of the outcome variables for each opener used to build models.</b> Click the link above to select a subset of openers to view at once.", escape = FALSE) |>
       kable_styling(full_width = TRUE, bootstrap_options = c("condensed"), fixed_thead = TRUE, font_size = 14) |>
-      collapse_rows(1:2) |>
-      add_header_above(c(" " = 5, "Species % Composition" = 3, "Harvest" = "4"))
+      collapse_rows(1:2, ) |>
+      add_header_above(c(" " = 5, "Species % Composition" = 3, "Harvest" = "4")) |> 
+      row_spec(1:nrow(table_dat), extra_css = "border-bottom: 1px solid lightgray;")
     
   } else {
     # message to print if no records are returned after filter selection
@@ -1351,12 +1595,16 @@ pred_kable = function(period_keep, year_keep) {
   # find the variables used in any model
   ordered_pred_vars = c(
     "start", "end", "hours_open", "p_before_noon", 
-    "weekend", "fished_yesterday", "total_btf_cpue",
-    "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp"
+    "weekend",#  "fished_yesterday",
+    "total_sonar_count",
+    "chinook_sonar_comp", "chum_sonar_comp", "sockeye_sonar_comp"
   )
   
   # keep only variables to display
   table_dat = table_dat[,c("year", "period", "date", ordered_pred_vars)]
+  
+  # format the year as a character, so it doesn't get a comma separator
+  table_dat$year = as.character(table_dat$year)
   
   # start/end times (24-hr clock)
   datetime_to_24hr = function(datetime) {paste0(hour(datetime), ":", str_pad(minute(datetime), width = 2, side = "left", pad = "0"))}
@@ -1365,16 +1613,16 @@ pred_kable = function(period_keep, year_keep) {
   
   # convert proportion variables to percentages
   table_dat$p_before_noon = percentize(table_dat$p_before_noon)
-  table_dat$chinook_btf_comp = percentize(table_dat$chinook_btf_comp)
-  table_dat$chum_btf_comp = percentize(table_dat$chum_btf_comp)
-  table_dat$sockeye_btf_comp = percentize(table_dat$sockeye_btf_comp)
+  table_dat$chinook_sonar_comp = percentize(table_dat$chinook_sonar_comp)
+  table_dat$chum_sonar_comp = percentize(table_dat$chum_sonar_comp)
+  table_dat$sockeye_sonar_comp = percentize(table_dat$sockeye_sonar_comp)
   
   # convert logical variables to yes/no
   table_dat$weekend = ifelse(table_dat$weekend, "Yes", "No")
-  table_dat$fished_yesterday = ifelse(table_dat$fished_yesterday, "Yes", "No")
+  # table_dat$fished_yesterday = ifelse(table_dat$fished_yesterday, "Yes", "No")
   
   # round numeric variables
-  table_dat$total_btf_cpue = round(table_dat$total_btf_cpue)
+  table_dat$total_sonar_count = round(table_dat$total_sonar_count)
   
   # format the date
   table_dat$date = paste(month(table_dat$date, label = TRUE, abbr = TRUE), day(table_dat$date))
@@ -1384,16 +1632,16 @@ pred_kable = function(period_keep, year_keep) {
     out = table_dat |>
       kbl("html", row.names = FALSE,
           col.names = c("Year", "Period", "Date", "Start Time", "End Time",
-                        "Hours Open", "% Before Noon", "Weekend?", "Fished Yesterday?",
-                        "Total CPUE", "% Chinook", "% Chum", "% Sockeye"
+                        "Hours Open", "% Before Noon", "Weekend?", #"Fished Yesterday?",
+                        "Total Count", "% Chinook", "% Chum", "% Sockeye"
           ),
-          align = "cclllcccccccc",
+          align = "cclllccccccc", format.args = list(big.mark = ","), 
           caption = "<b>Values of the condition variables for each opener used to build models.</b> Click the link above to select a subset of openers to view at once.", escape = FALSE) |>
       kable_styling(full_width = TRUE, bootstrap_options = c("condensed"), fixed_thead = TRUE, font_size = 14) |>
       collapse_rows(1:2) |>
       column_spec(3, width = "65px") |>
-      add_header_above(c(" " = 9, "Bethel Test Fishery" = 4
-      ))
+      add_header_above(c(" " = 8, "Kuskokwim Sonar" = 4)) |> 
+      row_spec(1:nrow(table_dat), extra_css = "border-bottom: 1px solid lightgray;")
     
   } else {
     # message to print if no records are returned after filter selection
@@ -1428,7 +1676,8 @@ observeEvent(rvals$pred_kable, {
 resp_vars = names(fit_lists)
 
 # set the names of the predictor variables
-pred_vars = c("day", "hours_open", "p_before_noon", "weekend", "fished_yesterday", "total_btf_cpue", "chinook_btf_comp", "chum_btf_comp", "sockeye_btf_comp")
+pred_vars = c("day", "hours_open", "p_before_noon", "weekend", #"fished_yesterday",
+              "total_sonar_count", "chinook_sonar_comp", "chum_sonar_comp", "sockeye_sonar_comp")
 
 # set the names of the harvest variables
 harv_vars = c("chinook_harv", "chum_harv", "sockeye_harv")
@@ -1447,7 +1696,7 @@ fillRow(
     selectInput(
       inputId = "scatterplot_xvar", label = strong(em("X"), "-Axis Variable"),
       choices = list("Outcome Variables" = resp_vars, "Condition Variables" = pred_vars, "Harvest" = harv_vars),
-      selected = "total_btf_cpue", width = "100%"
+      selected = "total_sonar_count", width = "100%"
     ),
     
     # input widgets for whether to color code periods and label years
@@ -1628,16 +1877,16 @@ tab = c(
   "Day",                 "Number of days past May 31st",                                  "YES", "YES", "YES", "YES", "YES",
   "Day^2",               "Quadratic form; allows non-linear time trends",                 "YES", "YES", "NO" , "NO" , "NO" ,
   "Hours Open",          "Number of hours fishing was allowed that day",                  "YES", "NO" , "NO" , "NO" , "NO" ,
-  "Fished Yesterday",    "Yes/No; whether fishing was allowed the previous day",          "YES", "YES", "NO" , "NO" , "NO" ,
+  # "Fished Yesterday",    "Yes/No; whether fishing was allowed the previous day",          "YES", "YES", "NO" , "NO" , "NO" ,
   "Weekend",             "Yes/No; whether the day was Saturday or Sunday",                "YES", "NO" , "NO" , "NO" , "NO" ,
   "% Before Noon",       "Proportion of fishing hours that occured before noon that day", "YES", "NO" , "NO" , "NO" , "NO" ,
-  "Total BTF CPUE",      "Total daily Bethel Test Fishery CPUE (Chinook+chum+sockeye)",   "YES", "YES", "NO" , "NO" , "NO" ,
-  "BTF % Chinook",       "Daily proportion that Chinook CPUE made up of the total",       "YES", "NO" , "YES", "NO" , "NO" ,
-  "BTF % Chinook^2",     "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "YES", "NO" , "NO" ,
-  "BTF % Chum",          "Daily proportion that chum CPUE made up of the total",          "NO" , "NO" , "NO" , "YES", "NO" ,
-  "BTF % Chum^2",        "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "NO" , "YES", "NO" ,
-  "BTF % Sockeye",       "Daily proportion that sockeye CPUE made up of the total",       "NO" , "NO" , "NO" , "NO" , "YES",
-  "BTF % Sockeye^2",     "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "NO" , "NO" , "YES",
+  "Total Sonar Count",   "Total daily sonar count (Chinook+chum+sockeye)",                "YES", "YES", "NO" , "NO" , "NO" ,
+  "Sonar % Chinook",     "Daily proportion that Chinook salmon made up of the total",     "YES", "NO" , "YES", "NO" , "NO" ,
+  "Sonar % Chinook^2",   "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "YES", "NO" , "NO" ,
+  "Sonar % Chum",        "Daily proportion that chum salmon made up of the total",        "NO" , "NO" , "NO" , "YES", "NO" ,
+  "Sonar % Chum^2",      "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "NO" , "YES", "NO" ,
+  "Sonar % Sockeye",     "Daily proportion that sockeye salmon made up of the total",     "NO" , "NO" , "NO" , "NO" , "YES",
+  "Sonar % Sockeye^2",   "Quadratic form; allows non-linear relationships",               "NO" , "NO" , "NO" , "NO" , "YES",
   "Air Temperature",     "Daily average air temperature",                                 "TRY", "NO" , "NO" , "NO" , "NO" ,
   "Relative Humidity",   "Daily average percent relative humidity",                       "TRY", "NO" , "NO" , "NO" , "NO" ,
   "Precipitation",       "Daily total precipitation",                                     "TRY", "NO" , "NO" , "NO" , "NO" ,
@@ -1651,7 +1900,7 @@ tab = c(
 
 # replace the placeholders with the HTML symbols
 tab[tab == "YES"] = "&#9745;"
-tab[tab == "NO"] = "&#9744;"
+tab[tab == "NO"]  = "&#9744;"
 tab[tab == "TRY"] = "&#9746;"
 
 # set the font size in these symbol cells to be larger
@@ -1662,7 +1911,8 @@ tab[,1] = stringr::str_replace(tab[,1], "\\^2", "<sup>2</sup>")
 
 # add type ID column: for grouping rows
 tab = cbind(
-  type = c(rep("Timing", 6), rep("Bethel Test Fishery", 7), rep("Weather<sup>a<\\sup>", 7), rep("Water<sup>b<\\sup>", 2)),
+  type = c(rep("Timing", 5), rep("Sonar", 7), rep("Weather<sup>a</sup>", 7), rep("Water<sup>b</sup>", 2)),
+  # type = c(rep("Timing", 5), rep("Sonar", 7), rep("Weather", 7), rep("Water", 2)),
   tab
 )
 
@@ -1670,7 +1920,7 @@ tab = cbind(
 vars_table_caption = 'All condition variables assessed as part of the predictive analyses for each outcome variable. The symbol meanings are: <span style="font-size: medium;">&#9744;</span> (not assessed), <span style="font-size: medium;">&#9746;</span> (assessed but not part of final analysis), and <span style="font-size: medium;">&#9745;</span> (in final analysis).'
 
 # create the table
-kbl(tab, escape = FALSE, align = "lllccccc", caption = vars_table_caption,
+kbl(tab, format = "html", escape = FALSE, align = "lllccccc", caption = vars_table_caption,
     col.names = c(" ", "Condition Variable", "Description", "Trips/Day", "Catch/Trip", "Chinook", "Chum", "Sockeye")) |>
   kable_styling(full_width = TRUE, bootstrap_options = c("condensed"), fixed_thead = TRUE) |>
   add_header_above(c('<span class="nospace"> </span>' = 5, "% Composition" = 3), bold = TRUE, background = "#e6f0ff", escape = FALSE) |>
@@ -1679,13 +1929,13 @@ kbl(tab, escape = FALSE, align = "lllccccc", caption = vars_table_caption,
   column_spec(1, width = "80px") |>
   column_spec(2, width = "120px") |>
   column_spec(3, width = "180px") |>
-  collapse_rows(1) |>
   footnote(alphabet = c(
-    "Weather variables measured at Bethel Airport.", 
+    "Weather variables measured at Bethel Airport.",
     "Water variables measured during daily Bethel Test Fishery sampling."
   ), alphabet_title = "Notes") |>
-  column_spec(3:7, width = "65px") |> 
-  row_spec(0:nrow(tab), background = "#e6f0ff")
+  column_spec(3:7, width = "65px") |>
+  row_spec(0:nrow(tab), background = "#e6f0ff") |> 
+  collapse_rows(1)
 ```
 
 <!-- </details> -->
@@ -1706,7 +1956,7 @@ We do not want to include variables that have little predictive utility, but we 
 Thus, the analysis uses many models that range in complexity and assesses the predictive ability of each.
 
 Rather than selecting one single best model for prediction (which would ignore the uncertainty about which model is best), we perform **model-averaging**.
-This is where we average the predictions from each model so that those that are expected to produce better predictions carry more weight in the average.
+This involves averaging the predictions from each model so that those that are expected to produce better predictions carry more weight in the average.
 We use an index of predictive ability called the **Akaike Information Criterion** (AIC; AIC~c~ is for small sample sizes; [Wikipedia](https://en.wikipedia.org/wiki/Akaike_information_criterion)) to score each regression model for determining how much weight to assign to its predictions when taking the average.
 :::
 
@@ -1854,9 +2104,9 @@ eff_size_plot = function(fit_list) {
     out = switch(
       x,
       "Day^2" = expression(Day^2),
-      "BTF % Chinook^2" = expression(BTF~"%"~Chinook^2),
-      "BTF % Chum^2" = expression(BTF~"%"~Chum^2),
-      "BTF % Sockeye^2" = expression(BTF~"%"~Sockeye^2),
+      "Sonar % Chinook^2" = expression(Sonar~"%"~Chinook^2),
+      "Sonar % Chum^2" = expression(Sonar~"%"~Chum^2),
+      "Sonar % Sockeye^2" = expression(Sonar~"%"~Sockeye^2),
       x
     )
     
@@ -1951,7 +2201,7 @@ Using medians rather than means minimizes the influence of large but rare errors
 **Time Periods**
 
 In summarizing the errors, we categorize them into these three time periods of the season.
-This allows us to quantify how the reliability of predictions changes throughout the season.
+This allows quantifying how the reliability of predictions changes throughout the season.
 
 ```{r period-table}
 # how many openers in each period?
@@ -2155,7 +2405,7 @@ assign_color = function(p, allow_negatives) {
   # set breaks depending on whether negatives are allowed
   if (allow_negatives) {
     pal = colorRampPalette(c("salmon", "white", "#007BC2"))
-    breaks = c(-0.50,-0.30,-0.20,-0.15,-0.10,0.10,0.15,0.20,0.30,0.50)
+    breaks = c(-1,-0.40,-0.30,-0.20,-0.10,0.10,0.20,0.30,0.40,1)
   } else {
     pal = colorRampPalette(c("white", "forestgreen"))
     breaks = c(0, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 1, 2)
@@ -2332,7 +2582,7 @@ print_bibs = function(keys) {
 `r hr()`
 
 :::{.indent style="text-align: left; margin-left: 0px;"}
-`r print_bibs(c("staton-coggins-2016", "staton-coggins-2017", "staton-2018", "decossas-2019b", "decossas-2020", "russell-etal-2021", "bechtol-schomogyi-2022", "bechtol-etal-2024"))`
+`r print_bibs(c("staton-coggins-2016", "staton-coggins-2017", "staton-2018", "decossas-2019b", "decossas-2020", "russell-etal-2021", "bechtol-schomogyi-2022", "bechtol-etal-2024", "bechtol-etal-2025", "bechtol-etal-2026"))`
 :::
 
 </details>
